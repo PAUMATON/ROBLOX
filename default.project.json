@@ -1,0 +1,34 @@
+{
+  "name": "MuseuDeFossils",
+  "tree": {
+    "$className": "DataModel",
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "Zones": {
+        "$className": "Folder"
+      },
+      "Museums": {
+        "$className": "Folder"
+      },
+      "World": {
+        "$className": "Folder"
+      }
+    }
+  }
+}

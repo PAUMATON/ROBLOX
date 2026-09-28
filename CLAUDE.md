@@ -1,0 +1,118 @@
+# Museu de Fòssils
+
+## Joc
+Roblox. Excaves fòssils amb un minijoc de precisió: cada excavació dona UN
+fòssil (una peça d'un esquelet). Els guardes a la motxilla, els exposes al teu
+museu (10 vitrines) i **comercies peces amb altres jugadors**. Si tens la sort
+de reunir les 5 peces d'un esquelet, el muntes i rendeix el doble. L'índex
+(a part de la motxilla) apunta tot el que has descobert. El museu genera renda
+passiva amb sostre.
+
+## Loop
+Excavar → minijoc → fòssil amb raresa → motxilla (i índex) → l'exposes → renda →
+si et falta una peça d'un esquelet la comercies o segueixes excavant → muntes
+l'esquelet (x2) → millor eina a Dig & Co. (més sort) → repeteixes.
+Els fòssils que sobren es venen a la Bonnie (Fossil Buyer, al costat de
+Dig & Co.): una peça val 4 minuts de la seva renda de museu.
+
+## L'EIX DEL JOC: el comerç
+7 rareses: Common, Uncommon, Rare, Epic, Legendary, Mythic, Secret. Cada
+esquelet té UNA raresa i les seves 5 peces també. A la Zona 1 hi ha un esquelet
+per raresa (del Rat al T-Rex).
+Dins d'una raresa, TOTES les peces són igual de probables, i entre esquelets de
+la mateixa raresa també. Sense pietat: el que ja tens no fa més probable el que
+et falta. Per això completar un esquelet alt sol és molt lent, i el comerç n'és
+la drecera. Qualsevol canvi que faci que tothom completi sol mata el joc.
+Els números es balancegen amb tools/economy_sim.py.
+
+## Regla de zones
+Cada esquelet és completable DINS de la seva zona. No reparteixis peces d'un
+mateix conjunt entre zones — un jugador de zona 1 no pot comerciar amb un
+d'Egipte (poder de compra asimètric, no hi ha intercanvi possible). Només els
+esquelets de raresa molt alta poden tenir peces en més d'una zona.
+
+## Sort: paleta (x1 → x3) × passi de sort per Robux (x2 → x32). Sostre x96.
+Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
+amunt: Secret 1/25.000 sense sort, 1/260 a x96, 1/150 a x164. Han de ser MOLT
+rares encara amb la sort màxima.
+Tota la sort surt de la paleta (x1, x1.5, x2, x2.4, x2.7, x3); el minijoc només
+dona monedes. Es talla el PRODUCTE a x3. Totes les eines són paletes
+d'arqueòleg i NOMÉS donen sort: no toquen el minijoc ni la velocitat.
+
+## Stack
+Roblox Studio + Luau + Rojo. Cube 3D per a malles d'ossos (amb pla B: parts
+bàsiques si la qualitat no serveix). Claude Code via MCP.
+
+## Estructura
+src/server/Services/, src/client/Controllers/, src/client/UI/,
+src/shared/Config/, src/shared/Remotes/, src/shared/Util/
+
+## SEGURETAT — no negociable
+1. Autoritat total al servidor. El client envia intenció, mai resultat.
+   Únic matís: al minijoc el client diu QUAN ha clicat (contra el lag), i el
+   servidor només s'ho creu dins ±0,07 s de la seva estimació amb el ping que
+   mesura ell. El resultat (PERFECT/GOOD/MISS i la sort) el calcula el servidor.
+2. Tot remote valida: jugador, permís, distància (quan l'acció és al món:
+   excavar, comprar...), cooldown, tipus d'arguments. El comerç és amb tot
+   el servidor, sense distància (ho vas demanar així).
+3. Rate limit a tots els remotes.
+4. Cap valor econòmic en objectes del Player. Tot a la sessió del servidor.
+5. Es venen passis de sort per Robux (decisió del propietari). Res més aleatori.
+6. **El trading és el codi més perillós del joc.** Escrow atòmic o res.
+
+## DADES
+Session-locking per perfil. Autosave 120s + PlayerRemoving + BindToClose.
+pcall i retry a tot arreu. schemaVersion amb migracions.
+Cap acció modifica el perfil abans que hagi carregat (`profileReady`).
+
+## ESTIL
+MÓN 3D: cases TRADICIONALS (no es toquen, agraden així); carrer, plaça,
+platja, obra i museus MODERNS. Acollidor, no realista, amb molt de detall.
+Plaça: l'ÚNICA botiga és Dig & Co. (res de parades). Forats d'excavació
+de veritat (CSG), no boles. Models de la Toolbox: només triats a mà i
+sempre sense scripts (tools/world/lib.luau → Asset).
+Sorra #D9C7A0 · terra #8B6F47 · roca #6E6A63 · os #EDE3CC
+Llautó #C08A3E · verd fosc #2F4A3C
+UI: estil simulador, molt dopamínic. Colors vius (vermell, groc, verd, cian,
+rosa, arc de Sant Martí), contorns negres gruixuts, lletra FredokaOne amb
+contorn, botons grossos amb volum, rebots, números que salten, cartes de
+raresa amb raigs i confeti. Tot l'estil de la UI viu a src/client/UI/Theme.luau.
+Materials: Sand, Slate, WoodPlanks, Marble, Brick, Glass, Concrete, Metal,
+SmoothPlastic. Neon només per a efectes i llums.
+Lighting Technology = "Future".
+
+## ESCALES
+Referència de tot: el jugador fa 5 studs d'alt.
+Zona 1 (Obra): 60x60, amb cases al voltant · Tanca: 4 alt
+Excavadora: 12–14 alt · Oficina de contenidors: 8x4x3 · Grua: 22 alt
+Edifici en construcció: 24x18 d'ocupació
+Museus: 70x52 · Botiga Dig & Co.: 24x14, a la plaça (racó nord-est)
+Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja)
+Cap element de decoració es fa fora d'aquest rang.
+
+## MONETITZACIÓ
+Estil "+1 Speed Keyboard Escape": molts passis. Tot a src/shared/Config/Monetization.luau.
+Sort en cadena (cal l'anterior): x2 4R → x4 12R → x8 29R → x16 59R → x32 99R
+Diners en cadena, multiplica TOTES les monedes: x2 99R → x4 129R → x8 179R (màxim)
+Boosts: Fast Dig 149 · Speed Boots 79 · x2 Offline 99 · 24h Offline 149 ·
+x2 Sell 99 · VIP 249 (+20% monedes, etiqueta).
+Productes repetibles: x2 diners 15 min / 1 h, paquets de monedes.
+Els id de Roblox es posen a Monetization.luau quan es creen al Dashboard.
+
+## RECOMPENSES GRATIS (Config/Rewards.luau)
+Diària en ratxa de 7 (dia 7 = fòssil Epic) · regals per estona de joc (5 a
+60 min, cada sessió) · invitacions (premi per a qui convida i qui entra, un
+cop per amic, màx. 20). Like/preferits: MAI amb premi (normes de Roblox);
+només es demana amablement després d'una troballa rara.
+
+## FORA D'ABAST
+PvP, robatori, treballadors NPC, tercera zona, guàrdies.
+
+## IDIOMA
+Tot el que veu el jugador (UI, missatges, rètols del mapa) en ANGLÈS.
+Amb mi es parla en català.
+
+## COM TREBALLAR
+--!strict on es pugui. Codi en anglès, comentaris en català.
+Config primer, lògica després. Si et demano una cosa que trenca aquest fitxer,
+DIGUES-M'HO abans de fer-la.
