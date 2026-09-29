@@ -297,7 +297,7 @@ local function drawActive()
 end
 
 function redraw()
-	HudController.SetBadge("Trade", if invite or state.state == "active" then "!" else nil)
+	HudController.AutoBadge("Trade", if invite or state.state == "active" then "!" else nil)
 	if not Windows.IsOpen("Trade") then
 		return
 	end

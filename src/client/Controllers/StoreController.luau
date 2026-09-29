@@ -258,7 +258,7 @@ function StoreController.Start()
 				break
 			end
 		end
-		HudController.SetBadge("Store", if nextMoney then "!" else nil, C.red)
+		HudController.AutoBadge("Store", if nextMoney then "!" else nil, C.red)
 	end)
 end
 

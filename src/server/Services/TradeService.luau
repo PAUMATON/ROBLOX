@@ -368,6 +368,13 @@ function actions.confirm(player: Player, value: any)
 	if not t or type(value) ~= "boolean" then
 		return
 	end
+	-- Un canvi sense res a cap banda no és un canvi: només serviria per
+	-- sumar totalTrades i cobrar la missió "Trade with another player".
+	if value and next(t.offers[t.a]) == nil and next(t.offers[t.b]) == nil then
+		Remotes.Notify:FireClient(player, { kind = "shop", ok = false, icon = "🤝", message = "Put at least one fossil in the trade first" })
+		pushState(t)
+		return
+	end
 	t.confirmed[player] = value
 	if not value then
 		t.accepted[t.a] = false

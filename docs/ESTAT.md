@@ -2,7 +2,7 @@
 
 Document de context per a qualsevol sessió nova de Claude Code. Les REGLES
 del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ falta.
-Última actualització: 28/09/2026.
+Última actualització: 29/09/2026 (revisió al núvol, sense Studio).
 
 ---
 
@@ -94,7 +94,8 @@ o no es planten. Regla: deixar sempre **0,05** entre cares paral·leles.
 
 1. **Crear els passis i productes** al Creator Dashboard i posar els `id` a
    `Config/Monetization.luau`.
-2. **Provar el comerç amb 2 jugadors reals** (mai s'ha provat de debò). A
+2. **Provar el comerç amb 2 jugadors reals** (mai s'ha provat de debò). Tot el codi del 28/09 s'ha revisat al núvol però
+   no s'ha executat mai (veure §6): cal una partida de prova sencera a Studio. A
    Studio: Test > Clients and Servers amb 2 jugadors (a Studio no cal la
    mitja hora de joc).
 3. **Protegir l'economia del comerç**: fet (28/09/2026) menys el sostre per
@@ -113,7 +114,61 @@ o no es planten. Regla: deixar sempre **0,05** entre cares paral·leles.
 7. Idees parlades: rebirth (només diners, mai sort), neteja de fòssils amb
    pinzell, desar menys sovint quan es compren molts passis seguits.
 
-## 6. Fitxers que no s'han de fer servir
+## 6. Revisió al núvol (29/09/2026)
+
+Tot el codi del 28/09 es va revisar SENSE Studio: analitzador de tipus
+(luau-lsp amb les definicions de Roblox i el sourcemap de Rojo) sobre `src/`
+i sobre cada mòdul de `tools/world/` amb `lib.luau` al davant, i revisió a mà
+del servidor, del client i del món. Les eines no són al repositori (es
+compilen de la font oficial: `cargo install rojo` i luau-lsp amb cmake).
+
+**Analitzador**: cap error real. El que surt són limitacions de les
+definicions (`for x in t or {}`, taules amb tipus barrejats, `nil` a taules
+tipades) i avisos d'estil. `Player:IsFriendsWith` surt com a obsolet
+(Roblox recomana `IsFriendsWithAsync`); no s'ha tocat perquè encara funciona.
+
+**Arreglat**:
+- `DataService`: si el jugador marxava MENTRE es carregava el perfil, el
+  perfil arribava després del seu PlayerRemoving: el lock quedava agafat
+  (en tornar a entrar l'expulsaven, "profile still open") i ell i el seu
+  museu quedaven a les taules per sempre. Ara es desa, s'allibera i es
+  neteja al moment.
+- `DataService`: el batec recorria `profiles` mentre cedia el control (hi
+  entren i en surten jugadors); això pot petar i aturar el batec per
+  sempre, i llavors els locks caducarien amb els jugadors dins. Ara recorre
+  una llista feta abans.
+- `TradeService`: no es pot confirmar un canvi sense cap fòssil a cap banda
+  (servia per cobrar la missió "Trade with another player" sense donar res).
+- HUD: el 👆 de la missió a Backpack/Trade/Store l'esborrava el refresc del
+  HUD (cada 10 s). Ara hi ha `HudController.SetBadge` (la guia: tutorial i
+  missions) i `HudController.AutoBadge` (comptadors i avisos), i les
+  automàtiques no trepitgen el 👆.
+
+**Revisat i bé**: saveSeq/SaveMany (un desat vell no trepitja un de nou),
+escrow del comerç (validació sencera i mutació sense yield), invitacions que
+caduquen, ACCEPT amb retard, cooldown, audit; `lockedBones`/`museumLocked`
+(exposar o muntar no desbloqueja); missions (cap yield entre comprovar i
+cobrar: no es poden cobrar dos cops); cicles de `require` (cap); taules per
+jugador (totes es buiden a PlayerRemoving); `08_props`, `10_signs`,
+`gableRoof`.
+
+**Economia de les missions** (simulació amb la cadena de `Config/Quests`,
+300 partides, jugant sol): els premis en monedes (mínim 20/min de renda)
+pesen molt al principi. Sense missions → amb missions:
+Steel Trowel 6,7 → 2,0 min · Pro Trowel 33 → 6,5 min · Platja 91 → 64 min
+(44 min si el comerç de la missió 12 es fa als 35 min). A partir de la Ruby
+Trowel l'efecte és petit. **Pendent de decidir** (no s'ha tocat): rebaixar
+les monedes de les 11 primeres missions o la renda mínima per a missions.
+A més, la missió 12 ("Trade with another player") arriba cap als 6 min,
+però no es pot comerciar fins als 30 min de joc: **la cadena queda aturada
+~25 min** per a tothom i per sempre per a qui juga sol. Proposta: moure-la
+més avall (després de "Dig 75 fossils") o fer-la opcional.
+
+**Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
+el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa
+alguna cosa.
+
+## 7. Fitxers que no s'han de fer servir
 
 - `INSTALL.lua`: instal·lador antic de la primera versió de l'obra (80x80).
   Obsolet; el món actual es fa amb `tools/world/`.

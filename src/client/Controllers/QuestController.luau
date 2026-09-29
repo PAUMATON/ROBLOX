@@ -41,11 +41,11 @@ local claimButton: Widgets.Button
 local markedTile: string? = nil
 local lastClaim = 0
 
+-- Es torna a posar a cada volta de guide() (cada mig segon): el HUD reescriu
+-- les insígnies de Backpack i Trade cada cop que canvia el perfil, i si només
+-- es posés quan canvia la rajola, el 👆 desapareixeria al primer refresc.
 local function setTile(name: string?)
-	if markedTile == name then
-		return
-	end
-	if markedTile then
+	if markedTile and markedTile ~= name then
 		HudController.SetBadge(markedTile, nil)
 	end
 	markedTile = name

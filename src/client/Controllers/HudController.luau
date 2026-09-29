@@ -76,7 +76,11 @@ local function refreshTravelBadge()
 	end
 end
 
-function HudController.SetBadge(name: string, text: string?, color: Color3?)
+-- Rajoles on la guia (tutorial o missió) hi ha posat 👆: les insígnies
+-- automàtiques (comptadors, "!") no les trepitgen fins que la guia les treu.
+local pointed: { [string]: boolean } = {}
+
+local function applyBadge(name: string, text: string?, color: Color3?)
 	local badge = badges[name]
 	if badge then
 		badge.set(text, color)
@@ -84,6 +88,19 @@ function HudController.SetBadge(name: string, text: string?, color: Color3?)
 	if TRAVEL_ITEMS[name] then
 		travelBadges[name] = { text = text, color = color }
 		refreshTravelBadge()
+	end
+end
+
+-- La guia (tutorial i missions): 👆 mana sobre les automàtiques
+function HudController.SetBadge(name: string, text: string?, color: Color3?)
+	pointed[name] = text == "👆"
+	applyBadge(name, text, color)
+end
+
+-- Insígnies automàtiques (comptadors, avisos): no treuen el 👆 de la guia
+function HudController.AutoBadge(name: string, text: string?, color: Color3?)
+	if not pointed[name] then
+		applyBadge(name, text, color)
 	end
 end
 
@@ -454,10 +471,10 @@ local function refresh(snapshot: ProfileController.Snapshot)
 		end
 	end
 	local haveItems = total > 0 or next(snapshot.skeletons) ~= nil
-	HudController.SetBadge("Backpack", if canAssemble then "🔨" elseif newBones > 0 then tostring(math.min(newBones, 99)) else nil, if canAssemble then C.gold else nil)
-	HudController.SetBadge("Index", if newDiscoveries > 0 then "NEW" else nil, C.purple)
-	HudController.SetBadge("Museum", if haveItems and used < snapshot.slots then "!" else nil)
-	HudController.SetBadge("GoBeach", if Zones.IsUnlocked(snapshot.zones, "beach") then nil else "🔒", C.grey)
+	HudController.AutoBadge("Backpack", if canAssemble then "🔨" elseif newBones > 0 then tostring(math.min(newBones, 99)) else nil, if canAssemble then C.gold else nil)
+	HudController.AutoBadge("Index", if newDiscoveries > 0 then "NEW" else nil, C.purple)
+	HudController.AutoBadge("Museum", if haveItems and used < snapshot.slots then "!" else nil)
+	HudController.AutoBadge("GoBeach", if Zones.IsUnlocked(snapshot.zones, "beach") then nil else "🔒", C.grey)
 	-- botiga: "!" si pots pagar una eina que encara no tens
 	local canBuy = false
 	for _, def in Tools.LIST do
@@ -465,7 +482,7 @@ local function refresh(snapshot: ProfileController.Snapshot)
 			canBuy = true
 		end
 	end
-	HudController.SetBadge("Shop", if canBuy then "!" else nil, C.green)
+	HudController.AutoBadge("Shop", if canBuy then "!" else nil, C.green)
 
 	-- Barra de baix: progrés de l'índex i les rareses que ja has vist
 	Widgets.Clear(pipRow)

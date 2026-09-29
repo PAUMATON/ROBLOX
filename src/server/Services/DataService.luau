@@ -211,6 +211,9 @@ local function tryAcquire(player: Player): (string, Profile?, number)
 	return "ok", stored.profile, stored.saveSeq or 0
 end
 
+-- (més avall; loadProfile la necessita si el jugador marxa mentre carrega)
+local onPlayerRemoving: (Player) -> ()
+
 local function loadProfile(player: Player)
 	if loading[player] or ready[player] then
 		return
@@ -225,6 +228,24 @@ local function loadProfile(player: Player)
 		end
 
 		local status, data, seq = tryAcquire(player)
+
+		-- Ha marxat MENTRE carregava: el seu PlayerRemoving ja ha passat i
+		-- no ha trobat res per desar. Si ens quedessim el perfil, el lock
+		-- quedaria agafat (tornaria a entrar i l'expulsarien) i les taules
+		-- d'aquest i d'altres serveis no es buidarien mai. Es fa la sortida
+		-- ara: es desa, s'allibera el lock i es neteja tot.
+		if not player:IsDescendantOf(Players) then
+			loading[player] = nil
+			if status == "ok" then
+				profiles[player] = data :: Profile
+				persisted[player] = true
+				ready[player] = true
+				seqOf[player] = seq
+				playStart[player] = os.clock()
+				onPlayerRemoving(player)
+			end
+			return
+		end
 
 		if status == "ok" then
 			profiles[player] = data :: Profile
@@ -289,7 +310,15 @@ local function heartbeat()
 	end
 	local me = jobKey()
 
+	-- Llista feta abans de començar: cada batec cedeix el control, i
+	-- mentrestant hi pot haver jugadors que entren o surten. Recórrer
+	-- `profiles` directament mentre canvia pot petar ("invalid key to
+	-- 'next'") i mataria el bucle del batec: els locks caducarien sols.
+	local list = {}
 	for player in profiles do
+		table.insert(list, player)
+	end
+	for _, player in list do
 		if persisted[player] and player:IsDescendantOf(Players) then
 			retry(`batec de {player.Name}`, function()
 				return s:UpdateAsync(profileKey(player), function(old)
@@ -380,7 +409,7 @@ local function saveProfile(player: Player, release: boolean, deferrable: boolean
 	return ok
 end
 
-local function onPlayerRemoving(player: Player)
+onPlayerRemoving = function(player: Player)
 	loading[player] = nil
 	saveProfile(player, true)
 	profiles[player] = nil
