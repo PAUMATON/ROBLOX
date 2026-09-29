@@ -18,7 +18,7 @@
 local ProfileSchema = {}
 
 -- Puja aquest numero i afegeix el pas corresponent a STEPS.
-ProfileSchema.VERSION = 2
+ProfileSchema.VERSION = 3
 
 -- ─────────────────────────── TIPUS ───────────────────────────
 
@@ -178,7 +178,7 @@ local PROFILE_FIELDS: Spec = {
 		return ProfileSchema.VERSION
 	end },
 	coins = { kind = "number", default = function()
-		return 100
+		return 6000
 	end },
 	ownedBones = { kind = "table", default = emptyTable },
 	lockedBones = { kind = "table", default = emptyTable },
@@ -273,6 +273,13 @@ local STEPS: { [number]: (any) -> () } = {
 		if type(stats) == "table" and type(stats.playSeconds) ~= "number" then
 			local digs = if type(stats.totalDigs) == "number" then stats.totalDigs else 0
 			stats.playSeconds = digs * 6
+		end
+	end,
+	-- v2 -> v3: tots els diners del joc x60 (renda per segon en lloc de per
+	-- minut). Les monedes que ja tenies també, perquè valguin el mateix.
+	[2] = function(profile: any)
+		if type(profile.coins) == "number" then
+			profile.coins *= 60
 		end
 	end,
 }

@@ -77,7 +77,7 @@ Monetization.FAST_DIG_MULT = 0.5 -- el temps entre excavacions es multiplica per
 Monetization.OFFLINE_MULT = 2
 Monetization.OFFLINE_LONG_HOURS = 24
 Monetization.SELL_MULT = 2
-Monetization.COINS_MIN_RATE = 20 -- un paquet de monedes compta almenys aquesta renda/min
+Monetization.COINS_MIN_RATE = 1200 -- un paquet de monedes compta almenys aquesta renda/min
 
 -- ─────────────────────────── DERIVATS ───────────────────────────
 Monetization.PassByKey = {} :: { [string]: Pass }

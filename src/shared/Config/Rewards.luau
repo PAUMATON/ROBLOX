@@ -23,7 +23,7 @@ export type Reward = {
 	icon: string,
 }
 
-Rewards.MIN_RATE = 20 -- renda mínima per calcular les monedes (jugadors nous)
+Rewards.MIN_RATE = 1200 -- renda mínima per calcular les monedes (jugadors nous)
 
 Rewards.DAILY = {
 	{ kind = "coins", minutes = 10, label = "Coins", icon = "$" },

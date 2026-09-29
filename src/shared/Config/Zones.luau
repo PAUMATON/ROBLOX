@@ -42,7 +42,7 @@ local LIST: { ZoneDef } = {
 		name = "Construction Site",
 		number = 1,
 		unlockCost = 0,
-		coinsPerDig = 3,
+		coinsPerDig = 180,
 		-- una raresa per esquelet: Common → Secret
 		skeletons = { "Rat", "Pigeon", "Cat", "Dog", "Dodo", "Sabertooth", "TRex" },
 	},
@@ -50,8 +50,8 @@ local LIST: { ZoneDef } = {
 		id = "beach",
 		name = "Fossil Beach",
 		number = 2,
-		unlockCost = 25000,
-		coinsPerDig = 8,
+		unlockCost = 1500000,
+		coinsPerDig = 480,
 		skeletons = { "Seagull", "Otter", "Cormorant" },
 	},
 }

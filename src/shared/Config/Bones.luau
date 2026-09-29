@@ -97,15 +97,18 @@ local RARITY_COLORS: { [string]: Color3 } = {
 }
 Bones.RARITY_COLORS = RARITY_COLORS
 
--- Monedes per minut d'UN fòssil exposat sol al museu
+-- Monedes per minut d'UN fòssil exposat sol al museu. El jugador les veu
+-- per SEGON (Museum.PerSecondText): un Common fa 60/min = 1 $/s.
+-- (29/09/2026: TOTS els diners del joc x60 alhora, perquè el que abans
+-- donava 1 per minut en doni 1 per segon; el ritme del joc és el mateix)
 local PIECE_INCOME: { [string]: number } = {
-	Common = 1,
-	Uncommon = 2,
-	Rare = 4,
-	Epic = 10,
-	Legendary = 25,
-	Mythic = 70,
-	Secret = 200,
+	Common = 60,
+	Uncommon = 120,
+	Rare = 240,
+	Epic = 600,
+	Legendary = 1500,
+	Mythic = 4200,
+	Secret = 12000,
 }
 Bones.PIECE_INCOME = PIECE_INCOME
 

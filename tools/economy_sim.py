@@ -24,21 +24,21 @@ import sys
 RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret"]
 WEIGHTS = {"Common": 55, "Uncommon": 28, "Rare": 11, "Epic": 4.5, "Legendary": 1.2, "Mythic": 0.25, "Secret": 0.05}
 LUCKY_FROM = "Rare"
-PIECE_INCOME = {"Common": 1, "Uncommon": 2, "Rare": 4, "Epic": 10, "Legendary": 25, "Mythic": 70, "Secret": 200}
+PIECE_INCOME = {"Common": 60, "Uncommon": 120, "Rare": 240, "Epic": 600, "Legendary": 1500, "Mythic": 4200, "Secret": 12000}  # x60 (29/09/2026)
 SKELETON_BONUS = 2
 PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail"]
 MAX_LUCK = 3
 ZONES = {
-    "construction": {"cost": 0, "coins": 3, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
+    "construction": {"cost": 0, "coins": 180, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
                                                    "Dodo": "Legendary", "Sabertooth": "Mythic", "TRex": "Secret"}},
-    "beach": {"cost": 25000, "coins": 8, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
+    "beach": {"cost": 1500000, "coins": 480, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
 }
 # (id, preu, sort)
-TOOLS = [("rusty_shovel", 0, 1.0), ("steel_trowel", 750, 1.5), ("field_pickaxe", 6000, 2.0),
-         ("pro_brush", 40000, 2.4), ("golden_shovel", 200000, 2.7), ("sonic_drill", 900000, 3.0)]
+TOOLS = [("rusty_shovel", 0, 1.0), ("steel_trowel", 45000, 1.5), ("field_pickaxe", 360000, 2.0),
+         ("pro_brush", 2400000, 2.4), ("golden_shovel", 12000000, 2.7), ("sonic_drill", 54000000, 3.0)]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
-SLOTS, INCOME_CAP = 10, 6000
+SLOTS, INCOME_CAP = 10, 360000
 SELL_MINUTES = 4
 SELL = "--nosell" not in sys.argv
 PERFECT_BONUS, GOOD_BONUS, ATTEMPTS = 50, 30, 3
@@ -101,7 +101,7 @@ def museum_income(piece_count, skel_count):
 
 def play(max_minutes=2400):
     t = 0.0
-    coins = 100.0
+    coins = 6000.0
     tool = 0
     zones = ["construction"]
     zone = "construction"
@@ -135,7 +135,7 @@ def play(max_minutes=2400):
             skel_count[rarity] = skel_count.get(rarity, 0) + 1
             events.setdefault(f"esquelet {rarity} muntat", t)
         income = museum_income(piece_count, skel_count)
-        for milestone in (50, 200, 1000, INCOME_CAP):
+        for milestone in (3000, 12000, 60000, INCOME_CAP):
             if income >= milestone:
                 events.setdefault(f"renda >= {milestone}/min", t)
         # compres

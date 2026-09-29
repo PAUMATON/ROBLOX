@@ -26,10 +26,10 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 |---|---|---|
 | Excavar | `DigService`, `DigController`, `Config/Dig` | Minijoc de 3 cops: la franja verda salta a cada cop i la línia va més ràpid. El client diu quan ha clicat (±0,07 s de marge); el servidor calcula el resultat. |
 | Fòssils | `Config/Bones`, `Util/BoneBuilder` | 10 esquelets × 5 peces = 50. 7 rareses "1 de cada N" (Secret 1/25.000). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
-| Zones | `Config/Zones` | Obra (gratis, Rat → T-Rex) i Platja (25.000, Seagull/Otter/Cormorant). |
+| Zones | `Config/Zones` | Obra (gratis, Rat → T-Rex) i Platja (1.500.000, Seagull/Otter/Cormorant). |
 | Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 6 paletes (x1 → x3 de sort) a Dig & Co. (plaça). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
 | Vendre | `ShopService` (sell), `DialogController` (Bonnie) | La Bonnie (Fossil Buyer, al costat de Dig & Co.) compra repetits / tot / una peça. Val 4 min de renda. |
-| Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda/min amb sostre 6.000, esquelet muntat x2, renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`, "+0.67 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. |
+| Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda amb sostre 360.000/min (6.000 $/s), esquelet muntat x2, renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`: un Common exposat fa 60/min = "+1 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. **29/09/2026: TOTS els diners x60** (renda, monedes d'excavar, preus de les paletes, platja, sostre, venda, propines, renda mínima de premis i packs; migració de perfil v3 que multiplica les monedes que ja tenies): el ritme del joc és el mateix, els números 60 vegades més grossos. |
 | Visitants | `VisitorService`, `VisitorController`, `Config/Visitors`, `Util/VisitorPath` | NPC amb l'avatar dels amics de tots els jugadors del servidor. Miren vitrines i de tant en tant deixen propina (💰 +X sobre el cap). El servidor decideix; el client els dibuixa. |
 | Comerç | `TradeService`, `TradeController` | Amb tot el servidor, escrow atòmic, rètols al passar el ratolí. Es pot desactivar a la configuració. Proteccions: 30 min de joc abans de comerciar (`stats.playSeconds`; a Studio no compta), els fòssils de recompensa van bloquejats (`lockedBones`, 🔒 a la motxilla; exposar-los no els desbloqueja: `museumLocked`), cal que el perfil es desi de debò, registre `tradeLog` amb el mateix id als dos perfils, avís de canvi desigual (x3 de renda). Després d'un canvi els dos perfils es desen alhora (`DataService.SaveMany`) i no poden tornar a comerciar fins que acaben. |
 | Robux | `MonetizationService`, `StoreController`, `Config/Monetization` | Cadena de sort x2→x32, cadena de diners x2→x8, boosts, VIP, productes. **Els `id` encara són 0**: cal crear-los al Creator Dashboard. |
@@ -167,7 +167,7 @@ el servidor); `08_props`, `10_signs`, `gableRoof`. Els retocs de 02/03/04/
 mirar-ho amb captures a Studio.
 
 **Economia de les missions** (simulació amb la cadena de `Config/Quests`,
-300 partides, jugant sol): els premis en monedes (mínim 20/min de renda)
+300 partides, jugant sol): els premis en monedes (mínim 20/min de renda, ara 1.200/min amb el x60)
 pesen molt al principi. Sense missions → amb missions:
 Steel Trowel 6,7 → 2,0 min · Pro Trowel 33 → 6,5 min · Platja 91 → 64 min
 (44 min si el comerç de la missió 12 es fa als 35 min). A partir de la Ruby

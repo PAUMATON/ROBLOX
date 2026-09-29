@@ -30,7 +30,7 @@ Visitors.SKELETON_CHANCE = 1.5 -- un esquelet sencer crida més l'atenció
 Visitors.TIP_MINUTES = { 2, 5 } -- la propina val entre 2 i 5 minuts de renda d'aquella peça
 Visitors.WOW_ODDS = 40
 Visitors.WOW_MULT = 5
-Visitors.MIN_TIP = 1
+Visitors.MIN_TIP = 60
 
 -- Quants i cada quan
 Visitors.MAX_ACTIVE = 5 -- visitants alhora en un museu
