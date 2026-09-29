@@ -309,6 +309,40 @@ end
 -- Emoji com a icona (sense contorn: el contorn negre els embruta).
 -- El "$" dels diners no és un emoji: es fa verd i amb contorn, com les lletres.
 function Theme.Icon(parent: Instance, emoji: string, props: { [string]: any }?): TextLabel
+	-- "PYRAMIDS": no hi ha emoji de piràmide, es dibuixen amb triangles (Egipte)
+	if emoji == "PYRAMIDS" then
+		local holder = Instance.new("TextLabel")
+		holder.BackgroundTransparency = 1
+		holder.Size = UDim2.fromScale(1, 1)
+		holder.Text = ""
+		for key, value in props or {} do
+			(holder :: any)[key] = value
+		end
+		holder.Parent = parent
+		local z = holder.ZIndex
+		local function tri(size: number, x: number, color: Color3, zi: number)
+			Theme.Text(holder, "▲", {
+				Size = UDim2.fromScale(size, size),
+				AnchorPoint = Vector2.new(0.5, 1),
+				Position = UDim2.fromScale(x, 1),
+				TextColor3 = color,
+				StrokeThickness = 2,
+				ZIndex = zi,
+			})
+		end
+		-- el sol darrere, dues piràmides petites i la gran al davant
+		Theme.Text(holder, "●", {
+			Size = UDim2.fromScale(0.34, 0.34),
+			Position = UDim2.fromScale(0.64, 0),
+			TextColor3 = Theme.C.orange,
+			StrokeThickness = 2,
+			ZIndex = z,
+		})
+		tri(0.62, 0.24, Color3.fromRGB(214, 170, 72), z)
+		tri(0.62, 0.78, Color3.fromRGB(226, 190, 128), z)
+		tri(0.96, 0.5, Theme.C.yellow, z + 1)
+		return holder
+	end
 	if emoji == "$" then
 		local p: { [string]: any } = { TextColor3 = Theme.C.green, StrokeThickness = 3 }
 		for key, value in props or {} do

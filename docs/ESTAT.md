@@ -26,7 +26,7 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 |---|---|---|
 | Excavar | `DigService`, `DigController`, `Config/Dig` | Minijoc de 3 cops: la franja verda salta a cada cop i la línia va més ràpid. El client diu quan ha clicat (±0,07 s de marge); el servidor calcula el resultat. |
 | Fòssils | `Config/Bones`, `Util/BoneBuilder` | 14 esquelets × 5 peces = 70 (els 4 d'Egipte, 29/09/2026). 7 rareses "1 de cada N" (Secret 1/100.000, Mythic 1/20.000, Legendary 1/1.500; la sort les divideix). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
-| Zones | `Config/Zones` | Obra (gratis, 270/excavació, Rat → T-Rex), Platja (450.000, 720/exc., Seagull/Otter/Cormorant) i **Egipte** (5.000.000, 3.600/exc., cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és una illa a x = 2000 (`tools/world/11_egypt.luau`): només s'hi arriba amb ✈️ Travel → 🐫 Egypt, i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
+| Zones | `Config/Zones` | Obra (gratis, 270/excavació, Rat → T-Rex), Platja (450.000, 720/exc., Seagull/Otter/Cormorant) i **Egipte** (5.000.000, 3.600/exc., cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és un desert que arriba fins a l'horitzó a x = 6000 (`tools/world/11_egypt.luau`; zona jugable ±480 amb parets invisibles, dunes fins a la boira, piràmides gegants, forats repartits a l'atzar): només s'hi arriba amb ✈️ Travel → Egypt (la icona són piràmides dibuixades: `Theme.Icon("PYRAMIDS")`), i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
 | Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 11 paletes d'arqueòleg (NOMÉS sort): 8 a Dig & Co. (plaça): Rusty x1 · Steel x1.5 (12K) · Bronze x2 (45K) · Pro x3 (110K) · Ruby x4 (320K) · Emerald x5.5 (900K) · Golden x7 (2,5 M) · Diamond x9 (6 M); i 3 al basar de l'illa d'Egipte (`zone = "egypt"`, cal Egipte obert): Scarab x12 (15 M) · Anubis x15 (32 M) · Pharaoh's x20 (65 M). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
 | Vendre | `ShopService` (sell), `DialogController` (Bonnie) | La Bonnie (Fossil Buyer, al costat de Dig & Co.) compra repetits / tot / una peça. Val 4 min de renda. |
 | Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda amb sostre 360.000/min (6.000 $/s), esquelet muntat x2, renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`: un Common exposat fa 60/min = "+1 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. **29/09/2026: TOTS els diners x60** (renda, monedes d'excavar, preus de les paletes, platja, sostre, venda, propines, renda mínima de premis i packs; migració de perfil v3 que multiplica les monedes que ja tenies): el ritme del joc és el mateix, els números 60 vegades més grossos. |
@@ -47,9 +47,10 @@ El món NO és al codi del joc: el construeixen els scripts de `tools/world/`
 (01 terra i llum · 02 carrers · 03 cases · 04 museus · 05 plaça · 06 platja ·
 07 obra · 08 arbres i fanals · 09 Dig & Co. i la parada de la Bonnie ·
 10 indicadors a les cruïlles cap a la plaça, l'obra i la platja ·
-11 Egipte: l'illa amb el moll, la portalada, els cràters, piràmides,
-esfinx, temple, oasi i mercat; **mai construït encara**: cal executar-lo a
-Studio i fer-ne captures), amb
+11 Egipte: el desert infinit amb la plaça d'arribada, la portalada, els
+cràters a l'atzar, tres piràmides gegants, l'esfinx, temple, oasi, mercat i
+el basar de paletes; construït per primer cop el 29/09/2026 i refet a
+petició del propietari: desert en lloc d'illa, piràmides x3, forats a l'atzar), amb
 `tools/world/lib.luau` com a biblioteca comuna (peces, Toolbox, forats CSG).
 Els models de la Toolbox es carreguen per id i sense scripts (`ASSETS` a
 `lib.luau`).

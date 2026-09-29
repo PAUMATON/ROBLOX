@@ -42,7 +42,7 @@ local MUSIC: { [string]: { string } } = {
 		"rbxassetid://139402900044442", -- Oasis Song
 	},
 }
-local EGYPT_X = 1500 -- a l'est d'aquí ja ets a l'illa d'Egipte (x = 2000)
+local EGYPT_X = 1500 -- a l'est d'aquí ja ets al desert d'Egipte (x = 6000)
 local MUSIC_VOLUME = 0.22
 local MUSIC_FADE = 2
 local FADE = 2.5
@@ -50,8 +50,12 @@ local FADE = 2.5
 local sounds: { [string]: Sound } = {}
 local current: string? = nil
 
--- l'ambient: ocells a la ciutat, onades a la platja i a l'illa
+-- l'ambient: ocells a la ciutat, onades a la platja; al desert d'Egipte
+-- cap bucle ("egypt" no és a LOOPS: s'apaguen tots i sona la música)
 local function zoneAt(pos: Vector3): string
+	if pos.X > EGYPT_X then
+		return "egypt"
+	end
 	return if pos.X > BEACH_X then "beach" else "city"
 end
 

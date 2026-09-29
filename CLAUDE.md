@@ -34,7 +34,7 @@ d'Egipte (poder de compra asimètric, no hi ha intercanvi possible). Només els
 esquelets de raresa molt alta poden tenir peces en més d'una zona.
 Tres zones (29/09/2026): Obra (Rat → T-Rex), Platja (Seagull, Otter,
 Cormorant) i **Egipte** (Ibis, Jackal, Camel, Crocodile: de Rare a Mythic).
-Egipte és una illa lluny de tot: només s'hi arriba amb ✈️ Travel (mai
+Egipte és un desert lluny de tot: només s'hi arriba amb ✈️ Travel (mai
 caminant) i es desbloqueja a la seva portalada, amb la platja ja oberta.
 
 ## Sort: paleta (x1 → x20) × passi de sort per Robux (x2 → x32). Sostre x640.
@@ -102,7 +102,9 @@ Excavadora: 12–14 alt · Oficina de contenidors: 8x4x3 · Grua: 22 alt
 Edifici en construcció: 24x18 d'ocupació
 Museus: 70x52 · Botiga Dig & Co.: 24x14, a la plaça (racó nord-est)
 Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja i Egipte)
-Egipte: illa de 260x260 a x = 2000 (el mar del continent acaba a 1100)
+Egipte: desert fins a l'horitzó a x = 6000 (zona jugable de ±480 amb parets
+invisibles; el mar del continent acaba a 1100 i entremig no hi ha res).
+Excepció d'escala: les tres piràmides d'Egipte són GEGANTS (fins a 130 d'alt)
 Cap element de decoració es fa fora d'aquest rang.
 Dues cares paral·leles mai al mateix pla (fan pampallugues): deixar 0,05.
 Res dins d'una altra peça que es vegi (arbres dins de cases, etc.).

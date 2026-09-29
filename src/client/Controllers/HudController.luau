@@ -221,7 +221,7 @@ local function buildLeft(gui: ScreenGui)
 		{ id = "GoConstruction", text = "Dig Site", icon = "🏗️", color = C.yellow, dest = "construction", msg = "✈️ Off to the dig site!" },
 		{ id = "GoBeach", text = "Beach", icon = "🏖️", color = C.cyan, dest = "beach", msg = "✈️ Off to the beach!" },
 		-- Egipte és una illa: només s'hi arriba volant (no hi ha camí)
-		{ id = "GoEgypt", text = "Egypt", icon = "🐫", color = C.orange, dest = "egypt", msg = "✈️ Flying to Egypt!" },
+		{ id = "GoEgypt", text = "Egypt", icon = "PYRAMIDS", color = C.orange, dest = "egypt", msg = "✈️ Flying to Egypt!" },
 		{ id = "Shop", text = "Tool Shop", icon = "🛠️", color = C.red, dest = "shop", msg = "✈️ Off to Dig & Co.!" },
 	}
 	for i, t in items do

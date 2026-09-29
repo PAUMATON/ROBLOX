@@ -4712,23 +4712,25 @@ print(("Indicadors: %d pals a les cruïlles (plaça, obra i platja)"):format(n))
 end }
 STEPS[#STEPS + 1] = { "11_egypt", function()
 -- ═══════════════════════════ 11 · EGIPTE (zona 3) ═══════════════════════════
--- Una illa al mig del mar, MOLT lluny del continent: el mar de 01 acaba a
--- x = 1100 i l'illa comença a ~1.740; entremig no hi ha res (el buit). No
--- s'hi pot arribar ni caminant ni nedant: només amb el botó ✈️ Travel
--- (TravelPoint "egypt"). Ha d'anar DESPRÉS de 01 (que fa Terrain:Clear()).
+-- Un DESERT que arriba fins a l'horitzó, MOLT lluny del continent: el mar de
+-- 01 acaba a x = 1100 i el desert comença a x = 4600; entremig no hi ha res
+-- (el buit) i des d'aquí no es veu la ciutat. No s'hi pot arribar ni
+-- caminant ni nedant: només amb el botó ✈️ Travel (TravelPoint "egypt").
+-- La zona jugable és un quadrat de ±BORDER amb parets invisibles; fora,
+-- dunes i més dunes fins a la boira. Ha d'anar DESPRÉS de 01 (Terrain:Clear()).
 --
--- Què hi ha: moll d'arribada amb obeliscs, portalada egípcia (pilons) on es
--- desbloqueja la zona (ZoneUnlock), el camp d'excavació (cràters "desert"
--- amb DigSpot, Zone = "egypt"), tres piràmides, una esfinx, un temple en
--- ruïnes, un oasi amb palmeres, parades de mercat, roques i dunes.
--- Escales: el jugador fa 5; la piràmide gran és el fons (com la grua de l'obra).
+-- Què hi ha: plaça d'arribada amb obeliscs, portalada egípcia (pilons) on es
+-- desbloqueja la zona (ZoneUnlock), els forats (cràters "desert" amb
+-- DigSpot, Zone = "egypt") repartits a l'atzar, tres piràmides GEGANTS al
+-- fons (l'excepció d'escala del CLAUDE.md: es veuen de tot arreu), una
+-- esfinx gran, un temple en ruïnes, un oasi, mercat i el basar de paletes.
 local F = folder("Egypt", WORLD)
 local Terrain = Workspace.Terrain
 local rng = Random.new(3000)
 
-local EX, EZ = 2000, 0 -- centre de l'illa
-local ISLAND = 130 -- mig costat de l'illa de sorra
-local SEA = 260 -- mig costat del mar que l'envolta
+local EX, EZ = 6000, 0 -- centre de la zona
+local DESERT = 1400 -- mig costat del desert (fins a la boira)
+local BORDER = 480 -- mig costat de la zona jugable (parets invisibles)
 local SAND_Y = -0.3 -- alçada de la sorra (com la platja)
 
 -- paleta egípcia (càlida; dins de la família del CLAUDE.md)
@@ -4739,35 +4741,39 @@ local GOLD = C(214, 170, 72)
 local LAPIS = C(46, 84, 150)
 local TERRA = C(178, 96, 58)
 
--- ── terreny: mar al voltant i illa de sorra ──
+-- ── terreny: desert fins a l'horitzó ──
 do
-	for x = EX - SEA, EX + SEA - 1, 256 do
-		for z = EZ - SEA, EZ + SEA - 1, 256 do
-			local sx = math.min(256, EX + SEA - x)
-			local sz = math.min(256, EZ + SEA - z)
-			Terrain:FillBlock(CF(x + sx / 2, -11, z + sz / 2), V3(sx, 14, sz), M.Water)
-			Terrain:FillBlock(CF(x + sx / 2, -24, z + sz / 2), V3(sx, 12, sz), M.Sand)
+	for x = EX - DESERT, EX + DESERT - 1, 256 do
+		for z = EZ - DESERT, EZ + DESERT - 1, 256 do
+			local sx = math.min(256, EX + DESERT - x)
+			local sz = math.min(256, EZ + DESERT - z)
+			Terrain:FillBlock(CF(x + sx / 2, -10.3, z + sz / 2), V3(sx, 16, sz), M.Sand)
 		end
 	end
-	for x = EX - ISLAND, EX + ISLAND - 1, 130 do
-		for z = EZ - ISLAND, EZ + ISLAND - 1, 130 do
-			Terrain:FillBlock(CF(x + 65, -10.3, z + 65), V3(130, 16, 130), M.Sand)
-		end
-	end
-	-- vora suau: boles de sorra a tot el perímetre (no queda un tall recte)
-	for k = 0, 47 do
-		local a = k / 48 * math.pi * 2
-		local r = ISLAND * 1.02
-		local p = V3(EX + math.cos(a) * r, -15, EZ + math.sin(a) * r)
-		Terrain:FillBall(p, 12 + rng:NextNumber(0, 3), M.Sand)
-	end
-	-- dunes a les vores (lluny del camp d'excavació i del camí)
-	for _, d in ipairs({ { 100, -112, 22 }, { 110, 95, 26 }, { -40, 118, 18 }, { 20, -122, 20 } }) do
-		Terrain:FillBall(V3(EX + d[1], -d[3] * 0.72, EZ + d[2]), d[3], M.Sand)
+	-- dunes: suaus a prop de la tanca i cada cop més grosses cap a
+	-- l'horitzó, perquè la vista no s'acabi mai (i la vora quedi amagada)
+	for _ = 1, 140 do
+		local a = rng:NextNumber(0, math.pi * 2)
+		local d = rng:NextNumber(BORDER + 40, DESERT + 60)
+		local r = 30 + (d - BORDER) / (DESERT - BORDER) * rng:NextNumber(60, 140)
+		Terrain:FillBall(V3(EX + math.cos(a) * d, -r * 0.8, EZ + math.sin(a) * d), r, M.Sand)
 	end
 	-- l'oasi: un estany d'aigua enmig de la sorra
 	Terrain:FillBlock(CF(EX - 20, -2.6, EZ + 84), V3(32, 3, 22), M.Air)
 	Terrain:FillBlock(CF(EX - 20, -3.4, EZ + 84), V3(30, 2.6, 20), M.Water)
+end
+
+-- ── parets invisibles de la zona jugable (el desert continua a fora) ──
+do
+	local m = Instance.new("Model")
+	m.Name = "EgyptBorder"
+	for _, w in ipairs({ { BORDER, 0, 2, BORDER * 2 }, { -BORDER, 0, 2, BORDER * 2 }, { 0, BORDER, BORDER * 2, 2 }, { 0, -BORDER, BORDER * 2, 2 } }) do
+		local wall = P(V3(w[3], 200, w[4]), CF(EX + w[1], 100, EZ + w[2]), C(255, 255, 255), M.SmoothPlastic, m)
+		wall.Transparency = 1
+		wall.CanQuery = false
+		wall.CastShadow = false
+	end
+	m.Parent = F
 end
 
 -- ── moll d'arribada (TravelPoint) ──
@@ -4839,22 +4845,44 @@ do
 	m.Parent = F
 end
 
--- ── camp d'excavació: cràters de sorra del desert ──
+-- ── forats: cràters repartits a l'atzar per la sorra ──
+-- Es tria un lloc a l'atzar dins la zona de cavar i es descarta si toca
+-- res (temple, oasi, esfinx, palmeres, roques, un altre forat).
 local digs = 0
 do
 	local field = Instance.new("Model")
 	field.Name = "EgyptDigField"
 	field.Parent = F
-	for _, gx in ipairs({ -36, -12, 12, 36 }) do
-		for _, gz in ipairs({ -24, 0, 24 }) do
+	-- cercles ocupats {x, z, radi} relatius a (EX, EZ)
+	local busy = {
+		{ -8, -82, 26 }, -- temple
+		{ -20, 84, 26 }, -- oasi
+		{ 150, 0, 34 }, -- esfinx
+		{ 30, -60, 8 }, { 40, 60, 8 }, -- palmeres
+		{ 60, 118, 12 }, { 120, 50, 12 }, { 4, 116, 10 }, { -30, -118, 10 }, -- roques
+	}
+	local function free(x, z)
+		for _, b in ipairs(busy) do
+			if (V3(x, 0, z) - V3(b[1], 0, b[2])).Magnitude < b[3] + 10 then
+				return false
+			end
+		end
+		return true
+	end
+	local tries = 0
+	while digs < 12 and tries < 4000 do
+		tries += 1
+		-- a l'est de la portalada, entre el temple i l'oasi fins a l'esfinx;
+		-- centre múltiple de 4 (graella del terreny)
+		local x = math.floor(rng:NextNumber(-30, 175) / 4 + 0.5) * 4
+		local z = math.floor(rng:NextNumber(-150, 150) / 4 + 0.5) * 4
+		if free(x, z) then
 			digs += 1
-			-- centre múltiple de 4 (graella del terreny) i una mica de desordre
-			local x = EX + gx + rng:NextInteger(-1, 1) * 4
-			local z = EZ + gz + rng:NextInteger(-1, 1) * 4
-			digPit(V3(x, SAND_Y, z), "egypt", "EgyptDig" .. digs, "desert", rng, field)
+			table.insert(busy, { x, z, 13 })
+			digPit(V3(EX + x, SAND_Y, EZ + z), "egypt", "EgyptDig" .. digs, "desert", rng, field)
 		end
 	end
-	-- cartells "DIG HERE" a l'entrada del camp
+	-- cartells "DIG HERE" a l'entrada
 	for _, s in ipairs({ -1, 1 }) do
 		local p = V3(GX + 10, SAND_Y, EZ + s * 14)
 		P(V3(0.4, 5, 0.4), CF(p + UP * 2.5), MOD.steel, M.Metal, F, true)
@@ -4875,15 +4903,16 @@ local function pyramid(p, base, h)
 	Pyramid(CF(p + UP * (0.75 + h * 0.9)), base * 0.1 + 0.4, h * 0.1, GOLD, M.Metal, m)
 	m.Parent = F
 end
-pyramid(V3(EX + 96, SAND_Y, EZ + 6), 64, 42)
-pyramid(V3(EX + 72, SAND_Y, EZ - 70), 38, 25)
-pyramid(V3(EX + 64, SAND_Y, EZ + 74), 30, 20)
+-- gegants, al fons (es veuen des de tot arreu i fan de punt de referència)
+pyramid(V3(EX + 340, SAND_Y, EZ), 200, 130)
+pyramid(V3(EX + 262, SAND_Y, EZ - 300), 150, 97)
+pyramid(V3(EX + 232, SAND_Y, EZ + 292), 120, 78)
 
 -- ── l'esfinx ──
 do
 	local m = Instance.new("Model")
 	m.Name = "Sphinx"
-	local base = V3(EX + 44, SAND_Y, EZ - 44)
+	local base = V3(EX + 150, SAND_Y, EZ) -- davant la piràmide gran
 	local cf = CF(base) * CFrame.Angles(0, math.rad(-90), 0) -- mira cap a l'oest (cap al moll)
 	P(V3(9, 1, 22), cf * CF(0, 0.5, 0), STONE_D, M.Limestone, m) -- plataforma
 	P(V3(7, 5, 14), cf * CF(0, 3.5, -2), STONE, M.Limestone, m) -- cos
@@ -4904,7 +4933,10 @@ do
 	P(V3(4.2, 0.9, 4), head * CF(0, 2.35, -0.3), GOLD, M.Metal, m, true)
 	P(V3(1, 1.2, 0.6), head * CF(0, 0.2, 1.95), STONE_D, M.Limestone, m, true) -- nas
 	P(V3(0.8, 1.6, 0.8), head * CF(0, -2.4, 1.4), GOLD, M.Metal, m, true) -- barba
+	-- gran: s'escala des de la base (el pivot), així es queda a terra
+	m.WorldPivot = CF(base)
 	m.Parent = F
+	m:ScaleTo(2.4)
 end
 
 -- ── temple en ruïnes (columnes, algunes trencades) ──
@@ -5020,7 +5052,7 @@ do
 	m.Parent = F
 end
 
--- ── roques al voltant de l'illa ──
+-- ── roques ──
 for k, rp in ipairs({ { -118, -60, 6 }, { -110, 70, 5 }, { 60, 118, 7 }, { -30, -118, 5 }, { 120, 50, 6 }, { 4, 116, 4 } }) do
 	for q = 0, 2 do
 		local a = q * 2.1 + k
