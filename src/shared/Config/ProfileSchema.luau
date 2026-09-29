@@ -15,10 +15,12 @@
 -- ha guardat la versio nova. Per aixo la migracio treballa SOBRE la taula que
 -- arriba en comptes de fer-ne una de nova.
 
+local Bones = require(script.Parent.Bones)
+
 local ProfileSchema = {}
 
 -- Puja aquest numero i afegeix el pas corresponent a STEPS.
-ProfileSchema.VERSION = 3
+ProfileSchema.VERSION = 4
 
 -- ─────────────────────────── TIPUS ───────────────────────────
 
@@ -60,16 +62,16 @@ export type TradeLogEntry = {
 export type Profile = {
 	schemaVersion: number,
 	coins: number,
-	ownedBones: { [string]: number }, -- id de peça -> quantitat (la motxilla)
+	ownedBones: { [string]: number }, -- peça amb estat ("Rat_Skull#4") -> quantitat (la motxilla)
 	-- Quantes de les de la motxilla són de recompensa i no es poden
 	-- comerciar. Sempre <= ownedBones[clau] (InventoryService ho manté).
 	lockedBones: { [string]: number },
 	discovered: { [string]: boolean }, -- peces trobades algun cop (l'índex)
-	ownedSkeletons: { [string]: number }, -- id d'esquelet -> muntats sense exposar
+	ownedSkeletons: { [string]: number }, -- esquelet amb estats ("Rat#34425") -> muntats sense exposar
 	ownedTools: { string },
 	equippedTool: string,
 	unlockedZones: { string },
-	museumLayout: { [string]: any }, -- vitrina ("1".."6") -> id d'esquelet
+	museumLayout: { [string]: any }, -- vitrina ("1".."10") -> peça o esquelet (amb estat)
 	-- Vitrines on hi ha una peça de recompensa: en treure-la, torna a la
 	-- motxilla igual de bloquejada (si no, exposar-la la "rentaria").
 	museumLocked: { [string]: boolean },
@@ -292,6 +294,47 @@ local STEPS: { [number]: (any) -> () } = {
 	[2] = function(profile: any)
 		if type(profile.coins) == "number" then
 			profile.coins *= 60
+		end
+	end,
+	-- v3 -> v4: els fòssils tenen estat (Bones > ESTAT). Tot el que ja tenies
+	-- passa a Dusty (x1): rendeix el mateix que abans (els esquelets, una mica
+	-- més pel bonus de conjunt). "discovered" es queda amb les claus de base.
+	[3] = function(profile: any)
+		local function rekey(counts: any, isPiece: boolean)
+			if type(counts) ~= "table" then
+				return
+			end
+			local moved = {}
+			for key in counts do
+				if type(key) == "string" and not string.find(key, "#", 1, true) then
+					local target = if isPiece and Bones.IsBaseKey(key)
+						then Bones.PieceItem(key, Bones.DEFAULT_GRADE)
+						elseif not isPiece and Bones.IsSkeletonId(key)
+						then Bones.SkeletonItem(key, Bones.GradesOf(key))
+						else nil
+					if target then
+						moved[key] = target
+					end
+				end
+			end
+			for old, new in moved do
+				counts[new] = (counts[new] or 0) + counts[old]
+				counts[old] = nil
+			end
+		end
+		rekey(profile.ownedBones, true)
+		rekey(profile.lockedBones, true)
+		rekey(profile.ownedSkeletons, false)
+		if type(profile.museumLayout) == "table" then
+			for slot, item in profile.museumLayout do
+				if type(item) == "string" and not string.find(item, "#", 1, true) then
+					if Bones.IsBaseKey(item) then
+						profile.museumLayout[slot] = Bones.PieceItem(item, Bones.DEFAULT_GRADE)
+					elseif Bones.IsSkeletonId(item) then
+						profile.museumLayout[slot] = Bones.SkeletonItem(item, Bones.GradesOf(item))
+					end
+				end
+			end
 		end
 	end,
 }

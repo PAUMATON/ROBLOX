@@ -29,7 +29,7 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 | Zones | `Config/Zones` | Obra (gratis, 270/excavació, Rat → T-Rex), Platja (450.000, 720/exc., Seagull/Otter/Cormorant) i **Egipte** (5.000.000, 3.600/exc., cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és un desert que arriba fins a l'horitzó a x = 6000 (`tools/world/11_egypt.luau`; zona jugable ±480 amb parets invisibles, dunes fins a la boira, piràmides gegants, forats repartits a l'atzar): només s'hi arriba amb ✈️ Travel → Egypt (la icona són piràmides dibuixades: `Theme.Icon("PYRAMIDS")`), i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
 | Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 11 paletes d'arqueòleg (NOMÉS sort): 8 a Dig & Co. (plaça): Rusty x1 · Steel x1.5 (12K) · Bronze x2 (45K) · Pro x3 (110K) · Ruby x4 (320K) · Emerald x5.5 (900K) · Golden x7 (2,5 M) · Diamond x9 (6 M); i 3 al basar de l'illa d'Egipte (`zone = "egypt"`, cal Egipte obert): Scarab x12 (15 M) · Anubis x15 (32 M) · Pharaoh's x20 (65 M). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
 | Vendre | `ShopService` (sell), `DialogController` (Bonnie) | La Bonnie (Fossil Buyer, al costat de Dig & Co.) compra repetits / tot / una peça. Val 4 min de renda. |
-| Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda amb sostre 360.000/min (6.000 $/s), esquelet muntat x2, renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`: un Common exposat fa 60/min = "+1 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. **29/09/2026: TOTS els diners x60** (renda, monedes d'excavar, preus de les paletes, platja, sostre, venda, propines, renda mínima de premis i packs; migració de perfil v3 que multiplica les monedes que ja tenies): el ritme del joc és el mateix, els números 60 vegades més grossos. |
+| Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda amb sostre 720.000/min (12.000 $/s; era 6.000 fins al 30/09/2026), esquelet muntat (suma de les peces x5 x bonus de conjunt), renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`: un Common exposat fa 60/min = "+1 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. **29/09/2026: TOTS els diners x60** (renda, monedes d'excavar, preus de les paletes, platja, sostre, venda, propines, renda mínima de premis i packs; migració de perfil v3 que multiplica les monedes que ja tenies): el ritme del joc és el mateix, els números 60 vegades més grossos. |
 | Visitants | `VisitorService`, `VisitorController`, `Config/Visitors`, `Util/VisitorPath` | NPC amb l'avatar dels amics de tots els jugadors del servidor. Miren vitrines i de tant en tant deixen propina (💰 +X sobre el cap). El servidor decideix; el client els dibuixa. |
 | Comerç | `TradeService`, `TradeController` | Amb tot el servidor, escrow atòmic, rètols al passar el ratolí. Es pot desactivar a la configuració. Proteccions: 30 min de joc abans de comerciar (`stats.playSeconds`; a Studio no compta), els fòssils de recompensa van bloquejats (`lockedBones`, 🔒 a la motxilla; exposar-los no els desbloqueja: `museumLocked`), cal que el perfil es desi de debò, registre `tradeLog` amb el mateix id als dos perfils, avís de canvi desigual (x3 de renda). Després d'un canvi els dos perfils es desen alhora (`DataService.SaveMany`) i no poden tornar a comerciar fins que acaben. |
 | Robux | `MonetizationService`, `StoreController`, `Config/Monetization` | Cadena de sort x2→x32, cadena de diners x2→x8, boosts, VIP, productes. **Els `id` encara són 0**: cal crear-los al Creator Dashboard. |
@@ -229,6 +229,25 @@ troballa, els diàlegs, el recordatori del like, el "Welcome back" i el
 botó de treure de la vitrina. Al museu, cada vitrina té un rètol petit a
 sobre (`MuseumService.infoSign`, només es veu de prop): nom i raresa, +X $/s
 i una frase de l'animal (`Bones.FACTS`).
+
+**30/09/2026 (tarda)**: ESTAT DELS FÒSSILS (regles a `CLAUDE.md`). 6 estats
+(`Bones.GRADES`, `Bones.RollGrade` amb la sort de la paleta sola), claus amb
+estat ("Rat_Skull#4", "Rat#34425"; `PieceInfo`/`ById` també responen a
+aquestes claus; per validar, `IsPieceKey` / `IsSkeletonItem`; l'índex i
+`discovered` van per la base), migració de perfil v4 (tot a Dusty), el
+servidor munta amb la millor peça de cada (`Bones.BestPieces`), "vendre
+repetits" es queda la de millor estat. Es veu: ossos bruts i torts o blancs
+i brillants (`BoneBuilder.Weather`, les Pristine amb espurnes), barreta de 6
+nivells a les rajoles (`Widgets.GradeBar`), segell a la carta de troballa,
+estat al rètol de la vitrina i a la motxilla, % de fòssils nets a la fitxa de
+cada paleta. Simulació (100 partides, sol) sense → amb estat: Platja 28 → 22
+min · Egipte 92 → 70 min · Pharaoh's 7,3 → 4,8 h · esquelet Legendary 7,9 →
+6,2 h · el Mythic sol continua gairebé impossible (el 8-11% en 40 h). Com
+que el sostre de renda s'atrapava a les 3 h, ha passat a 12.000 $/s
+(720.000/min): ara s'hi arriba a les ~14 h, com abans. **Cal provar-ho a
+Studio**, sobretot el comerç (les claus han canviat) i la migració d'un
+perfil vell. En publicar: Shut down all servers (un servidor vell no entén
+les claus noves).
 
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa

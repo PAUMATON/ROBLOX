@@ -59,7 +59,7 @@ end
 local function sortedKeys(counts: { [string]: number }, isPiece: boolean): { string }
 	local keys = {}
 	for key, n in counts do
-		if n > 0 and (if isPiece then Bones.IsPieceKey(key) else Bones.IsSkeletonId(key)) then
+		if n > 0 and (if isPiece then Bones.IsPieceKey(key) else Bones.IsSkeletonItem(key)) then
 			table.insert(keys, key)
 		end
 	end
@@ -68,7 +68,12 @@ local function sortedKeys(counts: { [string]: number }, isPiece: boolean): { str
 		if ra ~= rb then
 			return ra > rb
 		end
-		return a < b
+		-- la mateixa peça en estats diferents, una al costat de l'altra, la millor primer
+		local ba, bb = Bones.BaseOf(a), Bones.BaseOf(b)
+		if ba ~= bb then
+			return ba < bb
+		end
+		return Bones.IncomeOf(a) > Bones.IncomeOf(b)
 	end)
 	return keys
 end
@@ -99,12 +104,21 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 	Theme.Corner(pill, 15)
 	Theme.Stroke(pill, 2)
 	Theme.Text(pill, string.upper(rarity), { Size = UDim2.new(1, -16, 1, -8), Position = UDim2.fromOffset(8, 4) })
+	-- l'estat (peça) o el bonus de conjunt (esquelet), al costat
+	local gradePill = Instance.new("Frame")
+	gradePill.Size = UDim2.fromOffset(150, 30)
+	gradePill.Position = UDim2.fromOffset(152, 10)
+	gradePill.BackgroundColor3 = if isPiece then Bones.GradeDef(Bones.GradeOf(item)).color else C.gold
+	gradePill.Parent = detail
+	Theme.Corner(gradePill, 15)
+	Theme.Stroke(gradePill, 2)
+	Theme.Text(gradePill, string.upper(Bones.GradeText(item)), { Size = UDim2.new(1, -16, 1, -8), Position = UDim2.fromOffset(8, 4) })
 	local canBuild = isPiece and Bones.CanAssemble(snapshot.bones, Bones.PieceInfo[item].skeleton)
 	-- espai que ocupen els botons de la dreta (SHOW, BUILD i SELL)
 	local rightUsed = 204 + (if canBuild then 262 else 0) + (if isPiece then 172 else 0)
 	Theme.Text(detail, name, {
-		Size = UDim2.new(1, -(rightUsed + 160), 0, 30),
-		Position = UDim2.fromOffset(154, 10),
+		Size = UDim2.new(1, -(rightUsed + 322), 0, 30),
+		Position = UDim2.fromOffset(312, 10),
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	local locked = if isPiece then (snapshot.locked or {})[item] or 0 else 0
@@ -135,8 +149,15 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 	Effects.Shine(show.button, 14, 1.8)
 	if isPiece then
 		local info = Bones.PieceInfo[item]
-		if Bones.CanAssemble(snapshot.bones, info.skeleton) then
+		local chosen = Bones.BestPieces(snapshot.bones, info.skeleton)
+		if chosen then
 			local def = Bones.ById[info.skeleton]
+			-- el que rendirà, amb la millor peça de cada (el servidor tria igual)
+			local grades = {}
+			for i, piece in chosen do
+				grades[i] = Bones.GradeOf(piece)
+			end
+			local skeleton = Bones.SkeletonItem(def.id, grades)
 			local build = Widgets.Button({
 				Parent = detail,
 				Size = UDim2.fromOffset(250, 60),
@@ -149,7 +170,7 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 				OnClick = function()
 					Remotes.MuseumAction:FireServer("assemble", def.id)
 					selected = def.id
-					Effects.Toast(`🦴 {def.name} skeleton built! It earns x5 $`, C.gold, "reward")
+					Effects.Toast(`🦴 {def.name} skeleton built! +{Museum.PerSecondText(Bones.IncomeOf(skeleton))} $/s · {Bones.GradeText(skeleton)}`, C.gold, "reward")
 				end,
 			})
 			Effects.Shine(build.button, 14, 1.2)
@@ -255,8 +276,10 @@ local function redraw()
 		section("🔨 READY TO BUILD (earns x5!)", nextOrder())
 		local g = grid(nextOrder(), 84)
 		for i, def in ready do
-			local tile = Widgets.PieceTile(g, Bones.PieceKey(def.id, "Skull"), 1, 84, function()
-				selected = Bones.PieceKey(def.id, "Skull")
+			local best = Bones.BestPieces(snapshot.bones, def.id) or {}
+			local first = best[1] or Bones.PieceKey(def.id, "Skull")
+			local tile = Widgets.PieceTile(g, first, 1, 84, function()
+				selected = first
 				drawDetail(snapshot)
 			end, i)
 			Widgets.Badge(tile, 30).set("🔨", C.gold)

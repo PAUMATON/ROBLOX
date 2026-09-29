@@ -47,6 +47,7 @@ type Session = {
 	spot: BasePart,
 	zone: string,
 	toolLuck: number, -- de l'eina equipada en començar (no canvia a mitges)
+	trowelLuck: number, -- només la de la paleta: decideix l'estat del fòssil (Bones > ESTAT)
 	startTime: number, -- quan surt la línia de l'intent actual (temps del servidor)
 	center: number, -- on és la franja verda de l'intent actual
 	speed: number,
@@ -190,14 +191,17 @@ local function finish(player: Player)
 	if not profile then
 		return
 	end
-	local key = rollPiece(session.zone, session.total, session.toolLuck)
+	local base = rollPiece(session.zone, session.total, session.toolLuck)
+	-- l'estat: com més rara la peça, més malmesa; com millor la paleta, més neta
+	local grade = if base then Bones.RollGrade(Bones.PieceInfo[base].rarity, session.trowelLuck, rng) else nil
+	local key = if base and grade then Bones.PieceItem(base, grade) else nil
 	profile.stats.totalDigs += 1
 	-- Renda activa: monedes per cada excavació, més com millor ho fas
 	local zone = Zones.ById[session.zone]
 	local coins = if zone then Dig.CoinsFor(zone.coinsPerDig, session.total) else 0
 	coins = math.floor(coins * Monetization.MoneyMultiplier(profile.gamepasses, profile.boostUntil) * (if session.golden then Dig.GOLDEN_COINS else 1))
 	profile.coins += coins
-	local isNew = key ~= nil and not profile.discovered[key]
+	local isNew = base ~= nil and not profile.discovered[base]
 	local stored = key ~= nil and InventoryService.AddBone(player, key)
 	if stored and key then
 		-- per a les missions "troba un fòssil X" (només compta el que s'excava)
@@ -221,7 +225,7 @@ local function finish(player: Player)
 			kind = "announce",
 			rarity = rarity,
 			userId = player.UserId, -- (qui l'ha trobat ja té la seva carta: no li cal l'avís)
-			message = `{player.DisplayName} found a {string.upper(rarity :: string)} fossil: {text}!`,
+			message = `{player.DisplayName} found a {if grade then Bones.GradeDef(grade).name .. " " else ""}{string.upper(rarity :: string)} fossil: {text}!`,
 		})
 	end
 	Remotes.DigUpdate:FireClient(player, {
@@ -233,6 +237,7 @@ local function finish(player: Player)
 		coins = coins,
 		luck = Dig.LuckMultiplier(session.total, session.toolLuck),
 		new = isNew,
+		grade = grade,
 		stored = stored and DataService.IsPersisted(player),
 		potion = potion,
 	})
@@ -302,6 +307,7 @@ local function onStart(player: Player, spot: any)
 		id = nextSessionId,
 		spot = spot,
 		zone = zoneId :: string,
+		trowelLuck = tool.luck,
 		toolLuck = tool.luck
 			* Monetization.LuckMultiplier(profile.gamepasses)
 			* (if profile.luckBoostUntil > os.time() then 2 else 1)

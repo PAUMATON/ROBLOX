@@ -16,6 +16,7 @@ Model del jugador (mitja):
     esquelet quan en te les 5 peces (rendeix x2).
   - compra l'eina seguent quan hi arriba i obre la platja quan pot.
 """
+import math
 import random
 import statistics
 import sys
@@ -26,6 +27,29 @@ WEIGHTS = {"Common": 55, "Uncommon": 28, "Rare": 11, "Epic": 4.5, "Legendary": 1
 LUCKY_FROM = "Rare"
 PIECE_INCOME = {"Common": 60, "Uncommon": 120, "Rare": 240, "Epic": 600, "Legendary": 1500, "Mythic": 4200, "Secret": 12000}  # x60 (29/09/2026)
 SKELETON_BONUS = 5  # 29/09/2026: el muntat rendeix la suma de les peces x5
+
+# Estat dels fòssils (Bones.luau > ESTAT): Crushed … Pristine
+GRADE_MULT = [0.5, 0.75, 1.0, 1.25, 1.6, 2.2]
+GRADE_WEIGHT = [10, 18, 30, 22, 13, 7]
+GRADE_TILT_TOOL, GRADE_TILT_RARITY, GRADE_TILT_BASE, GRADE_TOOL_TOP = 0.8, 0.8, 0.1, 20
+SET_BONUS_STEP = 0.1  # bonus de conjunt: +10% per estat de la peça pitjor
+NOGRADE = "--nograde" in sys.argv  # com abans: tot Dusty i sense bonus de conjunt
+
+
+def roll_grade(rarity, tool_luck):
+    """1..6, com Bones.RollGrade (només la sort de la paleta)"""
+    if NOGRADE:
+        return 3
+    t = min(max(math.log(max(1, tool_luck)) / math.log(GRADE_TOOL_TOP), 0), 1)
+    r = RARITIES.index(rarity) / (len(RARITIES) - 1)
+    tilt = GRADE_TILT_TOOL * t - GRADE_TILT_RARITY * r + GRADE_TILT_BASE
+    w = [b * math.exp(tilt * (i - 2.5)) for i, b in enumerate(GRADE_WEIGHT)]
+    return random.choices(range(1, 7), weights=w)[0]
+
+
+def skeleton_value(rarity, grades):
+    bonus = 1 if NOGRADE else 1 + SET_BONUS_STEP * (min(grades) - 1)
+    return sum(PIECE_INCOME[rarity] * GRADE_MULT[g - 1] for g in grades) * SKELETON_BONUS * bonus
 PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail", "Ribs", "Pelvis", "Extra"]
 # quantes peces té cada esquelet (Bones.luau: `pieces`)
 PIECES_OF = {"Rat": 5, "Pigeon": 5, "Cat": 6, "Dog": 6, "Dodo": 7, "Sabertooth": 8, "TRex": 8,
@@ -46,7 +70,7 @@ TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 9000, 1.5, None), ("br
          ("pharaoh_trowel", 45000000, 20, "egypt")]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
-SLOTS, INCOME_CAP = 10, 360000
+SLOTS, INCOME_CAP = 10, 720000  # 30/09/2026: x2 amb l'estat dels fòssils
 SELL_MINUTES = 4
 SELL = "--nosell" not in sys.argv
 PERFECT_BONUS, GOOD_BONUS, ATTEMPTS = 50, 30, 3
@@ -91,14 +115,14 @@ def rarity_of(sk):
     raise KeyError(sk)
 
 
-def museum_income(piece_count, skel_count):
-    """piece_count: raresa -> peces soltes; skel_count: esquelet -> muntats.
-    Les 10 vitrines s'omplen amb el que més rendeix."""
-    items = []
-    for sk, n in skel_count.items():
-        items += [PIECE_INCOME[rarity_of(sk)] * PIECES_OF[sk] * SKELETON_BONUS] * n
-    for r, n in piece_count.items():
-        items += [PIECE_INCOME[r]] * min(n, SLOTS)
+def museum_income(loose, skels):
+    """loose: renda d'una peça solta -> quantes; skels: rendes dels esquelets
+    muntats. Les 10 vitrines s'omplen amb el que més rendeix."""
+    items = sorted(skels, reverse=True)[:SLOTS]
+    for v in sorted(loose, reverse=True):
+        if len(items) >= SLOTS and v <= min(items):
+            break
+        items += [v] * min(loose[v], SLOTS)
     items.sort(reverse=True)
     return min(sum(items[:SLOTS]), INCOME_CAP)
 
@@ -109,8 +133,8 @@ def play(max_minutes=2400):
     tool = 0
     zones = ["construction"]
     zone = "construction"
-    bones = {}
-    piece_count, skel_count = {}, {}
+    bones = {}  # (esquelet, peça) -> llista d'estats
+    loose, skels = {}, []  # renda de peça solta -> quantes · rendes dels esquelets
     events = {}
     income = 0
     while t < max_minutes * 60:
@@ -121,26 +145,36 @@ def play(max_minutes=2400):
         bonus = sum(click_bonus() for _ in range(ATTEMPTS))
         coins += int(ZONES[zone]["coins"] * (1 + bonus / 100))
         sk, piece = roll(zone, luck_of(bonus, tool_luck))
-        bones[(sk, piece)] = bones.get((sk, piece), 0) + 1
         rarity = rarity_of(sk)
+        grade = roll_grade(rarity, tool_luck)
+        value = PIECE_INCOME[rarity] * GRADE_MULT[grade - 1]
         events.setdefault(f"1a peça {rarity}", t)
-        # venda (Fossil Buyer): les repetides fins a Rare es venen; la resta es guarda
-        if SELL and bones[(sk, piece)] > 1 and RARITIES.index(rarity) <= RARITIES.index("Rare"):
-            bones[(sk, piece)] -= 1
-            coins += PIECE_INCOME[rarity] * SELL_MINUTES
-            continue_sell = True
+        have = bones.setdefault((sk, piece), [])
+        # venda (Fossil Buyer): les repetides fins a Rare es venen (la pitjor); la resta es guarda
+        if SELL and have and RARITIES.index(rarity) <= RARITIES.index("Rare"):
+            worst = min(have + [grade])
+            if worst != grade:
+                have.remove(worst)
+                have.append(grade)
+                loose[PIECE_INCOME[rarity] * GRADE_MULT[worst - 1]] -= 1
+                loose[value] = loose.get(value, 0) + 1
+            coins += PIECE_INCOME[rarity] * GRADE_MULT[worst - 1] * SELL_MINUTES
         else:
-            piece_count[rarity] = piece_count.get(rarity, 0) + 1
-        # munta tot el que es pugui
+            have.append(grade)
+            loose[value] = loose.get(value, 0) + 1
+        # munta tot el que es pugui (amb la millor peça de cada)
         mine = PIECES[:PIECES_OF[sk]]
-        if all(bones.get((sk, p), 0) > 0 for p in mine):
+        if all(bones.get((sk, p)) for p in mine):
+            grades = []
             for p in mine:
-                bones[(sk, p)] -= 1
-            piece_count[rarity] -= len(mine)
-            skel_count[sk] = skel_count.get(sk, 0) + 1
+                g = max(bones[(sk, p)])
+                bones[(sk, p)].remove(g)
+                loose[PIECE_INCOME[rarity] * GRADE_MULT[g - 1]] -= 1
+                grades.append(g)
+            skels.append(skeleton_value(rarity, grades))
             events.setdefault(f"esquelet {rarity} muntat", t)
-        income = museum_income(piece_count, skel_count)
-        for milestone in (3000, 12000, 60000, INCOME_CAP):
+        income = museum_income({v: n for v, n in loose.items() if n > 0}, skels)
+        for milestone in (3000, 12000, 60000, 360000, INCOME_CAP):
             if income >= milestone:
                 events.setdefault(f"renda >= {milestone}/min", t)
         # compres

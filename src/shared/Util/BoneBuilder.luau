@@ -722,8 +722,63 @@ end
 local EXTRA_AT = { Ribs = "Spine", Neck = "Spine", Pelvis = "HindLimbs", Jaw = "Skull" }
 BoneBuilder.EXTRA_AT = EXTRA_AT
 
--- Una peça sola, amb els atributs que la identifiquen.
-function BoneBuilder.Piece(skeletonId: string, pieceId: string): Model
+-- ─────────────────────────── ESTAT ───────────────────────────
+-- Com es veu cada estat (Bones > ESTAT): del més brut al més net. `tint` és
+-- el color cap on s'estira l'os i quant; `wobble`, quants graus es torcen
+-- les parts (un os esclafat no està ben posat); `shine`, la reflectància.
+local DIRT = Color3.fromRGB(139, 111, 71) -- terra #8B6F47
+local RUST = Color3.fromRGB(168, 120, 78)
+local SAND = Color3.fromRGB(217, 199, 160) -- sorra #D9C7A0
+local IVORY = Color3.fromRGB(255, 252, 240)
+local LOOKS: { { tint: Color3?, amount: number, wobble: number, shine: number, sparkle: boolean? } } = {
+	{ tint = DIRT, amount = 0.6, wobble = 9, shine = 0 }, -- Crushed
+	{ tint = RUST, amount = 0.4, wobble = 4, shine = 0 }, -- Cracked
+	{ tint = SAND, amount = 0.25, wobble = 0, shine = 0 }, -- Dusty
+	{ tint = nil, amount = 0, wobble = 0, shine = 0 }, -- Clean
+	{ tint = IVORY, amount = 0.45, wobble = 0, shine = 0.08 }, -- Polished
+	{ tint = IVORY, amount = 0.8, wobble = 0, shine = 0.15, sparkle = true }, -- Pristine
+}
+
+-- Aplica l'estat a un model ja fet. Determinista (sempre torç igual la
+-- mateixa peça): al museu i a la UI es veu idèntic.
+function BoneBuilder.Weather(model: Model, grade: number)
+	local look = LOOKS[grade]
+	if not look then
+		return
+	end
+	local rng = Random.new(#model.Name * 97 + grade)
+	local biggest: BasePart? = nil
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			if d.Color ~= SOCKET then
+				if look.tint then
+					d.Color = d.Color:Lerp(look.tint, look.amount)
+				end
+				d.Reflectance = look.shine
+				if look.shine > 0 then
+					d.Material = Enum.Material.SmoothPlastic
+				end
+			end
+			if look.wobble > 0 then
+				local w = math.rad(look.wobble)
+				d.CFrame *= CFrame.Angles(rng:NextNumber(-w, w), rng:NextNumber(-w, w), rng:NextNumber(-w, w))
+			end
+			if not biggest or d.Size.Magnitude > biggest.Size.Magnitude then
+				biggest = d
+			end
+		end
+	end
+	if look.sparkle and biggest then
+		local sparks = Instance.new("Sparkles")
+		sparks.SparkleColor = Color3.fromRGB(255, 200, 250)
+		sparks.Parent = biggest
+	end
+	model:SetAttribute("Grade", grade)
+end
+
+-- Una peça sola, amb els atributs que la identifiquen. Amb `grade`, amb
+-- l'aspecte del seu estat.
+function BoneBuilder.Piece(skeletonId: string, pieceId: string, grade: number?): Model
 	local def = Bones.ById[skeletonId]
 	assert(def, `[BoneBuilder] esquelet desconegut {skeletonId}`)
 	local build = BUILDERS[def.kind][pieceId]
@@ -736,18 +791,25 @@ function BoneBuilder.Piece(skeletonId: string, pieceId: string): Model
 	model.WorldPivot = CFrame.identity
 	model:SetAttribute("Piece", key)
 	model:SetAttribute("Rarity", Bones.PieceInfo[key].rarity)
+	if grade then
+		BoneBuilder.Weather(model, grade)
+	end
 	return model
 end
 
--- L'esquelet sencer, amb les 5 peces al seu lloc i el pivot al centre.
-function BoneBuilder.Assembled(skeletonId: string): Model
+-- L'esquelet sencer, amb totes les peces al seu lloc i el pivot al centre.
+-- Accepta l'id ("Rat") o l'esquelet muntat amb estats ("Rat#34425"): llavors
+-- cada peça es veu del seu estat.
+function BoneBuilder.Assembled(item: string): Model
+	local skeletonId = Bones.BaseOf(item)
 	local def = Bones.ById[skeletonId]
 	assert(def, `[BoneBuilder] esquelet desconegut {skeletonId}`)
+	local grades = if string.find(item, "#", 1, true) then Bones.GradesOf(item) else nil
 	local layout = BoneBuilder.Layout(def)
 	local model = Instance.new("Model")
 	model.Name = skeletonId
-	for _, piece in Bones.PiecesOf(skeletonId) do
-		local m = BoneBuilder.Piece(skeletonId, piece.id)
+	for i, piece in Bones.PiecesOf(skeletonId) do
+		local m = BoneBuilder.Piece(skeletonId, piece.id, grades and grades[i])
 		m:PivotTo(CFrame.new(layout[piece.id] or layout[EXTRA_AT[piece.id] or ""] or Vector3.zero))
 		m.Parent = model
 	end

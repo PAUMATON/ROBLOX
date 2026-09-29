@@ -156,9 +156,22 @@ local function sell(player: Player, action: any, payload: any)
 		end
 		plan[payload] = 1
 	elseif action == "dupes" or action == "all" then
+		-- repetits: de cada peça es queda UNA, la de millor estat (Bones > ESTAT)
+		local keep: { [string]: string } = {}
+		if action == "dupes" then
+			for key, n in profile.ownedBones do
+				if Bones.IsPieceKey(key) and type(n) == "number" and n > 0 then
+					local base = Bones.BaseOf(key)
+					local best = keep[base]
+					if not best or Bones.GradeOf(key) > Bones.GradeOf(best) then
+						keep[base] = key
+					end
+				end
+			end
+		end
 		for key, n in profile.ownedBones do
 			if Bones.IsPieceKey(key) and type(n) == "number" and n > 0 then
-				local amount = if action == "dupes" then n - 1 else n
+				local amount = if keep[Bones.BaseOf(key)] == key then n - 1 else n
 				if amount > 0 then
 					plan[key] = math.floor(amount)
 				end

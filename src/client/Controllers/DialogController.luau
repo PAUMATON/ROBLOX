@@ -47,7 +47,7 @@ local NODES: { [string]: Node } = {
 		options = { { label = "I'll find it!", go = "hello" }, { label = "Bye!" } },
 	},
 	coins = {
-		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find ALL the bones of one skeleton (5 to 8, the rarer the more) and BUILD it: a full skeleton earns x5!",
+		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find ALL the bones of one skeleton (5 to 8, the rarer the more) and BUILD it: a full skeleton earns x5! Cleaner bones earn more too (Pristine x2.2), and better trowels dig them up cleaner.",
 		options = { { label = "Thanks, Rex!", go = "hello" }, { label = "Bye!" } },
 	},
 }
@@ -56,8 +56,16 @@ local NODES: { [string]: Node } = {
 local function looseFossils(dupesOnly: boolean): (number, number)
 	local snapshot = ProfileController.Get()
 	local n, coins = 0, 0
+	-- repetits: de cada peça en queda una, la de millor estat (igual que el servidor)
+	local keep: { [string]: string } = {}
+	for key in (if snapshot then snapshot.bones else {}) do
+		local base = Bones.BaseOf(key)
+		if not keep[base] or Bones.GradeOf(key) > Bones.GradeOf(keep[base]) then
+			keep[base] = key
+		end
+	end
 	for key, c in (if snapshot then snapshot.bones else {}) do
-		local amount = if dupesOnly then c - 1 else c
+		local amount = if dupesOnly and keep[Bones.BaseOf(key)] == key then c - 1 else c
 		if amount > 0 then
 			n += amount
 			coins += Bones.SellValue(key) * amount
@@ -131,7 +139,7 @@ local BONNIE: { [string]: Node } = {
 					table.insert(parts, `{r} {Bones.SellValue(any)}`)
 				end
 			end
-			return "I pay: " .. table.concat(parts, " · ") .. ". Tip: in your museum a fossil earns that same amount every few minutes, so show your best ones!"
+			return "I pay (Dusty): " .. table.concat(parts, " · ") .. ". Clean ones pay more, Pristine x2.2! Tip: in your museum a fossil earns that same amount every few minutes, so show your best ones!"
 		end,
 		options = { { label = "Got it!", go = "hello" }, { label = "Bye!" } },
 	},

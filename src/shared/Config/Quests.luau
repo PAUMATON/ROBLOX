@@ -130,7 +130,7 @@ function Quests.Value(profile: any, quest: Quest): number
 	elseif stat == "discovered" then
 		local n = 0
 		for key in profile.discovered or {} do
-			if Bones.IsPieceKey(key) then
+			if Bones.IsBaseKey(key) then
 				n += 1
 			end
 		end

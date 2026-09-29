@@ -14,7 +14,10 @@ local Bones = require(script.Parent.Bones)
 local Museum = {}
 
 Museum.SLOTS = 10 -- vitrines per museu (Slot1..Slot10 al mapa)
-Museum.INCOME_CAP = 360000 -- monedes/minut màximes = 6.000 $/s (CLAUDE.md: renda amb sostre)
+-- monedes/minut màximes = 12.000 $/s (CLAUDE.md: renda amb sostre). 30/09/2026:
+-- x2 amb l'estat dels fòssils; si no, el sostre arribava a les 3 h en lloc de
+-- les ~15 h (tools/economy_sim.py) i el museu deixava de créixer massa aviat.
+Museum.INCOME_CAP = 720000
 Museum.TICK = 1 -- cada quants segons s'acumula la renda en línia (es veu entrar cada segon)
 Museum.PUSH_EVERY = 10 -- cada quants TICK s'envia el perfil sencer (els altres, només les monedes)
 Museum.EXHIBIT_GAP = 0.3 -- aire entre el sòcol i la part més baixa de l'exhibició

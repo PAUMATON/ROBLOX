@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
+local Bones = require(Config:WaitForChild("Bones"))
 local Museum = require(Config:WaitForChild("Museum"))
 local Rewards = require(Config:WaitForChild("Rewards"))
 local Zones = require(Config:WaitForChild("Zones"))
@@ -74,10 +75,12 @@ local function give(player: Player, reward: Rewards.Reward): string?
 	elseif reward.kind == "fossil" then
 		local pool = Zones.PiecesByRarity.construction[reward.rarity or "Epic"]
 		if pool and #pool > 0 then
-			local key = pool[rng:NextInteger(1, #pool)]
+			-- de regal, sempre Clean (Bones > ESTAT): ni brut ni massa bo
+			local grade = 4
+			local key = Bones.PieceItem(pool[rng:NextInteger(1, #pool)], grade)
 			-- bloquejat: els fòssils de regal no es poden comerciar
 			InventoryService.AddBone(player, key, 1, true)
-			return `a {reward.rarity} fossil`
+			return `a {Bones.GradeDef(grade).name} {reward.rarity} fossil`
 		end
 	end
 	return nil

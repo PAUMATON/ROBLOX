@@ -61,7 +61,7 @@ local function exhibitModel(item: string): Model?
 	local model: Model
 	local info = Bones.PieceInfo[item]
 	if info then
-		model = BoneBuilder.Piece(info.skeleton, info.piece)
+		model = BoneBuilder.Piece(info.skeleton, info.piece, Bones.GradeOf(item))
 		maxSpan, maxHeight = Museum.FOSSIL_MAX_SPAN, Museum.FOSSIL_MAX_SPAN
 	elseif Bones.ById[item] then
 		model = BoneBuilder.Assembled(item)
@@ -123,7 +123,9 @@ local function infoSign(base: BasePart, item: string, rarity: Bones.Rarity): Bil
 		stroke.Parent = label
 	end
 	line(`{exhibitName(item)} · {string.upper(rarity)}`, 0.06, 0.3, Bones.RARITY_COLORS[rarity], true)
-	line(`+{Museum.PerSecondText(Bones.IncomeOf(item))} $/s`, 0.37, 0.28, Color3.fromRGB(90, 230, 110), true)
+	local grade = if Bones.PieceInfo[item] then Bones.GradeDef(Bones.GradeOf(item)) else nil
+	local gradeText = if grade then ` · {string.upper(grade.name)}` else ` · SET +{math.floor((Bones.SetBonus(item) - 1) * 100 + 0.5)}%`
+	line(`+{Museum.PerSecondText(Bones.IncomeOf(item))} $/s{gradeText}`, 0.37, 0.28, Color3.fromRGB(90, 230, 110), true)
 	line(Bones.FactOf(item), 0.68, 0.24, Color3.fromRGB(245, 236, 215), false)
 	return bb
 end
@@ -225,12 +227,12 @@ function actions.assemble(player, _profile, skeletonId)
 	if not Bones.IsSkeletonId(skeletonId) then
 		return false
 	end
-	return InventoryService.Assemble(player, skeletonId)
+	return InventoryService.Assemble(player, skeletonId) ~= nil
 end
 
--- Exposa una peça ("Rat_Skull") o un esquelet muntat ("Rat") a la primera vitrina lliure
+-- Exposa una peça ("Rat_Skull#4") o un esquelet muntat ("Rat#34425") a la primera vitrina lliure
 function actions.display(player, profile, item)
-	if not Bones.IsPieceKey(item) and not Bones.IsSkeletonId(item) then
+	if not Bones.IsPieceKey(item) and not Bones.IsSkeletonItem(item) then
 		return false
 	end
 	local free: string? = nil
@@ -282,7 +284,7 @@ function actions.withdraw(_player, profile, slot)
 	if Bones.IsPieceKey(item) then
 		-- torna igual de bloquejada: exposar-la no la fa comerciable
 		InventoryService.GiveBone(profile, item, wasLocked)
-	elseif Bones.IsSkeletonId(item) then
+	elseif Bones.IsSkeletonItem(item) then
 		InventoryService.GiveSkeleton(profile, item)
 	end
 	return true

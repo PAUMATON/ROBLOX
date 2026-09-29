@@ -477,7 +477,12 @@ function Widgets.PieceTile(parent: Instance, key: string, count: number, size: n
 			StrokeThickness = 1.5,
 		})
 		local text, rar = Bones.Describe(key)
-		Widgets.Tooltip(tile, text, `{string.upper(rar)} · {Museum.PerSecondText(Bones.IncomeOf(key))} $/s · sells {Bones.SellValue(key)} $`, Bones.RARITY_COLORS[rar])
+		local graded = string.find(key, "#", 1, true) ~= nil
+		local gradeLine = if graded then `{string.upper(Bones.GradeText(key))} · ` else ""
+		Widgets.Tooltip(tile, text, `{gradeLine}{string.upper(rar)} · {Museum.PerSecondText(Bones.IncomeOf(key))} $/s · sells {Bones.SellValue(key)} $`, Bones.RARITY_COLORS[rar])
+		if graded then
+			Widgets.GradeBar(tile, Bones.GradeOf(key))
+		end
 	end
 	if count > 1 then
 		Theme.Text(tile, "x" .. count, {
@@ -489,6 +494,39 @@ function Widgets.PieceTile(parent: Instance, key: string, count: number, size: n
 		})
 	end
 	return tile
+end
+
+-- L'estat d'una peça (Bones > ESTAT): 6 ratlletes a la vora dreta de la
+-- rajola, plenes de baix a dalt fins al seu estat i del color de l'estat.
+-- Com una barra de bateria: d'un cop d'ull es veu si està bruta o neta.
+function Widgets.GradeBar(tile: GuiObject, grade: number)
+	local def = Bones.GradeDef(grade)
+	local bar = Instance.new("Frame")
+	bar.Name = "GradeBar"
+	bar.BackgroundColor3 = C.ink
+	bar.BackgroundTransparency = 0.2
+	-- a la dreta, entre el "x3" de dalt i el nom de baix (a l'esquerra hi ha el 🔒)
+	bar.AnchorPoint = Vector2.new(1, 0.5)
+	bar.Position = UDim2.new(1, -3, 0.5, 0)
+	bar.Size = UDim2.new(0, 9, 0.42, 0)
+	bar.ZIndex = tile.ZIndex + 3
+	bar.Parent = tile
+	Theme.Corner(bar, 4)
+	local n = #Bones.GRADES
+	for i = 1, n do
+		local pip = Instance.new("Frame")
+		pip.AnchorPoint = Vector2.new(0.5, 1)
+		pip.Position = UDim2.new(0.5, 0, 1 - (i - 1) / n, -1)
+		pip.Size = UDim2.new(1, -4, 1 / n, -2)
+		pip.BackgroundColor3 = if i <= grade then def.color else Color3.fromRGB(70, 64, 84)
+		pip.BorderSizePixel = 0
+		pip.ZIndex = bar.ZIndex + 1
+		pip.Parent = bar
+		Theme.Corner(pip, 2)
+	end
+	if grade == n then
+		Effects.Pulse(bar, 0.12, 0.9) -- les Pristine bateguen
+	end
 end
 
 -- Cadenat petit a la cantonada de dalt a l'esquerra d'una rajola: fòssil

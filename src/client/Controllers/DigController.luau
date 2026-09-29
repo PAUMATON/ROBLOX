@@ -304,6 +304,46 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 		cg.Parent = card
 		Effects.Spin(cg, 60)
 	end
+	-- l'estat del fòssil (Bones > ESTAT): un segell que cau sobre la peça
+	if string.find(key, "#", 1, true) then
+		local grade = Bones.GradeOf(key)
+		local g = Bones.GradeDef(grade)
+		local stamp = Instance.new("Frame")
+		stamp.AnchorPoint = Vector2.new(0.5, 0.5)
+		stamp.Position = UDim2.new(0.5, 62, 0, 228)
+		stamp.Size = UDim2.fromOffset(178, 42)
+		stamp.Rotation = -8
+		stamp.BackgroundColor3 = g.color
+		stamp.ZIndex = 9
+		stamp.Visible = false
+		stamp.Parent = card
+		Theme.Corner(stamp, 12)
+		Theme.Stroke(stamp, 3)
+		Theme.Text(stamp, `{string.upper(g.name)} x{g.mult}`, {
+			Size = UDim2.new(1, -14, 1, -10),
+			Position = UDim2.fromOffset(7, 5),
+			ZIndex = 10,
+			StrokeThickness = 2.5,
+		})
+		task.delay(0.45, function()
+			if not stamp.Parent then
+				return
+			end
+			stamp.Visible = true
+			Effects.PopIn(stamp, 0.25)
+			if grade >= #Bones.GRADES then
+				Theme.Arpeggio("sparkle", { 1, 1.25, 1.5, 2 }, 0.07, 0.5)
+				Effects.Confetti(card, 30)
+				Effects.Pulse(stamp, 0.1, 0.7)
+			elseif grade >= 5 then
+				Theme.Note("sparkle", 0.45, 1.3)
+			elseif grade <= 2 then
+				Theme.Note("dirt", 0.5, 0.7)
+			else
+				Theme.Note("pop", 0.4, 1.1)
+			end
+		end)
+	end
 	-- primer cop que la trobes: entra a l'índex
 	if isNew then
 		local tag = Instance.new("Frame")

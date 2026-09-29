@@ -145,6 +145,11 @@ local function slotCard(slot: number, item: string?)
 		Position = UDim2.fromOffset(6, 88),
 		TextColor3 = C.green,
 	})
+	-- l'estat de la peça, o el bonus de conjunt de l'esquelet
+	if info then
+		Widgets.GradeBar(card, Bones.GradeOf(item))
+	end
+	Widgets.Tooltip(card, Bones.GradeText(item), `+{Museum.PerSecondText(Bones.IncomeOf(item))} $/s`, if info then Bones.GradeDef(Bones.GradeOf(item)).color else C.gold)
 	-- treure'l de la vitrina (torna a la motxilla)
 	Widgets.CloseButton({
 		Parent = card,

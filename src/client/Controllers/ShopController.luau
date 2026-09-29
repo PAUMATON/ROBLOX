@@ -17,6 +17,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
+local Bones = require(Config:WaitForChild("Bones"))
 local Tools = require(Config:WaitForChild("Tools"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
@@ -211,7 +212,10 @@ local function refresh()
 		compareLabel.Text = `Your {mine.name} is already {Tools.LuckText(mine.luck)}`
 		compareLabel.TextColor3 = C.muted
 	end
-	blurbLabel.Text = def.blurb .. " Luck makes rarer fossils show up more often."
+	-- la sort de la paleta també fa sortir els fòssils més nets (Bones > ESTAT)
+	local chances = Bones.GradeChances("Rare", def.luck)
+	local shiny = math.floor((chances[5] + chances[6]) * 100 + 0.5)
+	blurbLabel.Text = `{def.blurb} Rarer AND cleaner fossils: {shiny}% of Rare ones come out ✨Polished or Pristine.`
 	priceLabel.Text = if def.price > 0 then `$ {Theme.Short(def.price)} coins` else "🎁 Free"
 	fillAction(snapshot, def)
 end

@@ -12,8 +12,12 @@
 --     peces d'un esquelet (de 5 a 8, segons l'esquelet: `pieces`), el pots
 --     muntar i rendeix la suma de les peces x SKELETON_BONUS (x5).
 --
--- Una peça es desa al perfil amb la clau "<esquelet>_<peça>", p.ex.
--- "Rat_Skull". No la canviïs mai d'un esquelet ja publicat.
+-- Una peça es desa al perfil amb la clau "<esquelet>_<peça>#<estat>", p.ex.
+-- "Rat_Skull#4" (una peça Clean). L'esquelet muntat, "<esquelet>#<estats>"
+-- amb un dígit per peça en l'ordre de PiecesOf, p.ex. "Rat#34425". La part
+-- de davant ("Rat_Skull", "Rat") és la clau de BASE: l'índex, les
+-- probabilitats i els models van per la base. No canviïs mai les claus
+-- d'un esquelet ja publicat.
 -- La zona de cada esquelet la diu Zones.luau (Regla de zones).
 
 local Bones = {}
@@ -122,6 +126,44 @@ Bones.PIECE_INCOME = PIECE_INCOME
 -- Un esquelet muntat rendeix com TOTES les seves peces soltes sumades,
 -- multiplicat per això (29/09/2026: x5, decisió del propietari)
 Bones.SKELETON_BONUS = 5
+
+-- ─────────────────────────── ESTAT ───────────────────────────
+-- Cada fòssil surt de terra en un de 6 estats, del pitjor al millor. L'estat
+-- multiplica el que rendeix al museu i el que en paga la Bonnie.
+--   · Com més RARA la peça, més fàcil que surti malmesa (és més antiga).
+--   · Com millor la PALETA (la seva sort), més fàcil que surti neta. Només
+--     la paleta: ni els passis de sort ni les pocions hi compten.
+-- Fórmula (GradeChances): pes_i = BASE_i · e^(inclinació · (i − 3,5)) amb
+-- inclinació = 0,8·t − 0,8·r + 0,1, t = ln(sort paleta)/ln(20) (0 → 1) i
+-- r = (ordre de raresa − 1)/6 (0 → 1).
+-- Mitjana del multiplicador (tools/economy_sim.py): Common amb la Rusty
+-- x1,18 i amb la Pharaoh's x1,66; Secret x0,81 → x1,18. Els perfils vells
+-- passen tots a Dusty (x1): ningú no hi perd.
+export type Grade = {
+	id: string,
+	name: string,
+	mult: number,
+	color: Color3,
+	weight: number,
+}
+local GRADES: { Grade } = {
+	{ id = "Crushed", name = "Crushed", mult = 0.5, color = Color3.fromRGB(122, 92, 70), weight = 10 },
+	{ id = "Cracked", name = "Cracked", mult = 0.75, color = Color3.fromRGB(190, 120, 70), weight = 18 },
+	{ id = "Dusty", name = "Dusty", mult = 1, color = Color3.fromRGB(205, 186, 150), weight = 30 },
+	{ id = "Clean", name = "Clean", mult = 1.25, color = Color3.fromRGB(110, 220, 120), weight = 22 },
+	{ id = "Polished", name = "Polished", mult = 1.6, color = Color3.fromRGB(70, 200, 255), weight = 13 },
+	{ id = "Pristine", name = "Pristine", mult = 2.2, color = Color3.fromRGB(255, 120, 230), weight = 7 },
+}
+Bones.GRADES = GRADES
+Bones.DEFAULT_GRADE = 3 -- Dusty: el de les peces d'abans que hi hagués estat
+Bones.GRADE_TILT_TOOL = 0.8
+Bones.GRADE_TILT_RARITY = 0.8
+Bones.GRADE_TILT_BASE = 0.1
+Bones.GRADE_TOOL_TOP = 20 -- la sort de paleta que val t = 1 (la Pharaoh's)
+-- Esquelet muntat: bonus de conjunt segons la peça PITJOR (la baula feble):
+-- +10% per cada estat per sobre de Crushed (Crushed +0% … Pristine +50%).
+-- Així val la pena canviar (comerç) o tornar a excavar una sola peça bruta.
+Bones.SET_BONUS_STEP = 0.1
 
 -- Ordre de cada raresa (per ordenar: 1 = Common)
 Bones.RARITY_ORDER = {} :: { [string]: number }
@@ -233,6 +275,22 @@ Bones.PiecesById = {} :: { [string]: { PieceDef } } -- esquelet -> les seves pec
 Bones.PieceInfo = {} :: { [string]: PieceInfo } -- clau de peça -> info
 Bones.ALL_KEYS = {} :: { string } -- totes les peces, en ordre (per a l'índex)
 
+-- Les taules de base també responen a una clau amb estat: PieceInfo["Rat_Skull#4"]
+-- és la info de "Rat_Skull" i ById["Rat#34425"] la definició del Rat. Així
+-- tot el que només vol saber l'esquelet, la peça o la raresa funciona igual
+-- amb un objecte de la motxilla. Per VALIDAR, IsPieceKey / IsSkeletonItem.
+local function baseIndex(t: any, k: any): any
+	if type(k) == "string" then
+		local base = string.match(k, "^([^#]+)#")
+		if base then
+			return rawget(t, base)
+		end
+	end
+	return nil
+end
+setmetatable(Bones.ById :: any, { __index = baseIndex })
+setmetatable(Bones.PieceInfo :: any, { __index = baseIndex })
+
 function Bones.PieceKey(skeletonId: string, pieceId: string): string
 	return `{skeletonId}_{pieceId}`
 end
@@ -289,12 +347,141 @@ function Bones.HasPiece(def: SkeletonDef, pieceId: string): boolean
 	return false
 end
 
-function Bones.IsPieceKey(key: any): boolean
-	return type(key) == "string" and Bones.PieceInfo[key] ~= nil
+-- ─────────────────────── CLAUS AMB ESTAT ───────────────────────
+
+-- "Rat_Skull#4" -> "Rat_Skull", "4" · "Rat" -> "Rat", nil
+local function split(item: string): (string, string?)
+	local base, tail = string.match(item, "^([^#]+)#(%d+)$")
+	if base then
+		return base, tail
+	end
+	return item, nil
 end
 
+-- La clau de base (sense estat)
+function Bones.BaseOf(item: string): string
+	return (split(item))
+end
+
+-- Una peça de la motxilla: la base amb un estat (1..6)
+function Bones.PieceItem(baseKey: string, grade: number): string
+	return `{baseKey}#{grade}`
+end
+
+-- Un esquelet muntat: l'id amb l'estat de cada peça (en l'ordre de PiecesOf)
+function Bones.SkeletonItem(skeletonId: string, grades: { number }): string
+	return `{skeletonId}#{table.concat(grades)}`
+end
+
+local function validGrade(n: number?): boolean
+	return n ~= nil and n >= 1 and n <= #GRADES and n == math.floor(n)
+end
+
+-- Estat d'una peça (sense estat = Dusty)
+function Bones.GradeOf(item: string): number
+	local _, tail = split(item)
+	local n = tonumber(tail)
+	return if tail and #tail == 1 and validGrade(n) then n :: number else Bones.DEFAULT_GRADE
+end
+
+-- Estat de cada peça d'un esquelet muntat (sense estats = totes Dusty)
+function Bones.GradesOf(item: string): { number }
+	local base, tail = split(item)
+	local out = {}
+	for i = 1, #Bones.PiecesOf(base) do
+		local n = if tail then tonumber(string.sub(tail, i, i)) else nil
+		out[i] = if validGrade(n) then n :: number else Bones.DEFAULT_GRADE
+	end
+	return out
+end
+
+function Bones.GradeDef(grade: number): Grade
+	return GRADES[grade] or GRADES[Bones.DEFAULT_GRADE]
+end
+
+-- Una clau de BASE de peça ("Rat_Skull"): l'índex i les missions de descobrir
+function Bones.IsBaseKey(key: any): boolean
+	return type(key) == "string" and rawget(Bones.PieceInfo :: any, key) ~= nil
+end
+
+-- Una peça de la motxilla ben formada: base existent i UN dígit d'estat.
+-- És el que validen els remotes (comerç, vendre, exposar).
+function Bones.IsPieceKey(key: any): boolean
+	if type(key) ~= "string" then
+		return false
+	end
+	local base, tail = split(key)
+	return tail ~= nil and #tail == 1 and validGrade(tonumber(tail)) and rawget(Bones.PieceInfo :: any, base) ~= nil
+end
+
+-- Un id d'esquelet de BASE ("Rat"): muntar, l'índex
 function Bones.IsSkeletonId(id: any): boolean
-	return type(id) == "string" and Bones.ById[id] ~= nil
+	return type(id) == "string" and rawget(Bones.ById :: any, id) ~= nil
+end
+
+-- Un esquelet muntat ben format: "Rat#34425" (un dígit vàlid per peça)
+function Bones.IsSkeletonItem(item: any): boolean
+	if type(item) ~= "string" then
+		return false
+	end
+	local base, tail = split(item)
+	if not tail or rawget(Bones.ById :: any, base) == nil or #tail ~= #Bones.PiecesOf(base) then
+		return false
+	end
+	for i = 1, #tail do
+		if not validGrade(tonumber(string.sub(tail, i, i))) then
+			return false
+		end
+	end
+	return true
+end
+
+-- ─────────────────────────── ESTATS ───────────────────────────
+
+-- Probabilitat de cada estat (1..6) per a una peça d'aquesta raresa trobada
+-- amb una paleta d'aquesta sort (la fórmula és a dalt, a ESTAT)
+function Bones.GradeChances(rarity: string, toolLuck: number): { number }
+	local t = math.clamp(math.log(math.max(1, toolLuck)) / math.log(Bones.GRADE_TOOL_TOP), 0, 1)
+	local r = ((Bones.RARITY_ORDER[rarity] or 1) - 1) / (#RARITIES - 1)
+	local tilt = Bones.GRADE_TILT_TOOL * t - Bones.GRADE_TILT_RARITY * r + Bones.GRADE_TILT_BASE
+	local weights, total = {}, 0
+	for i, g in GRADES do
+		weights[i] = g.weight * math.exp(tilt * (i - (#GRADES + 1) / 2))
+		total += weights[i]
+	end
+	for i in weights do
+		weights[i] /= total
+	end
+	return weights
+end
+
+function Bones.RollGrade(rarity: string, toolLuck: number, rng: Random): number
+	local roll = rng:NextNumber()
+	for i, p in Bones.GradeChances(rarity, toolLuck) do
+		roll -= p
+		if roll <= 0 then
+			return i
+		end
+	end
+	return #GRADES
+end
+
+-- Bonus de conjunt d'un esquelet muntat (x1 … x1,5 segons la peça pitjor)
+function Bones.SetBonus(item: string): number
+	local worst = #GRADES
+	for _, g in Bones.GradesOf(item) do
+		worst = math.min(worst, g)
+	end
+	return 1 + Bones.SET_BONUS_STEP * (worst - 1)
+end
+
+-- "Pristine x2.2" (peça) o "Set +30%" (esquelet), per a la UI
+function Bones.GradeText(item: string): string
+	if Bones.PieceInfo[item] then
+		local g = Bones.GradeDef(Bones.GradeOf(item))
+		return `{g.name} x{g.mult}`
+	end
+	return `Set bonus +{math.floor((Bones.SetBonus(item) - 1) * 100 + 0.5)}%`
 end
 
 -- Una frase curta de cada animal (anglès), per al rètol de sobre la vitrina
@@ -318,7 +505,7 @@ Bones.FACTS = {
 
 function Bones.FactOf(item: string): string
 	local info = Bones.PieceInfo[item]
-	return Bones.FACTS[if info then info.skeleton else item] or ""
+	return Bones.FACTS[if info then info.skeleton else Bones.BaseOf(item)] or ""
 end
 
 -- "Rat · Skull", i la raresa. Per a la UI.
@@ -331,31 +518,53 @@ function Bones.Describe(key: string): (string, Rarity)
 	return `{def.name} · {PIECE_NAMES[def.kind][info.piece]}`, info.rarity
 end
 
--- Té les 5 peces d'aquest esquelet?
-function Bones.CanAssemble(ownedBones: { [string]: number }, skeletonId: string): boolean
-	if not Bones.ById[skeletonId] then
-		return false
+-- Les peces que es farien servir per muntar-lo: de cada peça, la de MILLOR
+-- estat que tinguis. nil si en falta alguna.
+function Bones.BestPieces(ownedBones: { [string]: number }, skeletonId: string): { string }?
+	if not Bones.IsSkeletonId(skeletonId) then
+		return nil
 	end
-	for _, piece in Bones.PiecesOf(skeletonId) do
-		if (ownedBones[Bones.PieceKey(skeletonId, piece.id)] or 0) < 1 then
-			return false
+	local chosen = {}
+	for i, piece in Bones.PiecesOf(skeletonId) do
+		local base = Bones.PieceKey(skeletonId, piece.id)
+		for grade = #GRADES, 1, -1 do
+			local item = Bones.PieceItem(base, grade)
+			if (ownedBones[item] or 0) > 0 then
+				chosen[i] = item
+				break
+			end
+		end
+		if not chosen[i] then
+			return nil
 		end
 	end
-	return true
+	return chosen
 end
 
--- Renda per minut d'una cosa exposada: una peça ("Rat_Skull") o un esquelet muntat ("Rat")
+-- Té totes les peces d'aquest esquelet (de qualsevol estat)?
+function Bones.CanAssemble(ownedBones: { [string]: number }, skeletonId: string): boolean
+	return Bones.BestPieces(ownedBones, skeletonId) ~= nil
+end
+
+-- Renda per minut d'una cosa exposada:
+--   · peça ("Rat_Skull#4"): renda de la raresa x l'estat
+--   · esquelet ("Rat#34425"): (suma de les peces, cadascuna x el seu estat)
+--     x SKELETON_BONUS (x5) x bonus de conjunt (la peça pitjor: x1 … x1,5)
 function Bones.IncomeOf(item: any): number
 	if type(item) ~= "string" then
 		return 0
 	end
 	local info = Bones.PieceInfo[item]
 	if info then
-		return PIECE_INCOME[info.rarity]
+		return PIECE_INCOME[info.rarity] * Bones.GradeDef(Bones.GradeOf(item)).mult
 	end
 	local def = Bones.ById[item]
 	if def then
-		return PIECE_INCOME[def.rarity] * #Bones.PiecesOf(def.id) * Bones.SKELETON_BONUS
+		local sum = 0
+		for _, grade in Bones.GradesOf(item) do
+			sum += PIECE_INCOME[def.rarity] * Bones.GradeDef(grade).mult
+		end
+		return sum * Bones.SKELETON_BONUS * Bones.SetBonus(item)
 	end
 	return 0
 end
@@ -369,7 +578,7 @@ Bones.SELL_MINUTES = 4
 
 function Bones.SellValue(key: string): number
 	local info = Bones.PieceInfo[key]
-	return if info then PIECE_INCOME[info.rarity] * Bones.SELL_MINUTES else 0
+	return if info then math.floor(Bones.IncomeOf(key) * Bones.SELL_MINUTES) else 0
 end
 
 -- Raresa d'una cosa exposada (peça o esquelet)

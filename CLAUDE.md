@@ -30,6 +30,17 @@ et falta. Per això completar un esquelet alt sol és molt lent, i el comerç n'
 la drecera. Qualsevol canvi que faci que tothom completi sol mata el joc.
 Els números es balancegen amb tools/economy_sim.py.
 
+## ESTAT DELS FÒSSILS (30/09/2026, Bones.luau > ESTAT)
+Cada fòssil surt amb un de 6 estats: Crushed x0,5 · Cracked x0,75 · Dusty x1
+· Clean x1,25 · Polished x1,6 · Pristine x2,2 (renda i venda). Com més rara
+la peça, més fàcil que surti malmesa; com millor la paleta (NOMÉS la sort de
+la paleta: ni passis ni pocions), més neta. Mitjana: Common x1,18 (Rusty) →
+x1,66 (Pharaoh's); Secret x0,81 → x1,18. Esquelet muntat = (suma de cada
+peça x el seu estat) x5 x bonus de conjunt (+10% per estat de la peça
+PITJOR: Crushed +0% … Pristine +50%). En muntar, el servidor tria la peça de
+millor estat de cada. La clau porta l'estat: "Rat_Skull#4", "Rat#34425".
+Els perfils vells passen a Dusty (migració v4). El minijoc no toca l'estat.
+
 ## Regla de zones
 Cada esquelet és completable DINS de la seva zona. No reparteixis peces d'un
 mateix conjunt entre zones — un jugador de zona 1 no pot comerciar amb un
@@ -51,7 +62,8 @@ La sort surt de la paleta × els passis de sort (i els boosts x2 temporals);
 el minijoc només dona monedes. 11 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
 x4, x5.5, x7, x9) i 3 al basar d'Egipte, que demanen Egipte obert (x12, x15,
 x20). Es talla el PRODUCTE a x640 (Constants.MAX_LUCK). Totes les eines són
-paletes d'arqueòleg i NOMÉS donen sort: no toquen el minijoc ni la velocitat.
+paletes d'arqueòleg i NOMÉS donen sort (de raresa i, des del 30/09/2026, també
+d'estat del fòssil): no toquen el minijoc ni la velocitat.
 
 ## Stack
 Roblox Studio + Luau + Rojo. Els ossos es fan amb parts (Util/BoneBuilder:
