@@ -29,13 +29,15 @@ SKELETON_BONUS = 2
 PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail"]
 MAX_LUCK = 3
 ZONES = {
-    "construction": {"cost": 0, "coins": 180, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
+    "construction": {"cost": 0, "coins": 270, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
                                                    "Dodo": "Legendary", "Sabertooth": "Mythic", "TRex": "Secret"}},
-    "beach": {"cost": 1500000, "coins": 480, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
+    "beach": {"cost": 750000, "coins": 720, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
+    # illa (només en avió), demana la platja
+    "egypt": {"cost": 8000000, "coins": 1800, "sk": {"Ibis": "Rare", "Jackal": "Epic", "Camel": "Legendary", "Crocodile": "Mythic"}},
 }
 # (id, preu, sort)
-TOOLS = [("rusty_shovel", 0, 1.0), ("steel_trowel", 45000, 1.5), ("field_pickaxe", 360000, 2.0),
-         ("pro_brush", 2400000, 2.4), ("golden_shovel", 12000000, 2.7), ("sonic_drill", 54000000, 3.0)]
+TOOLS = [("rusty_shovel", 0, 1.0), ("steel_trowel", 22500, 1.5), ("field_pickaxe", 180000, 2.0),
+         ("pro_brush", 1200000, 2.4), ("golden_shovel", 6000000, 2.7), ("sonic_drill", 27000000, 3.0)]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
 SLOTS, INCOME_CAP = 10, 360000
@@ -147,8 +149,17 @@ def play(max_minutes=2400):
             coins -= ZONES["beach"]["cost"]
             zones.append("beach")
             events.setdefault("obre la Platja", t)
-        # alterna zona: la platja no té Common però tampoc Legendary+
-        zone = "beach" if ("beach" in zones and random.random() < 0.35) else "construction"
+        elif "beach" in zones and "egypt" not in zones and coins >= ZONES["egypt"]["cost"]:
+            coins -= ZONES["egypt"]["cost"]
+            zones.append("egypt")
+            events.setdefault("obre Egipte", t)
+        # alterna zona: la platja no té Common però tampoc Legendary+;
+        # a Egipte (Rare → Mythic) hi va sobretot, però el T-Rex és a l'obra
+        r = random.random()
+        if "egypt" in zones:
+            zone = "egypt" if r < 0.6 else ("construction" if r < 0.85 else "beach")
+        else:
+            zone = "beach" if ("beach" in zones and r < 0.35) else "construction"
     return events
 
 

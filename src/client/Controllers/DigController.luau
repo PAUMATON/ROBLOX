@@ -428,7 +428,7 @@ local function swing()
 	attachment.Parent = workspace.Terrain
 	local zone = spot:GetAttribute("Zone")
 	local dirt = Instance.new("ParticleEmitter")
-	dirt.Color = ColorSequence.new(if zone == "beach" then DIRT.beach else DIRT.construction)
+	dirt.Color = ColorSequence.new(if zone == "construction" then DIRT.construction else DIRT.beach)
 	dirt.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.7), NumberSequenceKeypoint.new(1, 0.1) })
 	dirt.Lifetime = NumberRange.new(0.5, 0.9)
 	dirt.Speed = NumberRange.new(10, 18)

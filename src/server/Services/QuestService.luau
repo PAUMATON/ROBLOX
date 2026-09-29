@@ -39,9 +39,17 @@ local function ensureBase(profile: DataService.Profile)
 	if type(q.index) ~= "number" or q.index < 1 then
 		q.index = 1
 	end
-	if q.base == nil then
-		q.base = Quests.Value(profile, Quests.Get(q.index))
+	local quest = Quests.Get(q.index)
+	-- La base és d'una altra missió (s'ha canviat l'ordre de la cadena en una
+	-- actualització): es torna a començar a comptar. Les bases d'abans que
+	-- existís `baseFor` es respecten (nil = no se sap, però era aquesta).
+	if q.base ~= nil and q.baseFor ~= nil and q.baseFor ~= quest.text then
+		q.base = nil
 	end
+	if q.base == nil then
+		q.base = Quests.Value(profile, quest)
+	end
+	q.baseFor = quest.text
 end
 
 local function stateFor(profile: DataService.Profile): { [string]: any }
@@ -102,6 +110,7 @@ local function claim(player: Player)
 	-- la següent: la seva base és el valor d'ARA
 	q.index += 1
 	q.base = Quests.Value(profile, Quests.Get(q.index))
+	q.baseFor = Quests.Get(q.index).text
 	log:Info(`{player.Name} ha acabat la missió {q.index - 1} ({quest.text})`)
 	Remotes.Notify:FireClient(player, { kind = "shop", ok = true, icon = "📜", message = `Quest complete! {text}` })
 	InventoryService.Push(player) -- (això ja torna a enviar l'estat de la missió)

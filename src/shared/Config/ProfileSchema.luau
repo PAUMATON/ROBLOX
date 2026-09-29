@@ -75,7 +75,9 @@ export type Profile = {
 	tradeLog: { TradeLogEntry }, -- els últims canvis, el més nou primer
 	-- Missió en curs (Config/Quests): número i, per a les que compten des
 	-- que comencen, el valor del perfil en començar-la (nil = encara no fixat)
-	quests: { index: number, base: number? },
+	-- `baseFor` = el text de la missió de la qual és la base (si la cadena
+	-- canvia d'ordre, una base d'una altra missió no val)
+	quests: { index: number, base: number?, baseFor: string? },
 	lastOnline: number,
 	-- Fins quan s'ha cobrat la renda del museu. NO es lastOnline: aquest el
 	-- reescriu DataService en carregar, i la renda offline necessita saber

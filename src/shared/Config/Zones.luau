@@ -16,7 +16,8 @@
 -- Al mapa, cada munt excavable porta l'etiqueta "DigSpot" i l'atribut
 -- `Zone` amb l'id d'aqui sota. El servidor nomes es fia d'aquest atribut.
 --
--- FORA D'ABAST: tercera zona. N'hi ha dues i prou.
+-- Tres zones (29/09/2026: el propietari va afegir Egipte). Egipte és una
+-- illa lluny de tot: només s'hi arriba amb el botó ✈️ Travel.
 
 local Bones = require(script.Parent.Bones)
 
@@ -32,6 +33,11 @@ export type ZoneDef = {
 	-- ACTIVA; la del museu és la PASSIVA.
 	coinsPerDig: number,
 	skeletons: { string },
+	-- Cal tenir aquesta zona oberta abans de poder obrir aquesta
+	requires: string?,
+	-- On es desbloqueja (per al missatge "is locked · unlock it ...")
+	unlockAt: string?,
+	icon: string, -- per a la UI (menú Travel, índex)
 }
 
 Zones.DEFAULT = "construction" -- ha de coincidir amb ProfileSchema.unlockedZones
@@ -42,7 +48,8 @@ local LIST: { ZoneDef } = {
 		name = "Construction Site",
 		number = 1,
 		unlockCost = 0,
-		coinsPerDig = 180,
+		coinsPerDig = 270,
+		icon = "🏗️",
 		-- una raresa per esquelet: Common → Secret
 		skeletons = { "Rat", "Pigeon", "Cat", "Dog", "Dodo", "Sabertooth", "TRex" },
 	},
@@ -50,14 +57,28 @@ local LIST: { ZoneDef } = {
 		id = "beach",
 		name = "Fossil Beach",
 		number = 2,
-		unlockCost = 1500000,
-		coinsPerDig = 480,
+		unlockCost = 750000,
+		coinsPerDig = 720,
+		icon = "🏖️",
+		unlockAt = "at the beach gate",
 		skeletons = { "Seagull", "Otter", "Cormorant" },
+	},
+	{
+		id = "egypt",
+		name = "Egypt",
+		number = 3,
+		unlockCost = 8000000,
+		coinsPerDig = 1800,
+		icon = "🐫",
+		requires = "beach",
+		unlockAt = "at the Egypt gate (fly there with ✈️ Travel)",
+		-- zona alta: no hi ha Common ni Uncommon; la més "comuna" és Rare
+		skeletons = { "Ibis", "Jackal", "Camel", "Crocodile" },
 	},
 }
 Zones.LIST = LIST
 
-Zones.MAX_ZONES = 2
+Zones.MAX_ZONES = 3
 
 -- ────────────────────────── DERIVATS ──────────────────────────
 
@@ -89,6 +110,11 @@ do
 			local list = Zones.OfSkeleton[skeletonId] or {}
 			table.insert(list, zone.id)
 			Zones.OfSkeleton[skeletonId] = list
+		end
+	end
+	for _, zone in Zones.LIST do
+		if zone.requires and not Zones.ById[zone.requires] then
+			error(`[Zones] {zone.id} demana {zone.requires}, que no existeix`, 0)
 		end
 	end
 	if not Zones.ById[Zones.DEFAULT] then

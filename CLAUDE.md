@@ -32,6 +32,10 @@ Cada esquelet és completable DINS de la seva zona. No reparteixis peces d'un
 mateix conjunt entre zones — un jugador de zona 1 no pot comerciar amb un
 d'Egipte (poder de compra asimètric, no hi ha intercanvi possible). Només els
 esquelets de raresa molt alta poden tenir peces en més d'una zona.
+Tres zones (29/09/2026): Obra (Rat → T-Rex), Platja (Seagull, Otter,
+Cormorant) i **Egipte** (Ibis, Jackal, Camel, Crocodile: de Rare a Mythic).
+Egipte és una illa lluny de tot: només s'hi arriba amb ✈️ Travel (mai
+caminant) i es desbloqueja a la seva portalada, amb la platja ja oberta.
 
 ## Sort: paleta (x1 → x3) × passi de sort per Robux (x2 → x32). Sostre x96.
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
@@ -93,7 +97,8 @@ Zona 1 (Obra): 60x60, amb cases al voltant · Tanca: 4 alt
 Excavadora: 12–14 alt · Oficina de contenidors: 8x4x3 · Grua: 22 alt
 Edifici en construcció: 24x18 d'ocupació
 Museus: 70x52 · Botiga Dig & Co.: 24x14, a la plaça (racó nord-est)
-Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja)
+Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja i Egipte)
+Egipte: illa de 260x260 a x = 2000 (el mar del continent acaba a 1100)
 Cap element de decoració es fa fora d'aquest rang.
 Dues cares paral·leles mai al mateix pla (fan pampallugues): deixar 0,05.
 Res dins d'una altra peça que es vegi (arbres dins de cases, etc.).
@@ -125,7 +130,7 @@ museus i de tant en tant deixen propina (💰 +X sobre el cap). El servidor
 decideix les visites i les propines; el client només els dibuixa.
 
 ## FORA D'ABAST
-PvP, robatori, treballadors NPC, tercera zona, guàrdies.
+PvP, robatori, treballadors NPC, quarta zona, guàrdies.
 
 ## IDIOMA
 Tot el que veu el jugador (UI, missatges, rètols del mapa) en ANGLÈS.

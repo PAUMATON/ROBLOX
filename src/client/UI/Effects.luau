@@ -149,7 +149,7 @@ function Effects.Toast(text: string, color: Color3?, sound: string?)
 		holder.Name = "Holder"
 		holder.BackgroundTransparency = 1
 		holder.AnchorPoint = Vector2.new(0.5, 0)
-		holder.Position = UDim2.new(0.5, 0, 0, 92) -- a sota de l'objectiu del tutorial
+		holder.Position = UDim2.new(0.5, 0, 0, 172) -- a sota de la targeta del tutorial (o de la missió)
 		holder.Size = UDim2.fromOffset(620, 300)
 		holder.Parent = toastGui
 		Theme.AutoScale(holder)

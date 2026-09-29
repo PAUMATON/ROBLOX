@@ -44,6 +44,20 @@ function Museum.PerSecondText(perMinute: number): string
 	return text
 end
 
+-- Un preu sencer amb separadors, per als missatges: 8000000 -> "8,000,000"
+function Museum.MoneyText(n: number): string
+	local s = tostring(math.floor(n))
+	local sign = ""
+	if string.sub(s, 1, 1) == "-" then
+		sign, s = "-", string.sub(s, 2)
+	end
+	local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
+	if string.sub(out, 1, 1) == "," then
+		out = string.sub(out, 2)
+	end
+	return sign .. out
+end
+
 -- museumLayout: clau de vitrina ("1".."10") -> peça o esquelet exposat
 function Museum.IncomeRate(museumLayout: { [string]: any }): number
 	local rate = 0

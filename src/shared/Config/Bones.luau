@@ -172,6 +172,7 @@ Bones.PIECE_ICONS = PIECE_ICONS
 
 -- Zona 1 · Construction Site: un esquelet per raresa, dels animals de ciutat
 -- fins als extingits. Zona 2 · Fossil Beach: animals de costa.
+-- Zona 3 · Egypt (illa, només en avió): animals del Nil, de Rare a Mythic.
 local SKELETONS: { SkeletonDef } = {
 	{ id = "Rat", icon = "🐀", name = "Rat", rarity = "Common", kind = "mammal", s = 0.5, snout = 0.9, ribs = 5, tailLen = 2.2, tailSegs = 16 },
 	{ id = "Pigeon", icon = "🐦", name = "Pigeon", rarity = "Uncommon", kind = "bird", s = 0.7 },
@@ -184,6 +185,11 @@ local SKELETONS: { SkeletonDef } = {
 	{ id = "Seagull", icon = "🕊️", name = "Seagull", rarity = "Uncommon", kind = "bird", s = 0.9 },
 	{ id = "Otter", icon = "🦦", name = "Otter", rarity = "Rare", kind = "mammal", s = 0.9, snout = 0.35, ribs = 8, tailLen = 1.9, tailSegs = 14 },
 	{ id = "Cormorant", icon = "🦆", name = "Cormorant", rarity = "Epic", kind = "bird", s = 1.2 },
+
+	{ id = "Ibis", icon = "🦩", name = "Sacred Ibis", rarity = "Rare", kind = "bird", s = 1, beak = 1.6 },
+	{ id = "Jackal", icon = "🐺", name = "Jackal", rarity = "Epic", kind = "mammal", s = 1.2, snout = 0.85, ribs = 6, tailLen = 1.4 },
+	{ id = "Camel", icon = "🐪", name = "Camel", rarity = "Legendary", kind = "mammal", s = 1.9, snout = 0.7, ribs = 8, tailLen = 0.7 },
+	{ id = "Crocodile", icon = "🐊", name = "Nile Crocodile", rarity = "Mythic", kind = "mammal", s = 1.5, snout = 1.7, ribs = 9, tailLen = 3, tailSegs = 20 },
 }
 Bones.SKELETONS = SKELETONS
 

@@ -25,6 +25,7 @@ local Bones = require(Config:WaitForChild("Bones"))
 local Constants = require(Config:WaitForChild("Constants"))
 local Dig = require(Config:WaitForChild("Dig"))
 local Tools = require(Config:WaitForChild("Tools"))
+local Museum = require(Config:WaitForChild("Museum"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local Logger = require(Shared:WaitForChild("Util"):WaitForChild("Logger"))
@@ -251,7 +252,7 @@ local function onStart(player: Player, spot: any)
 	end
 	if not Zones.IsUnlocked(profile.unlockedZones, zoneId :: string) then
 		local zone = Zones.ById[zoneId :: string]
-		deny(player, `{zone.name} is locked · unlock it at the beach gate ({zone.unlockCost} coins)`)
+		deny(player, `{zone.name} is locked · unlock it {zone.unlockAt or "at its gate"} ({Museum.MoneyText(zone.unlockCost)} $)`)
 		return
 	end
 	if isDepleted(spot) then
@@ -387,7 +388,7 @@ function DigService.Start()
 			local created = Instance.new("ProximityPrompt")
 			created.Name = "DigPrompt"
 			created.ActionText = "Dig"
-			created.ObjectText = if spot:GetAttribute("Zone") == "beach" then "Sand mound" else "Dirt mound"
+			created.ObjectText = if spot:GetAttribute("Zone") == "construction" then "Dirt mound" else "Sand mound"
 			created.KeyboardKeyCode = Enum.KeyCode.E
 			created.GamepadKeyCode = Enum.KeyCode.ButtonX
 			created.HoldDuration = 0

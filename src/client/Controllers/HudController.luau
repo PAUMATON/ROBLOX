@@ -39,6 +39,7 @@ local barButton: TextButton
 local leftColumn: Frame
 local tileButtons: { TextButton } = {}
 local travelMenu: Frame
+local travelButtons: { TextButton } = {}
 local setTravelMenu: (boolean) -> ()
 local rightFrame: Frame
 local incomeCard: Frame
@@ -58,7 +59,7 @@ local lastTravel = 0
 -- Els destins de viatge viuen dins del menú ✈️ Travel: la seva insígnia es
 -- veu al botó del menú i, resumida, a la rajola de Travel (👆 mana sobre "!";
 -- el 🔒 de la platja no cal que surti a fora).
-local TRAVEL_ITEMS = { GoMuseum = true, GoCity = true, GoConstruction = true, GoBeach = true, Shop = true }
+local TRAVEL_ITEMS = { GoMuseum = true, GoCity = true, GoConstruction = true, GoBeach = true, GoEgypt = true, Shop = true }
 local travelBadges: { [string]: { text: string?, color: Color3? } } = {}
 
 local function refreshTravelBadge()
@@ -209,7 +210,8 @@ local function buildLeft(gui: ScreenGui)
 	travelMenu = Instance.new("Frame")
 	travelMenu.Name = "TravelMenu"
 	travelMenu.BackgroundTransparency = 1
-	travelMenu.Size = UDim2.fromOffset(5 * TILE + 4 * GAP, TILE)
+	-- la mida i on va cada rajola ho posa layout() (una fila o dues)
+	travelMenu.Size = UDim2.fromOffset(6 * TILE + 5 * GAP, TILE)
 	travelMenu.Visible = false
 	travelMenu.ZIndex = 5
 	travelMenu.Parent = leftColumn
@@ -218,6 +220,8 @@ local function buildLeft(gui: ScreenGui)
 		{ id = "GoCity", text = "Plaza", icon = "⛲", color = C.green, dest = "city", msg = "✈️ Off to the plaza!" },
 		{ id = "GoConstruction", text = "Dig Site", icon = "🏗️", color = C.yellow, dest = "construction", msg = "✈️ Off to the dig site!" },
 		{ id = "GoBeach", text = "Beach", icon = "🏖️", color = C.cyan, dest = "beach", msg = "✈️ Off to the beach!" },
+		-- Egipte és una illa: només s'hi arriba volant (no hi ha camí)
+		{ id = "GoEgypt", text = "Egypt", icon = "🐫", color = C.orange, dest = "egypt", msg = "✈️ Flying to Egypt!" },
 		{ id = "Shop", text = "Tool Shop", icon = "🛠️", color = C.red, dest = "shop", msg = "✈️ Off to Dig & Co.!" },
 	}
 	for i, t in items do
@@ -236,6 +240,7 @@ local function buildLeft(gui: ScreenGui)
 				travel(t.dest, t.msg)
 			end,
 		})
+		travelButtons[i] = b.button
 		badges[t.id] = Widgets.Badge(b.button, 34)
 	end
 end
@@ -386,6 +391,13 @@ local function layout(s: number)
 	-- el menú de viatges: a la dreta de les rajoles, a l'altura de la de
 	-- Travel (ordinador), o just a sota de la fila (mòbil)
 	local travelTile = tileButtons[#tileButtons]
+	-- al mòbil, els destins en dues files de 3 (sis en fila no hi caben)
+	local perRow = if compact then 3 else #travelButtons
+	for i, b in travelButtons do
+		b.Position = UDim2.fromOffset(((i - 1) % perRow) * (TILE + GAP), math.floor((i - 1) / perRow) * (TILE + GAP))
+	end
+	local travelRows = math.ceil(#travelButtons / perRow)
+	travelMenu.Size = UDim2.fromOffset(perRow * TILE + (perRow - 1) * GAP, travelRows * TILE + (travelRows - 1) * GAP)
 	if compact then
 		travelMenu.Position = UDim2.fromOffset(0, 108 + rows * (TILE + GAP))
 	else
@@ -483,6 +495,7 @@ local function refresh(snapshot: ProfileController.Snapshot)
 	HudController.AutoBadge("Index", if newDiscoveries > 0 then "NEW" else nil, C.purple)
 	HudController.AutoBadge("Museum", if haveItems and used < snapshot.slots then "!" else nil)
 	HudController.AutoBadge("GoBeach", if Zones.IsUnlocked(snapshot.zones, "beach") then nil else "🔒", C.grey)
+	HudController.AutoBadge("GoEgypt", if Zones.IsUnlocked(snapshot.zones, "egypt") then nil else "🔒", C.grey)
 	-- botiga: "!" si pots pagar una eina que encara no tens
 	local canBuy = false
 	for _, def in Tools.LIST do

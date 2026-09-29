@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local Zones = require(Shared:WaitForChild("Config"):WaitForChild("Zones"))
 
 local UI = script.Parent.Parent:WaitForChild("UI")
 local Theme = require(UI:WaitForChild("Theme"))
@@ -62,9 +63,16 @@ local function guide()
 		return
 	end
 	local go = state.go
-	if go == "construction" or go == "beach" then
-		Guide.PointAt("quest", Guide.ZoneTarget(go))
-		setTile(nil)
+	if Zones.IsZoneId(go) then
+		local target = Guide.ZoneTarget(go)
+		if go == "egypt" and target and not Guide.Near(target, 400) then
+			-- Egipte és una illa: el raig no hi arriba caminant, s'hi va volant
+			Guide.Clear("quest")
+			setTile("GoEgypt")
+		else
+			Guide.PointAt("quest", target)
+			setTile(nil)
+		end
 	elseif go == "shop" then
 		Guide.PointAt("quest", Guide.Keeper("TalkShopkeeper") or Guide.TravelPoint("shop"))
 		setTile(nil)

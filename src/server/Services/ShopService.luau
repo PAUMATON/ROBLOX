@@ -25,6 +25,7 @@ local Config = Shared:WaitForChild("Config")
 local Bones = require(Config:WaitForChild("Bones"))
 local Tools = require(Config:WaitForChild("Tools"))
 local Monetization = require(Config:WaitForChild("Monetization"))
+local Museum = require(Config:WaitForChild("Museum"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local Util = Shared:WaitForChild("Util")
@@ -74,7 +75,7 @@ local function buyOrEquip(player: Player, toolId: string)
 		return
 	end
 	if profile.coins < def.price then
-		reply(player, false, `You need {math.ceil(def.price - profile.coins)} more coins`)
+		reply(player, false, `You need {Museum.MoneyText(math.ceil(def.price - profile.coins))} more $`)
 		return
 	end
 	-- a partir d'aquí, cap yield: o es fa tot o no es fa res
@@ -98,8 +99,14 @@ local function unlockZone(player: Player, zoneId: string)
 		reply(player, true, `{zone.name} is already open`)
 		return
 	end
+	-- les zones van per ordre: Egipte demana la platja
+	if zone.requires and not Zones.IsUnlocked(profile.unlockedZones, zone.requires) then
+		local before = Zones.ById[zone.requires]
+		reply(player, false, `Unlock {before.name} first!`, "🔒")
+		return
+	end
 	if profile.coins < zone.unlockCost then
-		reply(player, false, `You need {math.ceil(zone.unlockCost - profile.coins)} more coins`)
+		reply(player, false, `You need {Museum.MoneyText(math.ceil(zone.unlockCost - profile.coins))} more $`)
 		return
 	end
 	profile.coins -= zone.unlockCost
@@ -298,7 +305,7 @@ local function setupZoneUnlock(part: BasePart)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "UnlockZone"
 	prompt.ObjectText = zone.name
-	prompt.ActionText = `Unlock · {zone.unlockCost} $`
+	prompt.ActionText = `Unlock · {Museum.MoneyText(zone.unlockCost)} $`
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.HoldDuration = 0.5
 	prompt.MaxActivationDistance = 12

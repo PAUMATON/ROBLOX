@@ -25,16 +25,16 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 | Sistema | On és | Resum |
 |---|---|---|
 | Excavar | `DigService`, `DigController`, `Config/Dig` | Minijoc de 3 cops: la franja verda salta a cada cop i la línia va més ràpid. El client diu quan ha clicat (±0,07 s de marge); el servidor calcula el resultat. |
-| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 10 esquelets × 5 peces = 50. 7 rareses "1 de cada N" (Secret 1/25.000). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
-| Zones | `Config/Zones` | Obra (gratis, Rat → T-Rex) i Platja (1.500.000, Seagull/Otter/Cormorant). |
-| Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 6 paletes (x1 → x3 de sort) a Dig & Co. (plaça). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
+| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 14 esquelets × 5 peces = 70 (els 4 d'Egipte, 29/09/2026). 7 rareses "1 de cada N" (Secret 1/25.000). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
+| Zones | `Config/Zones` | Obra (gratis, Rat → T-Rex), Platja (750.000, Seagull/Otter/Cormorant) i **Egipte** (8.000.000 i cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és una illa a x = 2000 (`tools/world/11_egypt.luau`): només s'hi arriba amb ✈️ Travel → 🐫 Egypt, i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
+| Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 6 paletes (x1 → x3 de sort) a Dig & Co. (plaça): 22.500 · 180.000 · 1,2 M · 6 M · 27 M (29/09/2026: economia ~2x més ràpida, preus a la meitat i +50% de monedes per excavació). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
 | Vendre | `ShopService` (sell), `DialogController` (Bonnie) | La Bonnie (Fossil Buyer, al costat de Dig & Co.) compra repetits / tot / una peça. Val 4 min de renda. |
 | Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda amb sostre 360.000/min (6.000 $/s), esquelet muntat x2, renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`: un Common exposat fa 60/min = "+1 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. **29/09/2026: TOTS els diners x60** (renda, monedes d'excavar, preus de les paletes, platja, sostre, venda, propines, renda mínima de premis i packs; migració de perfil v3 que multiplica les monedes que ja tenies): el ritme del joc és el mateix, els números 60 vegades més grossos. |
 | Visitants | `VisitorService`, `VisitorController`, `Config/Visitors`, `Util/VisitorPath` | NPC amb l'avatar dels amics de tots els jugadors del servidor. Miren vitrines i de tant en tant deixen propina (💰 +X sobre el cap). El servidor decideix; el client els dibuixa. |
 | Comerç | `TradeService`, `TradeController` | Amb tot el servidor, escrow atòmic, rètols al passar el ratolí. Es pot desactivar a la configuració. Proteccions: 30 min de joc abans de comerciar (`stats.playSeconds`; a Studio no compta), els fòssils de recompensa van bloquejats (`lockedBones`, 🔒 a la motxilla; exposar-los no els desbloqueja: `museumLocked`), cal que el perfil es desi de debò, registre `tradeLog` amb el mateix id als dos perfils, avís de canvi desigual (x3 de renda). Després d'un canvi els dos perfils es desen alhora (`DataService.SaveMany`) i no poden tornar a comerciar fins que acaben. |
 | Robux | `MonetizationService`, `StoreController`, `Config/Monetization` | Cadena de sort x2→x32, cadena de diners x2→x8, boosts, VIP, productes. **Els `id` encara són 0**: cal crear-los al Creator Dashboard. |
 | Recompenses | `RewardsService`, `RewardsController`, `Config/Rewards` | Diària (7 dies), regals per estona de joc, invitacions. El like NO té premi (normes de Roblox). |
-| Missions | `QuestService`, `QuestController`, `Config/Quests` | Cadena de 23 missions i després repetibles. El progrés surt del perfil (stats: `totalDigs`, `rarityFinds`, `totalSold`, `totalAssembled`...): res d'esdeveniments. Es veu a dalt quan el tutorial s'acaba, amb CLAIM i el raig de llum cap on anar. |
+| Missions | `QuestService`, `QuestController`, `Config/Quests` | Cadena de 24 missions (la 23 és "Fly to Egypt and unlock it") i després repetibles. La base de cada missió porta `baseFor` (el text de la missió): si es canvia l'ordre de la cadena, una base d'una altra missió no es fa servir. El progrés surt del perfil (stats: `totalDigs`, `rarityFinds`, `totalSold`, `totalAssembled`...): res d'esdeveniments. Es veu a dalt quan el tutorial s'acaba, amb CLAIM i el raig de llum cap on anar. |
 | Guia | `UI/Guide` | El raig de llum + fletxa (tutorial i missions; `owner` perquè no es trepitgin) i on són els llocs (entrada de zona, munt més proper, botiguers). |
 | Configuració | `SettingsService`, `SettingsController` | Mida del HUD, mida dels menús, música, efectes, gràfics, trades, premis ràpids. Es desa al perfil. |
 | Dades | `DataService`, `Config/ProfileSchema` | Session locking, autosave, migracions (esquema v2). Cada desat porta un `saveSeq` que puja: un desat vell que arriba tard no trepitja un de nou, i cap desat normal torna a agafar un lock ja alliberat. El lloc està publicat: el DataStore funciona. |
@@ -46,7 +46,10 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 El món NO és al codi del joc: el construeixen els scripts de `tools/world/`
 (01 terra i llum · 02 carrers · 03 cases · 04 museus · 05 plaça · 06 platja ·
 07 obra · 08 arbres i fanals · 09 Dig & Co. i la parada de la Bonnie ·
-10 indicadors a les cruïlles cap a la plaça, l'obra i la platja), amb
+10 indicadors a les cruïlles cap a la plaça, l'obra i la platja ·
+11 Egipte: l'illa amb el moll, la portalada, els cràters, piràmides,
+esfinx, temple, oasi i mercat; **mai construït encara**: cal executar-lo a
+Studio i fer-ne captures), amb
 `tools/world/lib.luau` com a biblioteca comuna (peces, Toolbox, forats CSG).
 Els models de la Toolbox es carreguen per id i sense scripts (`ASSETS` a
 `lib.luau`).
@@ -177,6 +180,14 @@ A més, la missió 12 ("Trade with another player") arriba cap als 6 min,
 però no es pot comerciar fins als 30 min de joc: **la cadena queda aturada
 ~25 min** per a tothom i per sempre per a qui juga sol. Proposta: moure-la
 més avall (després de "Dig 75 fossils") o fer-la opcional.
+
+**29/09/2026 (tarda)**: economia ~2x més ràpida (simulació: Steel Trowel
+6,5 → 2,8 min · Pro 32 → 18 min · Platja 89 → 54 min · Ruby 2,5 → 1,5 h ·
+Golden 6,1 → 3,7 h · Diamond 17 → 11 h · Egipte als ~5,7 h); la sort no es
+toca, així que els esquelets alts continuen igual de lents (el comerç
+continua sent la drecera). Tutorial redissenyat (targeta gran amb icona,
+títol, consell i punts de progrés, celebració en acabar). Els avisos
+(toasts) han baixat a y = 172 perquè no els tapi.
 
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa

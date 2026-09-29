@@ -27,7 +27,7 @@ export type Quest = {
 	delta: boolean, -- true: compta des que comença · false: valor actual
 	reward: { kind: string, minutes: number, label: string, icon: string },
 	-- on s'ha d'anar (el client hi apunta amb el raig de llum o la rajola):
-	-- "construction" | "beach" | "shop" | "seller" | "backpack" | "trade" | "store"
+	-- "construction" | "beach" | "egypt" | "shop" | "seller" | "backpack" | "trade" | "store"
 	go: string?,
 }
 
@@ -66,6 +66,7 @@ local CHAIN: { Quest } = {
 	{ text = `Make your museum earn {Museum.PerSecondText(12000)} $/s`, stat = "income", target = 12000, delta = false, reward = coins(45), go = "backpack" },
 	{ text = "Find a Legendary fossil", stat = "finds", arg = "Legendary", target = 1, delta = true, reward = luck(30), go = "construction" },
 	{ text = "Sell 50 fossils to Bonnie", stat = "sold", target = 50, delta = true, reward = coins(50), go = "seller" },
+	{ text = "Fly to Egypt and unlock it", stat = "zones", target = 3, delta = false, reward = luck(30), go = "egypt" },
 	{ text = "Discover every fossil in the Index", stat = "discovered", target = #Bones.ALL_KEYS, delta = false, reward = money(60), go = "construction" },
 }
 Quests.CHAIN = CHAIN

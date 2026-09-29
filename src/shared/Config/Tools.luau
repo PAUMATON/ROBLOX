@@ -33,11 +33,11 @@ Tools.MAX_LUCK = 3 -- les paletes van de x1 a x3 (els passis de sort multiplique
 -- perfils desats les porten; el que es veu és `name`.)
 local LIST: { ToolDef } = {
 	{ id = "rusty_shovel", name = "Rusty Trowel", model = "trowel", price = 0, luck = 1.0, blade = Color3.fromRGB(150, 96, 60), handle = Color3.fromRGB(139, 111, 71), blurb = "Old, bent and yours. Every digger starts here." },
-	{ id = "steel_trowel", name = "Steel Trowel", model = "trowel", price = 45000, luck = 1.5, blade = Color3.fromRGB(190, 196, 204), handle = Color3.fromRGB(120, 84, 56), blurb = "A real archaeologist's trowel. +50% luck!" },
-	{ id = "field_pickaxe", name = "Pro Trowel", model = "trowel", price = 360000, luck = 2.0, blade = Color3.fromRGB(60, 140, 230), handle = Color3.fromRGB(40, 44, 50), blurb = "Used by museum experts. DOUBLE luck!" },
-	{ id = "pro_brush", name = "Ruby Trowel", model = "trowel", price = 2400000, luck = 2.4, blade = Color3.fromRGB(230, 50, 80), handle = Color3.fromRGB(60, 40, 30), blurb = "Shines red. Epic fossils love it." },
-	{ id = "golden_shovel", name = "Golden Trowel", model = "trowel", price = 12000000, luck = 2.7, blade = Color3.fromRGB(255, 200, 50), handle = Color3.fromRGB(60, 40, 30), blurb = "Pure gold. Legends say it smells Mythic bones." },
-	{ id = "sonic_drill", name = "Diamond Trowel", model = "trowel", price = 54000000, luck = 3.0, blade = Color3.fromRGB(120, 230, 255), handle = Color3.fromRGB(34, 36, 40), blurb = "The best trowel ever made. MAX luck x3!" },
+	{ id = "steel_trowel", name = "Steel Trowel", model = "trowel", price = 22500, luck = 1.5, blade = Color3.fromRGB(190, 196, 204), handle = Color3.fromRGB(120, 84, 56), blurb = "A real archaeologist's trowel. +50% luck!" },
+	{ id = "field_pickaxe", name = "Pro Trowel", model = "trowel", price = 180000, luck = 2.0, blade = Color3.fromRGB(60, 140, 230), handle = Color3.fromRGB(40, 44, 50), blurb = "Used by museum experts. DOUBLE luck!" },
+	{ id = "pro_brush", name = "Ruby Trowel", model = "trowel", price = 1200000, luck = 2.4, blade = Color3.fromRGB(230, 50, 80), handle = Color3.fromRGB(60, 40, 30), blurb = "Shines red. Epic fossils love it." },
+	{ id = "golden_shovel", name = "Golden Trowel", model = "trowel", price = 6000000, luck = 2.7, blade = Color3.fromRGB(255, 200, 50), handle = Color3.fromRGB(60, 40, 30), blurb = "Pure gold. Legends say it smells Mythic bones." },
+	{ id = "sonic_drill", name = "Diamond Trowel", model = "trowel", price = 27000000, luck = 3.0, blade = Color3.fromRGB(120, 230, 255), handle = Color3.fromRGB(34, 36, 40), blurb = "The best trowel ever made. MAX luck x3!" },
 }
 Tools.LIST = LIST
 
