@@ -1,5 +1,7 @@
 # Museu de Fòssils
 
+> Estat del projecte, com es treballa amb el Studio i què falta: @docs/ESTAT.md
+
 ## Joc
 Roblox. Excaves fòssils amb un minijoc de precisió: cada excavació dona UN
 fòssil (una peça d'un esquelet). Els guardes a la motxilla, els exposes al teu
@@ -35,13 +37,16 @@ esquelets de raresa molt alta poden tenir peces en més d'una zona.
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
 amunt: Secret 1/25.000 sense sort, 1/260 a x96, 1/150 a x164. Han de ser MOLT
 rares encara amb la sort màxima.
-Tota la sort surt de la paleta (x1, x1.5, x2, x2.4, x2.7, x3); el minijoc només
-dona monedes. Es talla el PRODUCTE a x3. Totes les eines són paletes
-d'arqueòleg i NOMÉS donen sort: no toquen el minijoc ni la velocitat.
+La sort surt de la paleta (x1, x1.5, x2, x2.4, x2.7, x3) × els passis de sort
+(i els boosts x2 temporals); el minijoc només dona monedes. Es talla el
+PRODUCTE a x96 (Constants.MAX_LUCK). Totes les eines són paletes d'arqueòleg
+i NOMÉS donen sort: no toquen el minijoc ni la velocitat.
 
 ## Stack
-Roblox Studio + Luau + Rojo. Cube 3D per a malles d'ossos (amb pla B: parts
-bàsiques si la qualitat no serveix). Claude Code via MCP.
+Roblox Studio + Luau + Rojo. Els ossos es fan amb parts (Util/BoneBuilder:
+el·lipsoides, ossos llargs, vèrtebres) i es veuen igual al museu i a la UI
+(UI/PieceView). Cube 3D queda com a opció per al futur. Claude Code via MCP
+(com treballar: docs/ESTAT.md).
 
 ## Estructura
 src/server/Services/, src/client/Controllers/, src/client/UI/,
@@ -78,7 +83,8 @@ rosa, arc de Sant Martí), contorns negres gruixuts, lletra FredokaOne amb
 contorn, botons grossos amb volum, rebots, números que salten, cartes de
 raresa amb raigs i confeti. Tot l'estil de la UI viu a src/client/UI/Theme.luau.
 Materials: Sand, Slate, WoodPlanks, Marble, Brick, Glass, Concrete, Metal,
-SmoothPlastic. Neon només per a efectes i llums.
+SmoothPlastic, Ground, Grass, Limestone (els ossos). Neon només per a
+efectes i llums.
 Lighting Technology = "Future".
 
 ## ESCALES
@@ -89,6 +95,8 @@ Edifici en construcció: 24x18 d'ocupació
 Museus: 70x52 · Botiga Dig & Co.: 24x14, a la plaça (racó nord-est)
 Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja)
 Cap element de decoració es fa fora d'aquest rang.
+Dues cares paral·leles mai al mateix pla (fan pampallugues): deixar 0,05.
+Res dins d'una altra peça que es vegi (arbres dins de cases, etc.).
 
 ## MONETITZACIÓ
 Estil "+1 Speed Keyboard Escape": molts passis. Tot a src/shared/Config/Monetization.luau.
@@ -104,6 +112,17 @@ Diària en ratxa de 7 (dia 7 = fòssil Epic) · regals per estona de joc (5 a
 60 min, cada sessió) · invitacions (premi per a qui convida i qui entra, un
 cop per amic, màx. 20). Like/preferits: MAI amb premi (normes de Roblox);
 només es demana amablement després d'una troballa rara.
+
+## MISSIONS (Config/Quests.luau)
+Una a la vegada, a dalt de la pantalla quan el tutorial s'acaba. El progrés
+surt del perfil (mai del client); el client només demana "claim". Premis en
+minuts de renda, com les recompenses; mai fòssils (no han de ser farmejables
+per passar-los a un altre compte).
+
+## VISITANTS (Config/Visitors.luau)
+Amics de tots els jugadors del servidor (tots igual de probables) visiten els
+museus i de tant en tant deixen propina (💰 +X sobre el cap). El servidor
+decideix les visites i les propines; el client només els dibuixa.
 
 ## FORA D'ABAST
 PvP, robatori, treballadors NPC, tercera zona, guàrdies.
