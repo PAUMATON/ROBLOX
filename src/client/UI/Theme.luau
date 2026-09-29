@@ -112,6 +112,79 @@ function Theme.Play(name: string, volume: number?, pitch: number?)
 	SoundService:PlayLocalSound(template)
 end
 
+-- ───────────────────────── SONS QUE ENGANXEN ─────────────────────────
+-- Melodies fetes amb els mateixos sons oficials (a diferents tons). Cada
+-- nota és un Sound nou que s'esborra en acabar: així es poden encavalcar
+-- (Play() reutilitza un sol Sound per nom i una nota tallaria l'anterior).
+
+-- Una nota: el so `name` a `pitch` (1 = normal) i `volume` (0..1)
+function Theme.Note(name: string, volume: number?, pitch: number?)
+	local id = Theme.SOUNDS[name]
+	if not id or Theme.SfxVolume <= 0 then
+		return
+	end
+	local s = Instance.new("Sound")
+	s.SoundId = id
+	s.Volume = (volume or 0.5) * Theme.SfxVolume
+	s.PlaybackSpeed = pitch or 1
+	s.Parent = SoundService
+	s.Ended:Connect(function()
+		s:Destroy()
+	end)
+	s:Play()
+	task.delay(4, function()
+		if s.Parent then
+			s:Destroy()
+		end
+	end)
+end
+
+-- Notes seguides: `pitches` d'una en una, cada `gap` segons
+function Theme.Arpeggio(name: string, pitches: { number }, gap: number?, volume: number?)
+	for i, p in pitches do
+		task.delay((i - 1) * (gap or 0.08), Theme.Note, name, volume, p)
+	end
+end
+
+-- Fanfàrria: 1 = petita (compra, missió), 2 = gran (zona, passi), 3 = ÈPICA (Legendary+)
+function Theme.Fanfare(level: number?)
+	local l = level or 1
+	if l >= 3 then
+		Theme.Note("reward", 0.8, 0.8)
+		Theme.Note("reward", 0.5, 1.0)
+		Theme.Arpeggio("pop", { 1, 1.12, 1.26, 1.5, 1.68, 2 }, 0.07, 0.45)
+		task.delay(0.5, Theme.Note, "reward", 0.7, 1.26)
+		task.delay(0.95, Theme.Note, "notify", 0.6, 1.5)
+	elseif l == 2 then
+		Theme.Arpeggio("reward", { 0.9, 1.12, 1.35 }, 0.12, 0.55)
+		Theme.Arpeggio("pop", { 1.3, 1.5, 1.7, 2 }, 0.06, 0.35)
+	else
+		Theme.Arpeggio("pop", { 1, 1.26, 1.5 }, 0.07, 0.45)
+		task.delay(0.2, Theme.Note, "reward", 0.45, 1.2)
+	end
+end
+
+-- Cascada de monedes (vendre, premis): més notes com més n'hi ha
+function Theme.Cash(amount: number?)
+	local n = math.clamp(math.floor(math.log10(math.max(amount or 10, 10))), 2, 7)
+	local pitches = {}
+	for i = 1, n do
+		pitches[i] = 1.1 + i * 0.12
+	end
+	Theme.Arpeggio("pop", pitches, 0.045, 0.35)
+end
+
+-- Tic suau de les monedes que entren cada segon (molt fluix: sona sovint)
+local lastTick = 0
+function Theme.CoinTick()
+	local now = os.clock()
+	if now - lastTick < 0.5 then
+		return
+	end
+	lastTick = now
+	Theme.Note("hover", 0.12, 1.5 + math.random() * 0.2)
+end
+
 -- ─────────────────────────── NUMEROS ───────────────────────────
 
 local SUFFIXES = { "", "K", "M", "B", "T", "Qa", "Qi" }

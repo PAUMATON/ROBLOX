@@ -34,7 +34,7 @@ local giftsClaimed: { [Player]: { [number]: boolean } } = {}
 local rng = Random.new()
 
 local function notify(player: Player, message: string, icon: string)
-	Remotes.Notify:FireClient(player, { kind = "shop", ok = true, message = message, icon = icon })
+	Remotes.Notify:FireClient(player, { kind = "shop", ok = true, message = message, icon = icon, fx = "fanfare" })
 end
 
 -- ─────────────────────────── DONAR ───────────────────────────

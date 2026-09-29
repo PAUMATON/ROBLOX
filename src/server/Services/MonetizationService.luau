@@ -36,8 +36,8 @@ local MonetizationService = {}
 local limiter = RateLimiter.new(1)
 local BASE_WALK = 16
 
-local function reply(player: Player, ok: boolean, message: string, icon: string?)
-	Remotes.Notify:FireClient(player, { kind = "shop", ok = ok, message = message, icon = icon })
+local function reply(player: Player, ok: boolean, message: string, icon: string?, fx: string?)
+	Remotes.Notify:FireClient(player, { kind = "shop", ok = ok, message = message, icon = icon, fx = fx })
 end
 
 -- ─────────────────────────── CONSULTES ───────────────────────────
@@ -76,7 +76,7 @@ local function grantPass(player: Player, pass: Monetization.Pass)
 	profile.gamepasses[pass.key] = true
 	applyCharacter(player)
 	InventoryService.Push(player)
-	reply(player, true, `{pass.name} unlocked! Thank you!`, pass.icon)
+	reply(player, true, `{pass.name} unlocked! Thank you!`, pass.icon, "big")
 	log:Info(`{player.Name} té {pass.key}`)
 	task.spawn(DataService.Save, player)
 end

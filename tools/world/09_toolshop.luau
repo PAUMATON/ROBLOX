@@ -19,9 +19,10 @@ local WOODL = C(196, 150, 104)
 local DARKM = MOD.steel
 local ORANGE = C(240, 130, 50)
 local CREAM = C(250, 240, 218)
-local TOOL_IDS = { "rusty_shovel", "steel_trowel", "field_pickaxe", "pro_brush", "golden_shovel", "sonic_drill" }
-local TOOL_NAMES = { "RUSTY TROWEL", "STEEL TROWEL", "PRO TROWEL", "RUBY TROWEL", "GOLDEN TROWEL", "DIAMOND TROWEL" }
-local TOOL_COLS = { C(150, 96, 60), C(190, 196, 204), C(60, 140, 230), C(230, 50, 80), C(255, 200, 50), C(120, 230, 255) }
+-- les 8 de Dig & Co. (les 3 d'Egipte són al basar de l'illa, 11_egypt)
+local TOOL_IDS = { "rusty_shovel", "steel_trowel", "bronze_trowel", "field_pickaxe", "pro_brush", "emerald_trowel", "golden_shovel", "sonic_drill" }
+local TOOL_NAMES = { "RUSTY TROWEL", "STEEL TROWEL", "BRONZE TROWEL", "PRO TROWEL", "RUBY TROWEL", "EMERALD TROWEL", "GOLDEN TROWEL", "DIAMOND TROWEL" }
+local TOOL_COLS = { C(150, 96, 60), C(190, 196, 204), C(205, 127, 50), C(60, 140, 230), C(230, 50, 80), C(40, 200, 110), C(255, 200, 50), C(120, 230, 255) }
 local rng = Random.new(909)
 
 local m = Instance.new("Model")
@@ -270,11 +271,11 @@ end
 -- ── les eines, soltes en semicercle davant la botiga ──
 local stands = Instance.new("Model")
 stands.Name = "ToolStands"
-local RING = 13 -- distància des del centre de la façana
+local RING = 14 -- distància des del centre de la façana (8 sòcols: ~5 entre centres)
 local centre = L(0, 0, FRONT - 1)
 for i, id in ipairs(TOOL_IDS) do
-	-- de -62° a +62° al voltant de la direcció de la façana
-	local a = rad(-62 + (i - 1) * 124 / (#TOOL_IDS - 1))
+	-- de -72° a +72° al voltant de la direcció de la façana
+	local a = rad(-72 + (i - 1) * 144 / (#TOOL_IDS - 1))
 	local pos = (centre * CFrame.Angles(0, a, 0) * CF(0, 0, -RING)).Position
 	local face = CFrame.lookAt(V3(pos.X, TOP, pos.Z), V3(centre.Position.X, TOP, centre.Position.Z))
 	-- sòcol: base de formigó fosc, cos de fusta i tapa d'acer amb filet de llum

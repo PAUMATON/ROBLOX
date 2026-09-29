@@ -169,6 +169,12 @@ local function fillAction(snapshot: ProfileController.Snapshot?, def: Tools.Tool
 		props.OnClick = function()
 			Remotes.ShopRequest:FireServer("equip", def.id)
 		end
+	elseif def.zone and not Zones.IsUnlocked(snapshot and snapshot.zones or {}, def.zone) then
+		-- les d'Egipte: primer cal obrir Egipte
+		props.Color = C.grey
+		props.Text = `UNLOCK {string.upper(Zones.ById[def.zone].name)} FIRST`
+		props.Icon = "🔒"
+		props.Sound = "error"
 	elseif coins >= def.price then
 		props.Color = C.green
 		props.Text = `BUY · {Theme.Short(def.price)}`

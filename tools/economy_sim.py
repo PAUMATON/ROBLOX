@@ -11,7 +11,7 @@ Model del jugador (mitja):
   - cada excavacio triga: cooldown (1.2 s) + ~2.5 s de minijoc + ~3.5 s de
     caminar fins al munt seguent (els munts es buiden 20 s).
   - cada clic: 30% perfecte, 40% be, 30% fallat (l'eina no hi fa res).
-  - sort = la del minijoc (fins a x1.5) x la de l'eina (fins a x2), sostre x3.
+  - sort = la de la paleta (x1 .. x20; el minijoc ja no en dona), sense passis.
   - al museu (10 vitrines) hi posa sempre el que mes rendeix; munta un
     esquelet quan en te les 5 peces (rendeix x2).
   - compra l'eina seguent quan hi arriba i obre la platja quan pot.
@@ -27,17 +27,20 @@ LUCKY_FROM = "Rare"
 PIECE_INCOME = {"Common": 60, "Uncommon": 120, "Rare": 240, "Epic": 600, "Legendary": 1500, "Mythic": 4200, "Secret": 12000}  # x60 (29/09/2026)
 SKELETON_BONUS = 2
 PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail"]
-MAX_LUCK = 3
+MAX_LUCK = 20  # la millor paleta (sense passis de Robux)
 ZONES = {
     "construction": {"cost": 0, "coins": 270, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
                                                    "Dodo": "Legendary", "Sabertooth": "Mythic", "TRex": "Secret"}},
-    "beach": {"cost": 750000, "coins": 720, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
+    "beach": {"cost": 450000, "coins": 720, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
     # illa (només en avió), demana la platja
-    "egypt": {"cost": 8000000, "coins": 1800, "sk": {"Ibis": "Rare", "Jackal": "Epic", "Camel": "Legendary", "Crocodile": "Mythic"}},
+    "egypt": {"cost": 5000000, "coins": 3600, "sk": {"Ibis": "Rare", "Jackal": "Epic", "Camel": "Legendary", "Crocodile": "Mythic"}},
 }
-# (id, preu, sort)
-TOOLS = [("rusty_shovel", 0, 1.0), ("steel_trowel", 22500, 1.5), ("field_pickaxe", 180000, 2.0),
-         ("pro_brush", 1200000, 2.4), ("golden_shovel", 6000000, 2.7), ("sonic_drill", 27000000, 3.0)]
+# (id, preu, sort, zona que cal tenir oberta)
+TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 12000, 1.5, None), ("bronze_trowel", 45000, 2, None),
+         ("field_pickaxe", 110000, 3, None), ("pro_brush", 320000, 4, None), ("emerald_trowel", 900000, 5.5, None),
+         ("golden_shovel", 2500000, 7, None), ("sonic_drill", 6000000, 9, None),
+         ("scarab_trowel", 15000000, 12, "egypt"), ("anubis_trowel", 32000000, 15, "egypt"),
+         ("pharaoh_trowel", 65000000, 20, "egypt")]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
 SLOTS, INCOME_CAP = 10, 360000
@@ -58,7 +61,7 @@ def luck_of(bonus, tool_luck):
     return min(max(minigame * tool_luck, 1), MAX_LUCK)
 
 
-ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 80, "Legendary": 600, "Mythic": 4000, "Secret": 25000}
+ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 80, "Legendary": 1500, "Mythic": 20000, "Secret": 100000}
 
 
 def roll(zone, luck):
@@ -112,7 +115,7 @@ def play(max_minutes=2400):
     events = {}
     income = 0
     while t < max_minutes * 60:
-        _, _, tool_luck = TOOLS[tool]
+        tool_luck = TOOLS[tool][2]
         dt = DIG_COOLDOWN + MINIGAME_S + WALK_S
         t += dt
         coins += income * dt / 60
@@ -141,7 +144,7 @@ def play(max_minutes=2400):
             if income >= milestone:
                 events.setdefault(f"renda >= {milestone}/min", t)
         # compres
-        if tool + 1 < len(TOOLS) and coins >= TOOLS[tool + 1][1]:
+        if tool + 1 < len(TOOLS) and coins >= TOOLS[tool + 1][1] and (TOOLS[tool + 1][3] is None or TOOLS[tool + 1][3] in zones):
             coins -= TOOLS[tool + 1][1]
             tool += 1
             events.setdefault(f"eina {TOOLS[tool][0]}", t)

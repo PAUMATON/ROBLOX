@@ -499,7 +499,9 @@ local function refresh(snapshot: ProfileController.Snapshot)
 	-- botiga: "!" si pots pagar una eina que encara no tens
 	local canBuy = false
 	for _, def in Tools.LIST do
-		if def.price > 0 and snapshot.coins >= def.price and not table.find(snapshot.tools or {}, def.id) then
+		-- (les d'Egipte, només si Egipte és obert: es compren a l'illa)
+		local reachable = not def.zone or Zones.IsUnlocked(snapshot.zones, def.zone)
+		if reachable and def.price > 0 and snapshot.coins >= def.price and not table.find(snapshot.tools or {}, def.id) then
 			canBuy = true
 		end
 	end
@@ -668,6 +670,9 @@ function HudController.Start()
 
 	ProfileController.Changed:Connect(refresh)
 	ProfileController.CoinsChanged:Connect(function(coins: number)
+		if lastCoins and coins > lastCoins then
+			Theme.CoinTick()
+		end
 		showCoins(coins, true)
 	end)
 	-- Capa per al confeti de les compres
@@ -686,8 +691,23 @@ function HudController.Start()
 			task.delay(1.5, showWelcomeBack, data)
 		elseif data.kind == "shop" then
 			if data.ok then
-				Effects.Toast((data.icon or "🎉") .. " " .. tostring(data.message), C.green, "reward")
-				Effects.Confetti(fx, 60)
+				-- la festa que toca (ho diu el servidor): diners, fanfàrria o gran
+				local kind = data.fx
+				Effects.Toast((data.icon or "🎉") .. " " .. tostring(data.message), C.green, if kind then "" else "reward") -- ("": sense so, ja sona la festa)
+				if kind == "cash" then
+					Theme.Cash(tonumber(data.amount))
+					Effects.Confetti(fx, 40)
+					Effects.Pop(coinIcon, 0.5)
+				elseif kind == "big" then
+					Theme.Fanfare(2)
+					Effects.Confetti(fx, 140)
+					Effects.Flash(C.yellow, 0.35)
+				elseif kind == "fanfare" then
+					Theme.Fanfare(1)
+					Effects.Confetti(fx, 80)
+				else
+					Effects.Confetti(fx, 60)
+				end
 			else
 				Effects.Toast((data.icon or "$") .. " " .. tostring(data.message), C.red, "error")
 			end

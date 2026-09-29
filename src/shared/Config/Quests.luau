@@ -55,8 +55,10 @@ local CHAIN: { Quest } = {
 	{ text = "Discover 12 different fossils", stat = "discovered", target = 12, delta = false, reward = money(15), go = "construction" },
 	{ text = "Build your first full skeleton", stat = "built", target = 1, delta = false, reward = coins(20), go = "backpack" },
 	{ text = `Make your museum earn {Museum.PerSecondText(2400)} $/s`, stat = "income", target = 2400, delta = false, reward = coins(20), go = "backpack" },
-	{ text = "Trade with another player", stat = "trades", target = 1, delta = true, reward = luck(15), go = "trade" },
 	{ text = "Dig 75 fossils", stat = "digs", target = 75, delta = true, reward = coins(25), go = "construction" },
+	-- (abans anava 12a: arribava abans de la mitja hora que cal per comerciar
+	-- i la cadena s'hi quedava aturada)
+	{ text = "Trade with another player", stat = "trades", target = 1, delta = true, reward = luck(15), go = "trade" },
 	{ text = "Fill all 10 museum cases", stat = "displayed", target = 10, delta = false, reward = coins(25), go = "backpack" },
 	{ text = "Find an Epic fossil", stat = "finds", arg = "Epic", target = 1, delta = true, reward = coins(30), go = "construction" },
 	{ text = "Buy the Pro Trowel", stat = "tools", target = 3, delta = false, reward = luck(20), go = "shop" },

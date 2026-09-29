@@ -112,7 +112,7 @@ local function claim(player: Player)
 	q.base = Quests.Value(profile, Quests.Get(q.index))
 	q.baseFor = Quests.Get(q.index).text
 	log:Info(`{player.Name} ha acabat la missió {q.index - 1} ({quest.text})`)
-	Remotes.Notify:FireClient(player, { kind = "shop", ok = true, icon = "📜", message = `Quest complete! {text}` })
+	Remotes.Notify:FireClient(player, { kind = "shop", ok = true, icon = "📜", message = `Quest complete! {text}`, fx = "fanfare" })
 	InventoryService.Push(player) -- (això ja torna a enviar l'estat de la missió)
 	push(player, true)
 	task.spawn(DataService.Save, player)

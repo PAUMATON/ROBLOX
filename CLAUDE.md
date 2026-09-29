@@ -37,14 +37,18 @@ Cormorant) i **Egipte** (Ibis, Jackal, Camel, Crocodile: de Rare a Mythic).
 Egipte és una illa lluny de tot: només s'hi arriba amb ✈️ Travel (mai
 caminant) i es desbloqueja a la seva portalada, amb la platja ja oberta.
 
-## Sort: paleta (x1 → x3) × passi de sort per Robux (x2 → x32). Sostre x96.
+## Sort: paleta (x1 → x20) × passi de sort per Robux (x2 → x32). Sostre x640.
+(29/09/2026: el propietari va pujar les paletes de x3 a x20; per compensar,
+Legendary, Mythic i Secret tenen la N més alta.)
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
-amunt: Secret 1/25.000 sense sort, 1/260 a x96, 1/150 a x164. Han de ser MOLT
+amunt: Secret 1/100.000 sense sort, ~1/5.000 amb la millor paleta (x20) i
+~1/156 al sostre (x640). Mythic 1/20.000 → 1/1.000 → 1/31. Han de ser MOLT
 rares encara amb la sort màxima.
-La sort surt de la paleta (x1, x1.5, x2, x2.4, x2.7, x3) × els passis de sort
-(i els boosts x2 temporals); el minijoc només dona monedes. Es talla el
-PRODUCTE a x96 (Constants.MAX_LUCK). Totes les eines són paletes d'arqueòleg
-i NOMÉS donen sort: no toquen el minijoc ni la velocitat.
+La sort surt de la paleta × els passis de sort (i els boosts x2 temporals);
+el minijoc només dona monedes. 11 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
+x4, x5.5, x7, x9) i 3 al basar d'Egipte, que demanen Egipte obert (x12, x15,
+x20). Es talla el PRODUCTE a x640 (Constants.MAX_LUCK). Totes les eines són
+paletes d'arqueòleg i NOMÉS donen sort: no toquen el minijoc ni la velocitat.
 
 ## Stack
 Roblox Studio + Luau + Rojo. Els ossos es fan amb parts (Util/BoneBuilder:

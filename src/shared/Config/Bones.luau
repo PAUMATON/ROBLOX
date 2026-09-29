@@ -58,16 +58,19 @@ Bones.RARITIES = RARITIES
 
 -- "1 de cada N" de cada raresa, sense sort. Es tira de la més rara cap
 -- avall: la primera que surt guanya; si no en surt cap, Common.
--- La sort DIVIDEIX la N (de Rare cap amunt): amb sort x164 el Secret és
--- 1 de cada ~150; sense sort, 1 de cada 25.000.
+-- La sort DIVIDEIX la N (de Rare cap amunt). 29/09/2026: les paletes van
+-- fins a x20 i el sostre és x640, i per això Legendary, Mythic i Secret
+-- tenen la N més alta (Rare i Epic no: el principi del joc no canvia).
+-- Secret: 1 de cada 100.000 sense sort, ~5.000 amb la millor paleta
+-- (x20) i ~156 amb el sostre (x640). Mythic: 1 de cada 20.000, 1.000 i 31.
 -- Balancejat amb tools/economy_sim.py.
 local RARITY_ODDS: { [string]: number } = {
 	Uncommon = 4,
 	Rare = 15,
 	Epic = 80,
-	Legendary = 600,
-	Mythic = 4000,
-	Secret = 25000,
+	Legendary = 1500,
+	Mythic = 20000,
+	Secret = 100000,
 }
 Bones.RARITY_ODDS = RARITY_ODDS
 Bones.MAX_CHANCE = 0.9 -- cap raresa passa del 90% encara que la sort sigui enorme

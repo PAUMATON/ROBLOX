@@ -47,8 +47,9 @@ local standOf: { [string]: BasePart } = {} -- toolId -> el seu sòcol
 local sellerSpots: { BasePart } = {} -- on és la parada del Fossil Buyer
 local SELL_DISTANCE = 24
 
-local function reply(player: Player, ok: boolean, message: string, icon: string?)
-	Remotes.Notify:FireClient(player, { kind = "shop", ok = ok, message = message, icon = icon })
+-- `fx`: la festa que fa el client ("cash" amb `amount`, "fanfare", "big")
+local function reply(player: Player, ok: boolean, message: string, icon: string?, fx: string?, amount: number?)
+	Remotes.Notify:FireClient(player, { kind = "shop", ok = ok, message = message, icon = icon, fx = fx, amount = amount })
 end
 
 local function near(player: Player, part: BasePart): boolean
@@ -74,6 +75,12 @@ local function buyOrEquip(player: Player, toolId: string)
 		end
 		return
 	end
+	-- les paletes d'Egipte demanen tenir Egipte obert
+	if def.zone and not Zones.IsUnlocked(profile.unlockedZones, def.zone) then
+		local zone = Zones.ById[def.zone]
+		reply(player, false, `Unlock {if zone then zone.name else def.zone} first!`, "🔒")
+		return
+	end
 	if profile.coins < def.price then
 		reply(player, false, `You need {Museum.MoneyText(math.ceil(def.price - profile.coins))} more $`)
 		return
@@ -84,7 +91,7 @@ local function buyOrEquip(player: Player, toolId: string)
 	profile.equippedTool = def.id
 	ToolService.RefreshShovel(player)
 	InventoryService.Push(player)
-	reply(player, true, `{def.name} unlocked!`)
+	reply(player, true, `{def.name} unlocked! {Tools.LuckText(def.luck)} luck`, "⛏️", "fanfare")
 	log:Info(`{player.Name} ha comprat {def.id}`)
 	task.spawn(DataService.Save, player)
 end
@@ -112,7 +119,7 @@ local function unlockZone(player: Player, zoneId: string)
 	profile.coins -= zone.unlockCost
 	table.insert(profile.unlockedZones, zone.id)
 	InventoryService.Push(player)
-	reply(player, true, `{zone.name} is open! Go dig there`)
+	reply(player, true, `{zone.name} is open! Go dig there`, "🎉", "big")
 	log:Info(`{player.Name} ha obert {zone.id}`)
 	task.spawn(DataService.Save, player)
 end
@@ -178,7 +185,7 @@ local function sell(player: Player, action: any, payload: any)
 	profile.coins += coins
 	profile.stats.totalSold += sold
 	InventoryService.Push(player)
-	reply(player, true, if sold == 1 then `Sold for {coins} coins!` else `Sold {sold} fossils for {coins} coins!`, "$")
+	reply(player, true, if sold == 1 then `Sold for {coins} coins!` else `Sold {sold} fossils for {coins} coins!`, "$", "cash", coins)
 	log:Info(`{player.Name} ha venut {sold} fòssils per {coins}`)
 	task.spawn(DataService.Save, player)
 end

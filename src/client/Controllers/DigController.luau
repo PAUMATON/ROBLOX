@@ -329,18 +329,24 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 	end
 
 	Effects.PopIn(card, 0.45)
+	-- com més rara, més festa: so, confeti, flaix del color i sacsejada
 	if BIG[rarity] then
 		Effects.Confetti(root, if rarity == "Secret" then 160 elseif rarity == "Mythic" then 120 else 90)
-		Theme.Play("reward", 0.9, if rarity == "Secret" then 0.8 else 1)
+		Theme.Fanfare(3)
+		Effects.Flash(if rarity == "Secret" then C.white else color, if rarity == "Secret" then 0.8 else 0.55)
+		Effects.ShakeCamera(if rarity == "Secret" then 0.9 elseif rarity == "Mythic" then 0.65 else 0.45, 0.6)
 		task.delay(0.5, function()
 			Effects.Confetti(root, 60)
-			Theme.Play("reward", 0.6, 1.3)
 		end)
-	elseif rarity == "Epic" or rarity == "Rare" then
-		Effects.Confetti(root, if rarity == "Epic" then 60 else 30)
-		Theme.Play("reward", 0.6, if rarity == "Epic" then 1.15 else 1)
+	elseif rarity == "Epic" then
+		Effects.Confetti(root, 60)
+		Theme.Fanfare(2)
+		Effects.Flash(color, 0.3)
+	elseif rarity == "Rare" then
+		Effects.Confetti(root, 30)
+		Theme.Fanfare(1)
 	else
-		Theme.Play("pop", 0.6)
+		Theme.Arpeggio("pop", { 1, 1.26 }, 0.07, 0.5)
 	end
 
 	local closed = false
@@ -463,10 +469,29 @@ showHit = function(attempt: number, gained: number)
 	if hit then
 		feedback.Text = hit[1]
 		feedback.TextColor3 = hit[2]
-		Theme.Play("pop", 0.5, hit[3])
+		-- cada cop bo sona una mica més agut que l'anterior (enganxa)
+		Theme.Note("pop", 0.5, hit[3] + (attempt - 1) * 0.14)
+		if gained == Dig.PERFECT_BONUS then
+			Theme.Note("hover", 0.35, 1.6 + attempt * 0.12)
+		end
 		if pip then
 			pip.BackgroundColor3 = hit[2]
 			Effects.Pop(pip, 0.4)
+		end
+		-- tots els cops PERFECT: combo!
+		if attempt == Dig.ATTEMPTS then
+			local all = true
+			for i = 1, Dig.ATTEMPTS do
+				if shown[i] ~= Dig.PERFECT_BONUS then
+					all = false
+				end
+			end
+			if all then
+				feedback.Text = "PERFECT x3!"
+				feedback.TextColor3 = C.yellow
+				Theme.Fanfare(1)
+				Effects.Pop(feedback, 0.6)
+			end
 		end
 	else
 		feedback.Text = "MISS!"

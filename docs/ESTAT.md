@@ -25,9 +25,9 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 | Sistema | On és | Resum |
 |---|---|---|
 | Excavar | `DigService`, `DigController`, `Config/Dig` | Minijoc de 3 cops: la franja verda salta a cada cop i la línia va més ràpid. El client diu quan ha clicat (±0,07 s de marge); el servidor calcula el resultat. |
-| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 14 esquelets × 5 peces = 70 (els 4 d'Egipte, 29/09/2026). 7 rareses "1 de cada N" (Secret 1/25.000). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
-| Zones | `Config/Zones` | Obra (gratis, Rat → T-Rex), Platja (750.000, Seagull/Otter/Cormorant) i **Egipte** (8.000.000 i cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és una illa a x = 2000 (`tools/world/11_egypt.luau`): només s'hi arriba amb ✈️ Travel → 🐫 Egypt, i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
-| Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 6 paletes (x1 → x3 de sort) a Dig & Co. (plaça): 22.500 · 180.000 · 1,2 M · 6 M · 27 M (29/09/2026: economia ~2x més ràpida, preus a la meitat i +50% de monedes per excavació). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
+| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 14 esquelets × 5 peces = 70 (els 4 d'Egipte, 29/09/2026). 7 rareses "1 de cada N" (Secret 1/100.000, Mythic 1/20.000, Legendary 1/1.500; la sort les divideix). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
+| Zones | `Config/Zones` | Obra (gratis, 270/excavació, Rat → T-Rex), Platja (450.000, 720/exc., Seagull/Otter/Cormorant) i **Egipte** (5.000.000, 3.600/exc., cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és una illa a x = 2000 (`tools/world/11_egypt.luau`): només s'hi arriba amb ✈️ Travel → 🐫 Egypt, i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
+| Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 11 paletes d'arqueòleg (NOMÉS sort): 8 a Dig & Co. (plaça): Rusty x1 · Steel x1.5 (12K) · Bronze x2 (45K) · Pro x3 (110K) · Ruby x4 (320K) · Emerald x5.5 (900K) · Golden x7 (2,5 M) · Diamond x9 (6 M); i 3 al basar de l'illa d'Egipte (`zone = "egypt"`, cal Egipte obert): Scarab x12 (15 M) · Anubis x15 (32 M) · Pharaoh's x20 (65 M). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
 | Vendre | `ShopService` (sell), `DialogController` (Bonnie) | La Bonnie (Fossil Buyer, al costat de Dig & Co.) compra repetits / tot / una peça. Val 4 min de renda. |
 | Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda amb sostre 360.000/min (6.000 $/s), esquelet muntat x2, renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`: un Common exposat fa 60/min = "+1 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. **29/09/2026: TOTS els diners x60** (renda, monedes d'excavar, preus de les paletes, platja, sostre, venda, propines, renda mínima de premis i packs; migració de perfil v3 que multiplica les monedes que ja tenies): el ritme del joc és el mateix, els números 60 vegades més grossos. |
 | Visitants | `VisitorService`, `VisitorController`, `Config/Visitors`, `Util/VisitorPath` | NPC amb l'avatar dels amics de tots els jugadors del servidor. Miren vitrines i de tant en tant deixen propina (💰 +X sobre el cap). El servidor decideix; el client els dibuixa. |
@@ -188,6 +188,21 @@ toca, així que els esquelets alts continuen igual de lents (el comerç
 continua sent la drecera). Tutorial redissenyat (targeta gran amb icona,
 títol, consell i punts de progrés, celebració en acabar). Els avisos
 (toasts) han baixat a y = 172 perquè no els tapi.
+
+**29/09/2026 (vespre)**: sort fins a x20 (11 paletes, 3 a Egipte), sostre
+x640, N més altes per a Legendary/Mythic/Secret; corba de preus més ràpida;
+Egipte x2 de monedes per excavació; la missió del comerç va després de "Dig
+75 fossils" (ja no bloqueja la cadena). Simulació (100 partides, sol):
+Steel 1,2 min · Bronze 6,7 min · Pro 15 min · Ruby 32 min · Platja 49 min ·
+Emerald 73 min · Golden 2,1 h · Egipte 3,3 h · Diamond 4,4 h · Scarab 6,9 h
+· Anubis 11,7 h · Pharaoh's 19 h. L'esquelet Mythic sol: 33 h, el 49% (com
+abans). Dopamina: `Theme.Note/Arpeggio/Fanfare/Cash/CoinTick` (melodies amb
+els sons oficials, cada nota és un Sound nou), `Effects.Flash` i
+`Effects.ShakeCamera`; el servidor diu la festa amb `Notify.fx` ("cash",
+"fanfare", "big"). A l'excavació, els cops pugen de to i tres PERFECT fan
+"PERFECT x3!". Els sons són els 7 oficials de Roblox que ja teníem: si se'n
+volen de nous (moneda, caixa registradora...), triar-los a la Creator Store
+i posar-ne l'id a `Theme.SOUNDS`.
 
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa

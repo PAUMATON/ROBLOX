@@ -87,8 +87,8 @@ local Constants: Constants = {
 	-- Segons entre acabar un canvi i poder-ne començar un altre
 	TRADE_AFTER_COOLDOWN = 5,
 
-	-- sostre de sort total: paleta (x3) × passi de sort (x32)
-	MAX_LUCK = 96,
+	-- sostre de sort total: paleta (x20) × passi de sort (x32)
+	MAX_LUCK = 640,
 	DEBUG = true,
 }
 
