@@ -639,6 +639,18 @@ local function showWelcomeBack(data: any)
 	})
 
 	local closed = false
+	local function collectNow()
+		if closed then
+			return
+		end
+		closed = true
+		Effects.Confetti(holder, 50)
+		Effects.Pop(coinIcon, 0.5)
+		Effects.Tween(Effects.ScaleOf(card), 0.25, { Scale = 0 }, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+		task.delay(0.9, function()
+			gui:Destroy()
+		end)
+	end
 	local collect = Widgets.Button({
 		Parent = card,
 		Size = UDim2.fromOffset(260, 70),
@@ -649,19 +661,10 @@ local function showWelcomeBack(data: any)
 		Text = "COLLECT!",
 		Sound = "reward",
 		ZIndex = 3,
-		OnClick = function()
-			if closed then
-				return
-			end
-			closed = true
-			Effects.Confetti(holder, 50)
-			Effects.Pop(coinIcon, 0.5)
-			Effects.Tween(Effects.ScaleOf(card), 0.25, { Scale = 0 }, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-			task.delay(0.9, function()
-				gui:Destroy()
-			end)
-		end,
+		OnClick = collectNow,
 	})
+	-- les monedes ja són teves: tancar-la també les cobra
+	Widgets.CloseButton({ Parent = card, OnClick = collectNow })
 	Effects.Shine(collect.button, 14, 1.2)
 	Effects.PopIn(card, 0.5)
 	Effects.Pop(amount, 0.3)

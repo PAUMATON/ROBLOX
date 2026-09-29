@@ -78,14 +78,9 @@ local function build()
 		TextXAlignment = Enum.TextXAlignment.Left,
 		StrokeThickness = 3,
 	})
-	Widgets.Button({
-		Parent = header,
-		Size = UDim2.fromOffset(46, 46),
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -8, 0.5, 0),
-		Color = C.red,
-		Text = "✕",
-		Radius = 14,
+	Widgets.CloseButton({
+		Parent = card,
+		ZIndex = 8,
 		OnClick = function()
 			ShopController.Close()
 		end,

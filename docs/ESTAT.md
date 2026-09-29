@@ -222,6 +222,14 @@ missió (`settings.questGuide`) i parets invisibles al voltant del món
 (`08_props`: a la filera d'arbres i per la platja i el mar). El simulador no
 compta les pocions ni les recompenses: al joc real anirà una mica més ràpid.
 
+**30/09/2026**: botó de tancar únic (`Widgets.CloseButton`): vermell, a dalt
+a la dreta, amb la creu DIBUIXADA (FredokaOne no té el símbol ✕ i sortia un
+quadrat); a totes les finestres, la fitxa de les paletes, la targeta de
+troballa, els diàlegs, el recordatori del like, el "Welcome back" i el
+botó de treure de la vitrina. Al museu, cada vitrina té un rètol petit a
+sobre (`MuseumService.infoSign`, només es veu de prop): nom i raresa, +X $/s
+i una frase de l'animal (`Bones.FACTS`).
+
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa
 alguna cosa.

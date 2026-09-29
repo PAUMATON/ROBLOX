@@ -21,6 +21,10 @@ Museum.EXHIBIT_GAP = 0.3 -- aire entre el sòcol i la part més baixa de l'exhib
 Museum.SKELETON_MAX_SPAN = 7.4 -- un esquelet muntat ha de cabre dins el vidre
 Museum.SKELETON_MAX_HEIGHT = 6
 Museum.FOSSIL_MAX_SPAN = 4.2 -- un fòssil sol es veu gran però no toca el vidre
+-- Rètol petit de sobre cada vitrina (nom, $/s i una frase): alçada des del
+-- centre del sòcol (la tapa de vidre queda a ~8) i fins on es veu
+Museum.INFO_HEIGHT = 9.3
+Museum.INFO_DISTANCE = 55
 Museum.EMPTY_PLAQUE = "EMPTY CASE"
 Museum.FREE_SIGN = "FREE MUSEUM"
 

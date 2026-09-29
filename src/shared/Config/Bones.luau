@@ -297,6 +297,30 @@ function Bones.IsSkeletonId(id: any): boolean
 	return type(id) == "string" and Bones.ById[id] ~= nil
 end
 
+-- Una frase curta de cada animal (anglès), per al rètol de sobre la vitrina
+-- del museu (MuseumService) i qualsevol altra fitxa.
+Bones.FACTS = {
+	Rat = "City survivor. Its teeth never stop growing!",
+	Pigeon = "Can find its way home from 1,000 km away.",
+	Cat = "Ancient hunter. Always lands on its feet.",
+	Dog = "Humanity's best friend for 15,000 years.",
+	Dodo = "Flightless bird, gone forever since 1681.",
+	Sabertooth = "Its fangs were as long as a banana!",
+	TRex = "King of the dinosaurs. Bite of 6 tons!",
+	Seagull = "Beach thief. Your fries are never safe.",
+	Otter = "Holds hands with friends while sleeping.",
+	Cormorant = "Dives 45 m deep to catch fish.",
+	Ibis = "Sacred bird of Thoth, god of wisdom.",
+	Jackal = "Anubis, guardian of the tombs, had its head.",
+	Camel = "Walks the desert for a week without water.",
+	Crocodile = "River god Sobek. Older than the pyramids!",
+} :: { [string]: string }
+
+function Bones.FactOf(item: string): string
+	local info = Bones.PieceInfo[item]
+	return Bones.FACTS[if info then info.skeleton else item] or ""
+end
+
 -- "Rat · Skull", i la raresa. Per a la UI.
 function Bones.Describe(key: string): (string, Rarity)
 	local info = Bones.PieceInfo[key]

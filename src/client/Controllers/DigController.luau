@@ -367,17 +367,7 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 	end
 	card.Activated:Connect(close)
 	-- ✕ a la cantonada: la targeta es tanca tocant-la, però així es veu
-	Widgets.Button({
-		Parent = card,
-		Size = UDim2.fromOffset(46, 46),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.new(1, -10, 0, 10),
-		Color = C.red,
-		Text = "✕",
-		Radius = 23,
-		ZIndex = 9,
-		OnClick = close,
-	})
+	Widgets.CloseButton({ Parent = card, Size = 50, ZIndex = 9, OnClick = close })
 	local stay = if BIG[rarity] then 5 elseif rarity == "Common" or rarity == "Uncommon" then 1.8 else 3
 	task.delay(if Theme.QuickRewards then math.min(stay, 1.2) else stay, close)
 end

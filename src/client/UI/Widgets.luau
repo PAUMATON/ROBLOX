@@ -152,6 +152,58 @@ function Widgets.Button(p: ButtonProps): Button
 	return { button = b, label = label, icon = icon, gradient = gradient }
 end
 
+-- ─────────────────────────── TANCAR ───────────────────────────
+
+export type CloseProps = {
+	Parent: GuiObject,
+	OnClick: () -> (),
+	Size: number?, -- costat en píxels (per defecte 56)
+	ZIndex: number?,
+	Inside: boolean?, -- true: dins la cantonada; si no, mig sortint (com les finestres)
+}
+
+-- El botó vermell de tancar, sempre a dalt a la dreta i sempre igual a tot
+-- arreu. La creu es dibuixa amb dues barres (la lletra FredokaOne no té el
+-- símbol ✕ i sortia un quadrat buit).
+function Widgets.CloseButton(p: CloseProps): Button
+	local d = p.Size or 56
+	local inside = p.Inside == true
+	local z = p.ZIndex or (p.Parent.ZIndex + 6)
+	local b = Widgets.Button({
+		Parent = p.Parent,
+		Size = UDim2.fromOffset(d, d),
+		AnchorPoint = if inside then Vector2.new(1, 0) else Vector2.new(0.5, 0.5),
+		Position = if inside then UDim2.new(1, -8, 0, 8) else UDim2.new(1, -10, 0, 10),
+		Color = C.red,
+		Radius = math.floor(d * 0.3),
+		ZIndex = z,
+		Sound = "click",
+		OnClick = p.OnClick,
+	})
+	b.button.Name = "CloseButton"
+	-- primer les dues barres negres (el contorn) i a sobre les blanques: així
+	-- el centre de la creu no queda ratllat
+	local edge = math.max(3, math.floor(d / 12))
+	for layer = 1, 2 do
+		for _, angle in { 45, -45 } do
+			local bar = Instance.new("Frame")
+			bar.Name = "Cross"
+			bar.AnchorPoint = Vector2.new(0.5, 0.5)
+			bar.Position = UDim2.fromScale(0.5, 0.5)
+			bar.Size = if layer == 1
+				then UDim2.new(0.62, edge, 0.17, edge)
+				else UDim2.fromScale(0.62, 0.17)
+			bar.Rotation = angle
+			bar.BackgroundColor3 = if layer == 1 then C.ink else C.white
+			bar.BorderSizePixel = 0
+			bar.ZIndex = z + 1 + layer
+			bar.Parent = b.button
+			Theme.Corner(bar, 6)
+		end
+	end
+	return b
+end
+
 -- ─────────────────────────── INSIGNIA ───────────────────────────
 
 export type Badge = {
@@ -523,20 +575,14 @@ function Widgets.Window(p: WindowProps): Window
 		StrokeThickness = 3.5,
 	})
 
-	local close = Widgets.Button({
+	Widgets.CloseButton({
 		Parent = frame,
-		Size = UDim2.fromOffset(62, 62),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.new(1, -12, 0, 12),
-		Color = C.red,
-		Text = "X",
-		Radius = 31,
+		Size = 62,
 		ZIndex = 8,
 		OnClick = function()
 			Windows.Close(p.Name)
 		end,
 	})
-	close.button.ZIndex = 8
 
 	local body = Instance.new("Frame")
 	body.Name = "Body"

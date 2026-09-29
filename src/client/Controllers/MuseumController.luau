@@ -145,14 +145,11 @@ local function slotCard(slot: number, item: string?)
 		Position = UDim2.fromOffset(6, 88),
 		TextColor3 = C.green,
 	})
-	Widgets.Button({
+	-- treure'l de la vitrina (torna a la motxilla)
+	Widgets.CloseButton({
 		Parent = card,
-		Size = UDim2.fromOffset(28, 28),
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -6, 0, 6),
-		Color = C.red,
-		Text = "✕",
-		Radius = 14,
+		Size = 30,
+		Inside = true,
 		OnClick = function()
 			Remotes.MuseumAction:FireServer("withdraw", slot)
 		end,

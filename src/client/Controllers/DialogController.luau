@@ -234,17 +234,7 @@ function DialogController.Start()
 		TextSize = 26,
 	})
 	-- ✕ petit per tancar sense haver de triar cap resposta
-	Widgets.Button({
-		Parent = card,
-		Size = UDim2.fromOffset(46, 46),
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -12, 0, 12),
-		Color = C.red,
-		Text = "✕",
-		Radius = 14,
-		ZIndex = 4,
-		OnClick = close,
-	})
+	Widgets.CloseButton({ Parent = card, Size = 52, ZIndex = 6, OnClick = close })
 	options = Instance.new("Frame")
 	options.BackgroundTransparency = 1
 	options.Position = UDim2.fromOffset(20, 150)
