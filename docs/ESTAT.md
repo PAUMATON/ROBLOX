@@ -39,7 +39,7 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 | Configuració | `SettingsService`, `SettingsController` | Mida del HUD, mida dels menús, música, efectes, gràfics, trades, premis ràpids. Es desa al perfil. |
 | Dades | `DataService`, `Config/ProfileSchema` | Session locking, autosave, migracions (esquema v2). Cada desat porta un `saveSeq` que puja: un desat vell que arriba tard no trepitja un de nou, i cap desat normal torna a agafar un lock ja alliberat. El lloc està publicat: el DataStore funciona. |
 | UI | `src/client/UI/*` | `Theme` (estil), `Widgets`, `Windows`, `Effects`, `PieceView` (peça 3D dins la UI). Al mòbil (`Theme.IsCompact`) el HUD es reorganitza (rajoles 4x2 a dalt, sense barra d'índex) per no tapar el joystick ni el salt, i les finestres creixen fins a omplir la pantalla. A Studio es pot simular un mòbil amb els atributs `EmulateViewport` (Vector2) i `EmulateTouch` al LocalPlayer. |
-| So | `AmbienceController` | Ocells a la ciutat, onades a la platja, aigua a la font. Música de fons en roda (llista `MUSIC`: **encara buida**, cal posar-hi pistes de la biblioteca de Roblox). |
+| So | `AmbienceController`, `UI/Theme` | Ocells a la ciutat, onades a la platja i a l'illa, aigua a la font. Música de fons en roda, de DistroKid (biblioteca amb llicència de Roblox): 5 pistes alegres per a la ciutat i 3 d'egípcies que entren en fosa quan vas a l'illa (x > 1500). Efectes de ProSoundEffects i del compte Roblox a `Theme.SOUNDS` (pala, terra, monedes, caixa registradora, espurnes, compra): `Theme.Dig`, `Theme.Tip`, `Theme.Cash`, `Theme.Fanfare`. Triats pel nom a la Creator Store (no s'han pogut escoltar): si algun no agrada, es canvia l'id. |
 
 ## 3. El món 3D
 
@@ -113,7 +113,7 @@ o no es planten. Regla: deixar sempre **0,05** entre cares paral·leles.
    de debò.
 6. Llançament: tot a **`docs/LLANÇAMENT.md`** (qüestionari d'edat, que és
    per què en Luca no hi podia entrar; nom, descripció, icona, passis).
-   Música: omplir `MUSIC` a `AmbienceController`.
+   Música: ja hi és (29/09/2026); escoltar-la i canviar el que no agradi.
 7. Idees parlades: rebirth (només diners, mai sort), neteja de fòssils amb
    pinzell, desar menys sovint quan es compren molts passis seguits.
 
@@ -203,6 +203,10 @@ els sons oficials, cada nota és un Sound nou), `Effects.Flash` i
 "PERFECT x3!". Els sons són els 7 oficials de Roblox que ja teníem: si se'n
 volen de nous (moneda, caixa registradora...), triar-los a la Creator Store
 i posar-ne l'id a `Theme.SOUNDS`.
+
+**29/09/2026 (nit)**: música, so de pala a cada cop del minijoc, propines
+dels visitants amb dring i caixa registradora, i celebracions de fites de
+diners (1K, 10K, 100K, 1M "MILLIONAIRE!", ... 1T) al HUD.
 
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa

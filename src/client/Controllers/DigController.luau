@@ -329,6 +329,8 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 	end
 
 	Effects.PopIn(card, 0.45)
+	-- les monedes de l'excavació (totes les troballes en donen)
+	Theme.Note("coinBounce", 0.45, 1.1)
 	-- com més rara, més festa: so, confeti, flaix del color i sacsejada
 	if BIG[rarity] then
 		Effects.Confetti(root, if rarity == "Secret" then 160 elseif rarity == "Mythic" then 120 else 90)
@@ -345,6 +347,7 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 	elseif rarity == "Rare" then
 		Effects.Confetti(root, 30)
 		Theme.Fanfare(1)
+		Theme.Note("sparkle", 0.5, 1.15)
 	else
 		Theme.Arpeggio("pop", { 1, 1.26 }, 0.07, 0.5)
 	end
@@ -469,7 +472,8 @@ showHit = function(attempt: number, gained: number)
 	if hit then
 		feedback.Text = hit[1]
 		feedback.TextColor3 = hit[2]
-		-- cada cop bo sona una mica més agut que l'anterior (enganxa)
+		-- cop de pala + un "pop" que puja de to a cada intent (enganxa)
+		Theme.Dig(if gained == Dig.PERFECT_BONUS then 2 else 1)
 		Theme.Note("pop", 0.5, hit[3] + (attempt - 1) * 0.14)
 		if gained == Dig.PERFECT_BONUS then
 			Theme.Note("hover", 0.35, 1.6 + attempt * 0.12)
@@ -496,6 +500,7 @@ showHit = function(attempt: number, gained: number)
 	else
 		feedback.Text = "MISS!"
 		feedback.TextColor3 = C.red
+		Theme.Dig(0)
 		Theme.Play("error", 0.35)
 		shake(panel)
 		if pip then

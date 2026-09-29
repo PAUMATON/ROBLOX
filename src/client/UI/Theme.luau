@@ -65,6 +65,17 @@ Theme.SOUNDS = {
 	reward = "rbxassetid://15675043410", -- Roblox_UI_Tonal_Stinger
 	notify = "rbxassetid://15675085146", -- Roblox_UI_Indicator
 	error = "rbxassetid://15675075163", -- Roblox_UI_Delete
+	purchase = "rbxassetid://10066947742", -- RBLX UI Purchase (compte Roblox)
+	-- Efectes de ProSoundEffects (biblioteca amb llicència de Roblox, com els
+	-- ocells de l'ambient). Triats pel nom: si algun no agrada, es canvia aquí.
+	dig1 = "rbxassetid://9114083260", -- Dirt Dig Dirt Throws From Shovel 1
+	dig2 = "rbxassetid://9114083746", -- Dirt Dig Dirt Throws From Shovel 12
+	dirt = "rbxassetid://9114109300", -- Dirt Impacts 1
+	coins = "rbxassetid://9113849492", -- Coins Or Keys Jingle 6
+	coinBounce = "rbxassetid://9113848469", -- Coin Bounce 3
+	cash = "rbxassetid://9113728625", -- Cash Register 1
+	sparkle = "rbxassetid://9116394545", -- Magic Glows Soft Clusters Of Chiming Hits 1
+	sparkleBig = "rbxassetid://9119447936", -- Sparkle Bell Tree Wind Chimes 1
 }
 
 local soundCache: { [string]: Sound } = {}
@@ -152,26 +163,56 @@ function Theme.Fanfare(level: number?)
 	if l >= 3 then
 		Theme.Note("reward", 0.8, 0.8)
 		Theme.Note("reward", 0.5, 1.0)
+		Theme.Note("sparkleBig", 0.7, 1)
 		Theme.Arpeggio("pop", { 1, 1.12, 1.26, 1.5, 1.68, 2 }, 0.07, 0.45)
 		task.delay(0.5, Theme.Note, "reward", 0.7, 1.26)
 		task.delay(0.95, Theme.Note, "notify", 0.6, 1.5)
 	elseif l == 2 then
+		Theme.Note("purchase", 0.6, 1)
+		Theme.Note("sparkle", 0.6, 1.1)
 		Theme.Arpeggio("reward", { 0.9, 1.12, 1.35 }, 0.12, 0.55)
 		Theme.Arpeggio("pop", { 1.3, 1.5, 1.7, 2 }, 0.06, 0.35)
 	else
+		Theme.Note("purchase", 0.55, 1.05)
 		Theme.Arpeggio("pop", { 1, 1.26, 1.5 }, 0.07, 0.45)
 		task.delay(0.2, Theme.Note, "reward", 0.45, 1.2)
 	end
 end
 
--- Cascada de monedes (vendre, premis): més notes com més n'hi ha
+-- Caixa registradora + cascada de monedes (vendre): més notes com més n'hi ha
 function Theme.Cash(amount: number?)
 	local n = math.clamp(math.floor(math.log10(math.max(amount or 10, 10))), 2, 7)
 	local pitches = {}
 	for i = 1, n do
 		pitches[i] = 1.1 + i * 0.12
 	end
-	Theme.Arpeggio("pop", pitches, 0.045, 0.35)
+	Theme.Note("cash", 0.7, 1)
+	task.delay(0.12, Theme.Note, "coins", 0.6, 1)
+	Theme.Arpeggio("pop", pitches, 0.045, 0.3)
+end
+
+-- Cop de pala a la terra (cada clic del minijoc): dos sons que s'alternen,
+-- amb el to una mica a l'atzar perquè no cansi, i més agut com més bé
+local digFlip = false
+function Theme.Dig(quality: number?)
+	digFlip = not digFlip
+	local q = quality or 0 -- 0 fallat · 1 bé · 2 perfecte
+	Theme.Note(if digFlip then "dig1" else "dig2", 0.55, 0.95 + math.random() * 0.15 + q * 0.06)
+	Theme.Note("dirt", 0.3, 1 + q * 0.1)
+end
+
+-- Propina d'un visitant: dring de monedes; si és al teu museu, caixa
+-- registradora; si és WOW, espurnes a sobre
+function Theme.Tip(mine: boolean, wow: boolean)
+	Theme.Note("coins", if mine then 0.7 else 0.35, 1 + math.random() * 0.1)
+	if mine then
+		task.delay(0.08, Theme.Note, "cash", 0.55, 1.05)
+		task.delay(0.2, Theme.Note, "coinBounce", 0.45, 1.2)
+	end
+	if wow then
+		Theme.Note("sparkle", 0.6, 1)
+		task.delay(0.3, Theme.Arpeggio, "pop", { 1.2, 1.4, 1.6, 1.9 }, 0.05, 0.35)
+	end
 end
 
 -- Tic suau de les monedes que entren cada segon (molt fluix: sona sovint)

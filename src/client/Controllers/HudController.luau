@@ -428,9 +428,45 @@ end
 
 -- ─────────────────────────── REFRESC ───────────────────────────
 
+-- Fites de diners: en passar-ne una, festa. Només les noves d'aquesta
+-- partida (la primera instantània fixa on ets i no es celebra).
+local MILESTONES: { { at: number, text: string } } = {
+	{ at = 1e3, text = "Your first 1K $!" },
+	{ at = 1e4, text = "10K $! Nice!" },
+	{ at = 1e5, text = "100K $! You're rich!" },
+	{ at = 1e6, text = "💎 MILLIONAIRE! 1M $" },
+	{ at = 1e7, text = "💎 10M $! Big shot!" },
+	{ at = 1e8, text = "👑 100M $! Tycoon!" },
+	{ at = 1e9, text = "👑 BILLIONAIRE! 1B $" },
+	{ at = 1e10, text = "🌟 10B $! LEGEND!" },
+	{ at = 1e11, text = "🌟 100B $! UNSTOPPABLE!" },
+	{ at = 1e12, text = "🚀 TRILLIONAIRE!" },
+}
+local milestoneReached = 0 -- índex de l'última fita passada
+
+local function checkMilestones(coins: number, first: boolean)
+	local reached = milestoneReached
+	for i, m in MILESTONES do
+		if coins >= m.at then
+			reached = i
+		end
+	end
+	if not first and reached > milestoneReached then
+		local m = MILESTONES[reached]
+		task.delay(0.3, function()
+			Effects.Toast(`🎉 {m.text}`, C.gold, "")
+			Theme.Fanfare(2)
+			Effects.Confetti(leftColumn, 90)
+			Effects.Pop(coinIcon, 0.8)
+		end)
+	end
+	milestoneReached = math.max(milestoneReached, reached)
+end
+
 -- Monedes: compten cap amunt i salta un "+N $". `passive` = la renda del
 -- museu de cada segon: sense so (si no, sonaria un "pop" cada segon).
 local function showCoins(coins: number, passive: boolean?)
+	checkMilestones(coins, lastCoins == nil)
 	if lastCoins and coins > lastCoins then
 		local gain = coins - lastCoins
 		Effects.Float(leftColumn, "+" .. Theme.Short(gain) .. " $", C.green, UDim2.fromOffset(170, 20), 130)

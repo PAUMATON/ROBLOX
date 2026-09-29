@@ -113,7 +113,7 @@ end
 
 -- Sobre el cap del visitant: el símbol de diners i, a sota, "+X" (el que ha
 -- donat). Puja una mica i s'esvaeix.
-local function tipPop(v: Shown?, amount: number, wow: boolean)
+local function tipPop(v: Shown?, amount: number, wow: boolean, mine: boolean)
 	if not v or not v.model then
 		return
 	end
@@ -146,9 +146,14 @@ local function tipPop(v: Shown?, amount: number, wow: boolean)
 	task.delay(2.3, function()
 		bb:Destroy()
 	end)
+	-- dring de monedes (i caixa registradora si és al teu museu); si no és
+	-- teu, només se sent de prop
 	local dist = (workspace.CurrentCamera.CFrame.Position - anchor.Position).Magnitude
-	if dist < 60 then
-		Theme.Play(if wow then "reward" else "pop", if wow then 0.6 else 0.35, 1.3)
+	if mine or dist < 60 then
+		Theme.Tip(mine, wow)
+	end
+	if mine then
+		Effects.Pop(icon, 0.5)
 	end
 end
 
@@ -166,13 +171,14 @@ local function onUpdate(msg: any)
 		remove(msg.id)
 	elseif msg.type == "tip" then
 		local amount = tonumber(msg.amount) or 0
-		tipPop(visits[msg.id], amount, msg.wow == true)
+		tipPop(visits[msg.id], amount, msg.wow == true, msg.owner == player.UserId)
 		-- a l'amo, un avís (sense omplir la pantalla)
 		if msg.owner == player.UserId then
 			local now = os.clock()
 			if msg.wow or now - lastOwnerToast > 25 then
 				lastOwnerToast = now
-				Effects.Toast((if msg.wow then "🤩 WOW! A visitor tipped you " else "👀 A visitor tipped you ") .. `+{Theme.Short(amount)} $`, C.gold, if msg.wow then "reward" else "pop")
+				-- (sense so propi: ja sona la propina)
+				Effects.Toast((if msg.wow then "🤩 WOW! A visitor tipped you " else "👀 A visitor tipped you ") .. `+{Theme.Short(amount)} $`, C.gold, "")
 			end
 		end
 	end
