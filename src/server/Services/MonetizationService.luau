@@ -177,7 +177,13 @@ local function processReceipt(info: any): Enum.ProductPurchaseDecision
 	end
 	local purchaseId = tostring(info.PurchaseId)
 	if profile.purchaseHistory[purchaseId] then
-		return Enum.ProductPurchaseDecision.PurchaseGranted -- ja donat
+		-- Ja donat en aquesta sessió. Si el desat d'aquell cop va fallar,
+		-- Roblox ho reintenta: NOMÉS es torna a provar de desar, sense
+		-- tornar a donar res.
+		if DataService.Save(player) then
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
+		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 	local product = Monetization.ProductById[info.ProductId]
 	if not product then
@@ -188,9 +194,10 @@ local function processReceipt(info: any): Enum.ProductPurchaseDecision
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 	profile.purchaseHistory[purchaseId] = { product = product.key, at = os.time() }
-	-- desat abans de dir a Roblox que s'ha donat: si falla, Roblox ho reintenta
+	-- desat abans de dir a Roblox que s'ha donat: si falla, Roblox ho
+	-- reintenta. El registre NO s'esborra: les monedes ja són al perfil i,
+	-- si l'esborréssim, el reintent les tornaria a donar.
 	if not DataService.Save(player) then
-		profile.purchaseHistory[purchaseId] = nil
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 	log:Info(`{player.Name} ha comprat {product.key}`)

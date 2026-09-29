@@ -330,6 +330,14 @@ function Theme.AutoScale(guiObject: GuiObject, kind: string?)
 	local design = if menu then Vector2.new(guiObject.Size.X.Offset, guiObject.Size.Y.Offset) else nil
 	s.Scale = computeScale(menu, design)
 	s.Parent = guiObject
+	-- Fora les que ja no hi són: hi ha finestres que es fan i es destrueixen
+	-- (la targeta de cada troballa, les invitacions...) i la llista creixeria
+	-- sense parar tota la partida.
+	for i = #scaled, 1, -1 do
+		if scaled[i].s.Parent == nil then
+			table.remove(scaled, i)
+		end
+	end
 	table.insert(scaled, { s = s, menu = menu, design = design })
 end
 

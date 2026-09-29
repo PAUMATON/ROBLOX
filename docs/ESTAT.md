@@ -143,14 +143,28 @@ tipades) i avisos d'estil. `Player:IsFriendsWith` surt com a obsolet
   HUD (cada 10 s). Ara hi ha `HudController.SetBadge` (la guia: tutorial i
   missions) i `HudController.AutoBadge` (comptadors i avisos), i les
   automàtiques no trepitgen el 👆.
+- `MonetizationService.processReceipt`: si el desat fallava, s'esborrava el
+  registre de la compra però les monedes ja eren al perfil, i el reintent
+  de Roblox les tornava a donar. Ara el registre es queda i el reintent
+  només torna a provar de desar.
+- `Theme.AutoScale`: cada UIScale quedava per sempre en una llista, i la
+  targeta de cada troballa en fa una (una per excavació). Ara les que ja
+  no hi són es treuen.
+- Detall de UI no arreglat: SHOW a la motxilla ensenya "is on display!"
+  encara que el museu sigui ple (el servidor també avisa en vermell).
 
 **Revisat i bé**: saveSeq/SaveMany (un desat vell no trepitja un de nou),
 escrow del comerç (validació sencera i mutació sense yield), invitacions que
 caduquen, ACCEPT amb retard, cooldown, audit; `lockedBones`/`museumLocked`
 (exposar o muntar no desbloqueja); missions (cap yield entre comprovar i
 cobrar: no es poden cobrar dos cops); cicles de `require` (cap); taules per
-jugador (totes es buiden a PlayerRemoving); `08_props`, `10_signs`,
-`gableRoof`.
+jugador (totes es buiden a PlayerRemoving); tots els remotes (Settings,
+Travel, Shop, Sell, Museum, Dig, Quest, Reward, Purchase: validen tipus i
+rate limit, i el client no decideix cap resultat); connexions del client
+(totes un sol cop a `Start`); probabilitats de l'Índex (mateixa fórmula que
+el servidor); `08_props`, `10_signs`, `gableRoof`. Els retocs de 02/03/04/
+06/07/09 només s'han pogut passar per l'analitzador: si es veuen bé cal
+mirar-ho amb captures a Studio.
 
 **Economia de les missions** (simulació amb la cadena de `Config/Quests`,
 300 partides, jugant sol): els premis en monedes (mínim 20/min de renda)
