@@ -28,6 +28,7 @@ local REMOTE_NAMES: { string } = {
 	"PurchaseRequest", -- ("pass" | "product", clau): comprar amb Robux
 	"RewardRequest", -- ("daily") · ("gift", número) · ("state"): recompenses gratis
 	"QuestRequest", -- ("claim") · ("state"): cobrar la missió en curs
+	"PotionRequest", -- ("use", poció): fer servir una poció de la motxilla
 
 	-- Servidor -> client (resultats i estat)
 	"DigUpdate", -- fases de l'excavacio: start, hit, result, denied, cancel
@@ -51,6 +52,7 @@ export type Remotes = {
 	PurchaseRequest: RemoteEvent,
 	RewardRequest: RemoteEvent,
 	QuestRequest: RemoteEvent,
+	PotionRequest: RemoteEvent,
 	QuestUpdate: RemoteEvent,
 	CoinsUpdate: RemoteEvent,
 	RewardUpdate: RemoteEvent,

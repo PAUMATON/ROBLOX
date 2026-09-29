@@ -150,7 +150,7 @@ local function show(step: Step?)
 			iconLabel.Text = "🎉"
 			titleLabel.Text = "TUTORIAL COMPLETE!"
 			textLabel.Text = "Your museum earns $ every second now"
-			hintLabel.Text = "💡 Collect all 5 pieces and BUILD a skeleton: it earns x2!"
+			hintLabel.Text = "💡 Collect ALL the pieces and BUILD a skeleton: it earns x5!"
 			paintDots(TOTAL_STEPS + 1)
 			setBurst(true)
 			Effects.PopIn(card, 0.45)

@@ -21,6 +21,7 @@ local Effects = require(UI:WaitForChild("Effects"))
 local Guide = require(UI:WaitForChild("Guide"))
 local Widgets = require(UI:WaitForChild("Widgets"))
 local HudController = require(script.Parent.HudController)
+local ProfileController = require(script.Parent.ProfileController)
 local TutorialController = require(script.Parent.TutorialController)
 
 local C = Theme.C
@@ -41,6 +42,10 @@ local rewardLabel: TextLabel
 local claimButton: Widgets.Button
 local markedTile: string? = nil
 local lastClaim = 0
+-- el raig i la fletxa de la missió: es poden apagar (es desa a la configuració)
+local guideOn = true
+local guideSynced = false -- ja s'ha llegit del perfil
+local guideButton: Widgets.Button
 
 -- Es torna a posar a cada volta de guide() (cada mig segon): el HUD reescriu
 -- les insígnies de Backpack i Trade cada cop que canvia el perfil, i si només
@@ -57,7 +62,7 @@ end
 
 -- Cap on s'ha d'anar per fer la missió en curs
 local function guide()
-	if not state or state.done or not holder.Visible then
+	if not state or state.done or not holder.Visible or not guideOn then
 		Guide.Clear("quest")
 		setTile(nil)
 		return
@@ -171,6 +176,48 @@ function QuestController.Start()
 	claimButton.button.Visible = false
 	Effects.Shine(claimButton.button, 14, 1.2)
 	Effects.Pulse(claimButton.button, 0.06, 0.9)
+
+	-- Interruptor de la guia: penja de sota la targeta, ben visible, amb el
+	-- mateix estil de botó que la resta (verd = ON, gris = OFF)
+	local function paintGuide()
+		local b = guideButton
+		b.button.BackgroundColor3 = if guideOn then C.green else C.grey
+		if b.label then
+			b.label.Text = if guideOn then "GUIDE: ON" else "GUIDE: OFF"
+		end
+	end
+	guideButton = Widgets.Button({
+		Parent = holder,
+		Size = UDim2.fromOffset(168, 40),
+		AnchorPoint = Vector2.new(0, 0),
+		Position = UDim2.new(0, 16, 1, 6),
+		Color = C.green,
+		Icon = "🧭",
+		Text = "GUIDE: ON",
+		Radius = 20,
+		OnClick = function()
+			guideOn = not guideOn
+			guideSynced = true
+			paintGuide()
+			Effects.Toast(if guideOn then "🧭 Quest guide ON: follow the golden beam!" else "🧭 Quest guide OFF", C.cyan, "")
+			Remotes.SettingsRequest:FireServer({ questGuide = guideOn })
+			guide()
+		end,
+	})
+	paintGuide()
+	-- el valor desat al perfil (un cop, quan arriba)
+	local function syncGuide()
+		local snapshot = ProfileController.Get()
+		local settings = snapshot and snapshot.settings
+		if not guideSynced and settings and settings.questGuide ~= nil then
+			guideSynced = true
+			guideOn = settings.questGuide ~= false
+			paintGuide()
+			guide()
+		end
+	end
+	ProfileController.Changed:Connect(syncGuide)
+	syncGuide()
 
 	Remotes.QuestUpdate.OnClientEvent:Connect(function(data: any)
 		if type(data) ~= "table" then

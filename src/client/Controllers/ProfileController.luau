@@ -31,6 +31,8 @@ export type Snapshot = {
 	equippedTool: string,
 	digs: number,
 	persisted: boolean,
+	potions: { [string]: number }?, -- poció -> quantes (Config/Potions)
+	hasteLeft: number?, -- segons de poció haste que queden (quan es va enviar)
 	settings: {
 		musicVolume: number,
 		sfxVolume: number,
@@ -39,6 +41,7 @@ export type Snapshot = {
 		lowGraphics: boolean?,
 		allowTrades: boolean?,
 		quickRewards: boolean?,
+		questGuide: boolean?,
 	}?,
 }
 

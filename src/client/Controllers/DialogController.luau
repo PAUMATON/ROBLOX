@@ -47,7 +47,7 @@ local NODES: { [string]: Node } = {
 		options = { { label = "I'll find it!", go = "hello" }, { label = "Bye!" } },
 	},
 	coins = {
-		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find all 5 bones of one skeleton and BUILD it: a full skeleton earns double!",
+		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find ALL the bones of one skeleton (5 to 8, the rarer the more) and BUILD it: a full skeleton earns x5!",
 		options = { { label = "Thanks, Rex!", go = "hello" }, { label = "Bye!" } },
 	},
 }

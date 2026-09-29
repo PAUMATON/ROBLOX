@@ -209,7 +209,7 @@ local function drawActive()
 		pad.Parent = row
 		local order = 0
 		for _, def in Bones.SKELETONS do
-			for _, piece in Bones.PIECES do
+			for _, piece in Bones.PiecesOf(def.id) do
 				local key = Bones.PieceKey(def.id, piece.id)
 				local n = if snapshot then snapshot.bones[key] or 0 else 0
 				-- només les comerciables: les de regal no surten

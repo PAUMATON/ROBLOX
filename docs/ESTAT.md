@@ -209,6 +209,19 @@ i posar-ne l'id a `Theme.SOUNDS`.
 dels visitants amb dring i caixa registradora, i celebracions de fites de
 diners (1K, 10K, 100K, 1M "MILLIONAIRE!", ... 1T) al HUD.
 
+**29/09/2026 (matinada)**: esquelets de 5 a 8 peces (Rat/Pigeon/Seagull 5 ·
+Cat/Dog/Otter/Ibis 6 · Dodo/Cormorant/Jackal/Camel 7 · Sabertooth/T-Rex/
+Crocodile 8; `Bones.PiecesOf`, les peces de més a `BoneBuilder`), muntat x5,
+fora les missions de vendre, economia més ràpida (simulació: platja 28 min ·
+Egipte 1,5 h · Pharaoh's 7,3 h · Legendary 8 h · Mythic de 8 peces sol: el 9%
+en 40 h), pocions (`Config/Potions`, `PotionService`), barra de baix nova
+(`HotbarController`, amaga la de Roblox), recompenses molt més generoses
+(paquets), munt daurat (`DigService` + `EventController`), avisos de
+troballes grosses a tot el servidor, botó 🧭 GUIDE per apagar la fletxa de la
+missió (`settings.questGuide`) i parets invisibles al voltant del món
+(`08_props`: a la filera d'arbres i per la platja i el mar). El simulador no
+compta les pocions ni les recompenses: al joc real anirà una mica més ràpid.
+
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa
 alguna cosa.

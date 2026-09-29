@@ -29,7 +29,7 @@ local window: Widgets.Window
 local scroll: ScrollingFrame
 local progress: Widgets.Bar
 
-local ZONE_ICONS = { construction = "🏗️", beach = "🏖️" }
+local ZONE_ICONS = { construction = "🏗️", beach = "🏖️", egypt = "🏜️" }
 
 function IndexController.Count(snapshot: ProfileController.Snapshot): (number, number)
 	local found = 0
@@ -61,12 +61,13 @@ end
 local function row(snapshot: ProfileController.Snapshot, def: Bones.SkeletonDef, order: number, chances: { [string]: number })
 	local discovered = snapshot.discovered or {}
 	local found = 0
-	for _, piece in Bones.PIECES do
+	local pieces = Bones.PiecesOf(def.id)
+	for _, piece in pieces do
 		if discovered[Bones.PieceKey(def.id, piece.id)] then
 			found += 1
 		end
 	end
-	local complete = found == #Bones.PIECES
+	local complete = found == #pieces
 	local color = Bones.RARITY_COLORS[def.rarity]
 	local card = Widgets.Card(scroll, {
 		Size = UDim2.new(1, -16, 0, 86),
@@ -108,19 +109,23 @@ local function row(snapshot: ProfileController.Snapshot, def: Bones.SkeletonDef,
 	slots.BackgroundTransparency = 1
 	slots.AnchorPoint = Vector2.new(1, 0.5)
 	slots.Position = UDim2.new(1, -150, 0.5, 0)
-	slots.Size = UDim2.fromOffset(5 * 62 + 4 * 8, 62)
+	-- de 5 a 8 peces: com més n'hi ha, més petites (hi han de cabre)
+	local gap = if #pieces > 5 then 6 else 8
+	local tile = math.min(62, math.floor((452 - (#pieces - 1) * gap) / #pieces))
+	slots.Size = UDim2.fromOffset(#pieces * tile + (#pieces - 1) * gap, 62)
 	slots.Parent = card
 	local layout = Instance.new("UIListLayout")
 	layout.FillDirection = Enum.FillDirection.Horizontal
-	layout.Padding = UDim.new(0, 8)
+	layout.Padding = UDim.new(0, gap)
+	layout.VerticalAlignment = Enum.VerticalAlignment.Center
 	layout.SortOrder = Enum.SortOrder.LayoutOrder
 	layout.Parent = slots
-	for i, piece in Bones.PIECES do
+	for i, piece in pieces do
 		local key = Bones.PieceKey(def.id, piece.id)
-		Widgets.PieceTile(slots, key, if discovered[key] then 1 else 0, 62, nil, i)
+		Widgets.PieceTile(slots, key, if discovered[key] then 1 else 0, tile, nil, i)
 	end
 
-	Theme.Text(card, if complete then "COMPLETE ✓" else `{found}/{#Bones.PIECES}`, {
+	Theme.Text(card, if complete then "COMPLETE ✓" else `{found}/{#pieces}`, {
 		Size = UDim2.fromOffset(130, 34),
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -12, 0.5, 0),

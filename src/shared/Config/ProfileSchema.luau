@@ -30,6 +30,7 @@ export type Settings = {
 	lowGraphics: boolean, -- sense efectes de llum ni partícules (mòbils fluixos)
 	allowTrades: boolean, -- si altres jugadors et poden demanar trades
 	quickRewards: boolean, -- la targeta del premi dura menys
+	questGuide: boolean, -- el raig i la fletxa de la missió (es poden apagar)
 }
 
 export type Stats = {
@@ -85,7 +86,9 @@ export type Profile = {
 	lastIncomeAt: number,
 	gamepasses: { [string]: boolean }, -- clau (Config/Monetization) -> true
 	boostUntil: number, -- x2 de diners fins aquest os.time() (producte o recompensa)
-	luckBoostUntil: number, -- x2 de sort fins aquest os.time() (recompensa)
+	luckBoostUntil: number, -- x2 de sort fins aquest os.time() (recompensa o poció)
+	digBoostUntil: number, -- excavar el doble de sovint fins aquest os.time() (poció haste)
+	potions: { [string]: number }, -- poció (Config/Potions) -> quantes en té
 	daily: { lastDay: number, streak: number }, -- recompensa diària (Config/Rewards)
 	invites: { count: number, rewarded: { [string]: boolean } }, -- amics convidats
 	settings: Settings,
@@ -141,6 +144,9 @@ local SETTINGS_FIELDS: Spec = {
 	end },
 	quickRewards = { kind = "boolean", default = function()
 		return false
+	end },
+	questGuide = { kind = "boolean", default = function()
+		return true
 	end },
 }
 
@@ -217,6 +223,10 @@ local PROFILE_FIELDS: Spec = {
 	luckBoostUntil = { kind = "number", default = function()
 		return 0
 	end },
+	digBoostUntil = { kind = "number", default = function()
+		return 0
+	end },
+	potions = { kind = "table", default = emptyTable },
 	daily = {
 		kind = "table",
 		default = function()

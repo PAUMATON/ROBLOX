@@ -207,6 +207,15 @@ function mammal.Skull(m, sk)
 			ellip(m, "FangTip", V(0.09 * s, 0.07 * s, (tip - mid).Magnitude * 1.3), along(mid, tip), TOOTH)
 		end
 	end
+	if not Bones.HasPiece(sk, "Jaw") then
+		mammal.Jaw(m, sk)
+	end
+end
+
+-- Mandíbula: part del crani, o peça pròpia ("Jaw")
+function mammal.Jaw(m, sk)
+	local s = sk.s
+	local L = (0.2 + (sk.snout or 0.6) * 0.55) * s
 	-- mandíbula una mica oberta, amb les branques que pugen i les dents de baix
 	local hinge = CFrame.new(0, -0.24 * s, -0.08 * s) * CFrame.Angles(math.rad(-9), 0, 0)
 	local jl = L + 0.42 * s
@@ -221,15 +230,11 @@ function mammal.Skull(m, sk)
 	end
 end
 
-function mammal.Spine(m, sk)
+-- Costelles i estèrnum: part de la columna, o peça pròpia ("Ribs") si
+-- l'esquelet en té (Bones.EXTRA_PIECES)
+function mammal.Ribs(m, sk)
 	local s, n = sk.s, sk.ribs or 6
 	local len = 2.6 * s
-	local pts = {}
-	for i = 0, 10 do
-		local t = i / 10
-		table.insert(pts, V(0, math.sin(t * math.pi) * 0.12 * s, -len / 2 + len * t))
-	end
-	column(m, pts, 0.2 * s, 0.17 * s, 1.2)
 	-- Costelles: arc des de la columna cap avall i enfora, més llargues al mig
 	for i = 1, n do
 		local t = (i - 1) / math.max(1, n - 1)
@@ -246,6 +251,20 @@ function mammal.Spine(m, sk)
 	end
 	-- estèrnum
 	ellip(m, "Sternum", V(0.12 * s, 0.1 * s, len * 0.55), CFrame.new(0, -0.58 * 1.1 * s - 0.1 * s, 0))
+end
+
+function mammal.Spine(m, sk)
+	local s = sk.s
+	local len = 2.6 * s
+	local pts = {}
+	for i = 0, 10 do
+		local t = i / 10
+		table.insert(pts, V(0, math.sin(t * math.pi) * 0.12 * s, -len / 2 + len * t))
+	end
+	column(m, pts, 0.2 * s, 0.17 * s, 1.2)
+	if not Bones.HasPiece(sk, "Ribs") then
+		mammal.Ribs(m, sk)
+	end
 end
 
 -- una mà/peu de 4 dits amb artells i urpes
@@ -284,7 +303,8 @@ function mammal.ForeLimbs(m, sk)
 	end
 end
 
-function mammal.HindLimbs(m, sk)
+-- Pelvis: part de les potes del darrere, o peça pròpia ("Pelvis")
+function mammal.Pelvis(m, sk)
 	local s = sk.s
 	-- pelvis: sacre (vèrtebres soldades), dues ales (ili) i l'anell de sota
 	column(m, { V(0, 0.14 * s, 0.26 * s), V(0, 0.15 * s, 0.02 * s), V(0, 0.14 * s, -0.22 * s) }, 0.15 * s, 0.13 * s, 0.7)
@@ -294,6 +314,13 @@ function mammal.HindLimbs(m, sk)
 		-- l'anell (isqui i pubis) amb el forat al mig
 		curve(m, { socket, V(sgn * 0.24 * s, -0.16 * s, -0.3 * s), V(sgn * 0.1 * s, -0.22 * s, -0.16 * s), V(0, -0.2 * s, 0.04 * s), V(sgn * 0.14 * s, -0.14 * s, 0.1 * s), socket }, 0.07 * s, 0)
 		ball(m, "Socket", 0.17 * s, socket, BONE_DARK)
+	end
+end
+
+function mammal.HindLimbs(m, sk)
+	local s = sk.s
+	if not Bones.HasPiece(sk, "Pelvis") then
+		mammal.Pelvis(m, sk)
 	end
 	for _, sgn in { -1, 1 } do
 		local hip = V(sgn * 0.34 * s, -0.05 * s, -0.06 * s)
@@ -366,20 +393,35 @@ function bird.Skull(m, sk)
 	ball(m, "Atlas", 0.16 * s, V(0, -0.12 * s, -0.4 * s))
 end
 
-function bird.Spine(m, sk)
+-- Coll en S: part de la columna, o peça pròpia ("Neck")
+function bird.Neck(m, sk)
 	local s = sk.s
-	-- Coll en S
 	local neck = {}
 	for i = 0, 6 do
 		local t = i / 6
 		table.insert(neck, V(0, 0.5 * s - math.sin(t * math.pi) * 0.28 * s, 0.75 * s - t * 0.75 * s))
 	end
 	column(m, neck, 0.13 * s, 0.15 * s, 0.6)
+end
+
+function bird.Spine(m, sk)
+	local s = sk.s
+	if not Bones.HasPiece(sk, "Neck") then
+		bird.Neck(m, sk)
+	end
 	local trunk = {}
 	for i = 0, 5 do
 		table.insert(trunk, V(0, 0.05 * s, -i * 0.16 * s))
 	end
 	column(m, trunk, 0.16 * s, 0.15 * s, 0.9)
+	if not Bones.HasPiece(sk, "Ribs") then
+		bird.Ribs(m, sk)
+	end
+end
+
+-- Estèrnum, quilla, forquilla i costelles: part de la columna, o peça pròpia ("Ribs")
+function bird.Ribs(m, sk)
+	local s = sk.s
 	-- estèrnum amb la quilla (el que fa volar un ocell)
 	ellip(m, "Sternum", V(0.52 * s, 0.1 * s, 0.9 * s), CFrame.new(0, -0.5 * s, -0.32 * s))
 	ellip(m, "Keel", V(0.08 * s, 0.46 * s, 0.86 * s), CFrame.new(0, -0.7 * s, -0.3 * s))
@@ -433,11 +475,19 @@ function bird.ForeLimbs(m, sk)
 	end
 end
 
-function bird.HindLimbs(m, sk)
+-- Sinsacre i ili: part de les potes, o peça pròpia ("Pelvis")
+function bird.Pelvis(m, sk)
 	local s = sk.s
 	ellip(m, "Synsacrum", V(0.2 * s, 0.14 * s, 0.72 * s), CFrame.new(0, 0.14 * s, 0))
 	for _, sgn in { -1, 1 } do
 		ellip(m, "Ilium", V(0.18 * s, 0.1 * s, 0.7 * s), CFrame.new(sgn * 0.16 * s, 0.08 * s, -0.02 * s) * CFrame.Angles(0, 0, math.rad(sgn * -20)))
+	end
+end
+
+function bird.HindLimbs(m, sk)
+	local s = sk.s
+	if not Bones.HasPiece(sk, "Pelvis") then
+		bird.Pelvis(m, sk)
 	end
 	for _, sgn in { -1, 1 } do
 		local hip = V(sgn * 0.18 * s, 0, -0.05 * s)
@@ -491,7 +541,10 @@ function theropod.Skull(m, sk)
 	ellip(m, "Cranium", V(1.5 * s, 1.75 * s, 2.6 * s), CFrame.new(0, 0.1 * s, -0.4 * s))
 	ellip(m, "Snout", V(1.15 * s, 1.25 * s, 2.8 * s), CFrame.new(0, -0.1 * s, 1.5 * s) * CFrame.Angles(math.rad(6), 0, 0))
 	ellip(m, "NoseTip", V(0.9 * s, 0.9 * s, 0.8 * s), CFrame.new(0, -0.3 * s, 2.75 * s))
-	ellip(m, "Jaw", V(1.25 * s, 0.6 * s, 3.8 * s), CFrame.new(0, -0.95 * s, 0.8 * s) * CFrame.Angles(math.rad(-8), 0, 0))
+	local split = Bones.HasPiece(sk, "Jaw")
+	if not split then
+		theropod.Jaw(m, sk)
+	end
 	ellip(m, "Occiput", V(1.3 * s, 1.1 * s, 0.6 * s), CFrame.new(0, 0.2 * s, -1.6 * s))
 	for _, sgn in { -1, 1 } do
 		-- conca de l'ull, cella amb banyeta i les finestres del crani
@@ -505,9 +558,18 @@ function theropod.Skull(m, sk)
 		for i = 0, 7 do
 			local z = -0.35 * s + i * 0.44 * s
 			tooth(m, V(sgn * 0.44 * s, -0.62 * s, z), (0.32 + 0.1 * math.sin(i * 1.3)) * s, 0.16 * s, true, 0.06 * s)
-			if i > 0 and i < 7 then
-				tooth(m, V(sgn * 0.4 * s, -0.78 * s, z + 0.2 * s), 0.22 * s, 0.13 * s, false)
-			end
+		end
+	end
+end
+
+-- Mandíbula i dents de baix: part del crani, o peça pròpia ("Jaw")
+function theropod.Jaw(m, sk)
+	local s = sk.s
+	ellip(m, "Jaw", V(1.25 * s, 0.6 * s, 3.8 * s), CFrame.new(0, -0.95 * s, 0.8 * s) * CFrame.Angles(math.rad(-8), 0, 0))
+	for _, sgn in { -1, 1 } do
+		for i = 1, 6 do
+			local z = -0.35 * s + i * 0.44 * s
+			tooth(m, V(sgn * 0.4 * s, -0.78 * s, z + 0.2 * s), 0.22 * s, 0.13 * s, false)
 		end
 	end
 end
@@ -523,6 +585,14 @@ function theropod.Spine(m, sk)
 		table.insert(pts, V(0, y * s, z * s))
 	end
 	column(m, pts, 0.62 * s, 0.5 * s, 1.3)
+	if not Bones.HasPiece(sk, "Ribs") then
+		theropod.Ribs(m, sk)
+	end
+end
+
+-- Costelles i gastràlia: part de la columna, o peça pròpia ("Ribs")
+function theropod.Ribs(m, sk)
+	local s = sk.s
 	local r = 1.3 * s
 	for i = 1, 8 do
 		local t = (i - 1) / 7
@@ -562,7 +632,8 @@ function theropod.ForeLimbs(m, sk)
 	end
 end
 
-function theropod.HindLimbs(m, sk)
+-- Pelvis: part de les potes, o peça pròpia ("Pelvis")
+function theropod.Pelvis(m, sk)
 	local s = sk.s
 	-- pelvis: ili gran a banda i banda, pubis cap endavant amb "bota"
 	for _, sgn in { -1, 1 } do
@@ -571,6 +642,13 @@ function theropod.HindLimbs(m, sk)
 		ellip(m, "Ischium", V(0.22 * s, 1.1 * s, 0.3 * s), CFrame.new(sgn * 0.34 * s, -0.3 * s, -0.8 * s) * CFrame.Angles(math.rad(35), 0, 0))
 	end
 	ellip(m, "PubicBoot", V(0.9 * s, 0.4 * s, 0.9 * s), CFrame.new(0, -1.2 * s, 0.95 * s))
+end
+
+function theropod.HindLimbs(m, sk)
+	local s = sk.s
+	if not Bones.HasPiece(sk, "Pelvis") then
+		theropod.Pelvis(m, sk)
+	end
 	for _, sgn in { -1, 1 } do
 		local hip = V(sgn * 0.85 * s, 0, 0)
 		local knee = V(sgn * 1.05 * s, -2.4 * s, 0.9 * s)
@@ -639,6 +717,11 @@ function BoneBuilder.Layout(def: SkeletonDef): { [string]: Vector3 }
 	}
 end
 
+-- Les peces de més es construeixen amb les mateixes coordenades que la
+-- peça de base de la qual surten: van al mateix lloc.
+local EXTRA_AT = { Ribs = "Spine", Neck = "Spine", Pelvis = "HindLimbs", Jaw = "Skull" }
+BoneBuilder.EXTRA_AT = EXTRA_AT
+
 -- Una peça sola, amb els atributs que la identifiquen.
 function BoneBuilder.Piece(skeletonId: string, pieceId: string): Model
 	local def = Bones.ById[skeletonId]
@@ -663,9 +746,9 @@ function BoneBuilder.Assembled(skeletonId: string): Model
 	local layout = BoneBuilder.Layout(def)
 	local model = Instance.new("Model")
 	model.Name = skeletonId
-	for _, piece in Bones.PIECES do
+	for _, piece in Bones.PiecesOf(skeletonId) do
 		local m = BoneBuilder.Piece(skeletonId, piece.id)
-		m:PivotTo(CFrame.new(layout[piece.id] or Vector3.zero))
+		m:PivotTo(CFrame.new(layout[piece.id] or layout[EXTRA_AT[piece.id] or ""] or Vector3.zero))
 		m.Parent = model
 	end
 	model.WorldPivot = CFrame.identity

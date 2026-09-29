@@ -47,7 +47,6 @@ local CHAIN: { Quest } = {
 	{ text = "Dig 5 fossils", stat = "digs", target = 5, delta = true, reward = coins(5), go = "construction" },
 	{ text = "Show 2 fossils in your museum", stat = "displayed", target = 2, delta = false, reward = coins(5), go = "backpack" },
 	{ text = "Find an Uncommon fossil", stat = "finds", arg = "Uncommon", target = 1, delta = true, reward = coins(8), go = "construction" },
-	{ text = "Sell 3 fossils to Bonnie", stat = "sold", target = 3, delta = true, reward = coins(8), go = "seller" },
 	{ text = "Buy a better trowel at Dig & Co.", stat = "tools", target = 2, delta = false, reward = luck(10), go = "shop" },
 	{ text = "Dig 25 fossils", stat = "digs", target = 25, delta = true, reward = coins(12), go = "construction" },
 	{ text = "Fill 5 museum cases", stat = "displayed", target = 5, delta = false, reward = coins(12), go = "backpack" },
@@ -67,7 +66,6 @@ local CHAIN: { Quest } = {
 	{ text = "Unlock Fossil Beach", stat = "zones", target = 2, delta = false, reward = coins(40), go = "beach" },
 	{ text = `Make your museum earn {Museum.PerSecondText(12000)} $/s`, stat = "income", target = 12000, delta = false, reward = coins(45), go = "backpack" },
 	{ text = "Find a Legendary fossil", stat = "finds", arg = "Legendary", target = 1, delta = true, reward = luck(30), go = "construction" },
-	{ text = "Sell 50 fossils to Bonnie", stat = "sold", target = 50, delta = true, reward = coins(50), go = "seller" },
 	{ text = "Fly to Egypt and unlock it", stat = "zones", target = 3, delta = false, reward = luck(30), go = "egypt" },
 	{ text = "Discover every fossil in the Index", stat = "discovered", target = #Bones.ALL_KEYS, delta = false, reward = money(60), go = "construction" },
 }
@@ -77,7 +75,7 @@ Quests.CHAIN = CHAIN
 local ENDLESS: { Quest } = {
 	{ text = "Dig 100 fossils", stat = "digs", target = 100, delta = true, reward = coins(30), go = "construction" },
 	{ text = "Find an Epic fossil", stat = "finds", arg = "Epic", target = 1, delta = true, reward = luck(15), go = "construction" },
-	{ text = "Sell 30 fossils to Bonnie", stat = "sold", target = 30, delta = true, reward = coins(25), go = "seller" },
+	{ text = "Build a full skeleton", stat = "built", target = 1, delta = true, reward = coins(40), go = "backpack" },
 	{ text = "Find a Legendary fossil", stat = "finds", arg = "Legendary", target = 1, delta = true, reward = money(30), go = "construction" },
 }
 

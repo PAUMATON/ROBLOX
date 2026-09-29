@@ -16,6 +16,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
 local Bones = require(Config:WaitForChild("Bones"))
 local Dig = require(Config:WaitForChild("Dig"))
+local Potions = require(Config:WaitForChild("Potions"))
 local Tools = require(Config:WaitForChild("Tools"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
@@ -569,6 +570,18 @@ local function onUpdate(data: any)
 			end
 		else
 			Effects.Toast("Nothing this time... dig again!", C.grey)
+		end
+		-- poció de regal (de tant en tant, o sempre al munt daurat)
+		local potion = if type(data.potion) == "string" then Potions.ById[data.potion] else nil
+		if potion then
+			task.delay(0.8, function()
+				Effects.Toast(`🧪 BONUS! You found a {potion.name} {potion.icon}`, potion.color, "")
+				Theme.Arpeggio("pop", { 1.3, 1.6, 2 }, 0.06, 0.45)
+				Theme.Note("sparkle", 0.55, 1.2)
+				if lastSpot and lastSpot.Parent then
+					worldPop(lastSpot, `+1 🧪`, potion.color)
+				end
+			end)
 		end
 	elseif phase == "denied" then
 		Effects.Toast("🔒 " .. tostring(data.reason or "You can't dig here"), C.red, "error")

@@ -11,6 +11,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Bones = require(Shared:WaitForChild("Config"):WaitForChild("Bones"))
 local Museum = require(Shared:WaitForChild("Config"):WaitForChild("Museum"))
+local Potions = require(Shared:WaitForChild("Config"):WaitForChild("Potions"))
+local Tools = require(Shared:WaitForChild("Config"):WaitForChild("Tools"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
 local UI = script.Parent.Parent:WaitForChild("UI")
@@ -142,12 +144,12 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 				Position = UDim2.new(1, -204, 0.5, 0),
 				Color = C.gold,
 				Icon = "🔨",
-				Text = "BUILD x2 $",
+				Text = "BUILD x5 $",
 				Sound = "reward",
 				OnClick = function()
 					Remotes.MuseumAction:FireServer("assemble", def.id)
 					selected = def.id
-					Effects.Toast(`🦴 {def.name} skeleton built! It earns double $`, C.gold, "reward")
+					Effects.Toast(`🦴 {def.name} skeleton built! It earns x5 $`, C.gold, "reward")
 				end,
 			})
 			Effects.Shine(build.button, 14, 1.2)
@@ -182,6 +184,66 @@ local function redraw()
 		return order
 	end
 
+	-- pocions: clic = fer-la servir (el servidor ho valida)
+	local potionRow = {}
+	for _, def in Potions.LIST do
+		local n = (snapshot.potions or {})[def.id] or 0
+		if n > 0 then
+			table.insert(potionRow, { def = def, n = n })
+		end
+	end
+	if #potionRow > 0 then
+		section("🧪 POTIONS (tap to use)", nextOrder())
+		local g = grid(nextOrder(), 84)
+		for i, item in potionRow do
+			local def = item.def
+			local b = Widgets.Button({
+				Parent = g,
+				Size = UDim2.fromOffset(84, 84),
+				Color = def.color,
+				Icon = def.icon,
+				Text = `x{item.n}`,
+				Layout = "tile",
+				LayoutOrder = i,
+				OnClick = function()
+					Remotes.PotionRequest:FireServer("use", def.id)
+				end,
+			})
+			Widgets.Tooltip(b.button, def.name, def.text, def.color)
+		end
+	end
+
+	-- paletes que tens: clic = equipar-la (la de la mà, amb contorn groc)
+	section("⛏️ TROWELS (tap to equip)", nextOrder())
+	do
+		local g = grid(nextOrder(), 84)
+		for i, def in Tools.LIST do
+			if table.find(snapshot.tools or {}, def.id) then
+				local equipped = snapshot.equippedTool == def.id
+				local b = Widgets.Button({
+					Parent = g,
+					Size = UDim2.fromOffset(84, 84),
+					Color = def.blade:Lerp(C.panel, 0.3),
+					Icon = "⛏️",
+					Text = Tools.LuckText(def.luck),
+					Layout = "tile",
+					LayoutOrder = i,
+					OnClick = function()
+						if not equipped then
+							Remotes.ShopRequest:FireServer("equip", def.id)
+						end
+					end,
+				})
+				local st = b.button:FindFirstChildOfClass("UIStroke")
+				if st and equipped then
+					st.Color = C.yellow
+					st.Thickness = 5
+				end
+				Widgets.Tooltip(b.button, def.name, if equipped then "In your hands" else `{Tools.LuckText(def.luck)} luck · tap to equip`, def.blade)
+			end
+		end
+	end
+
 	-- esquelets que ja pots muntar
 	local ready = {}
 	for _, def in Bones.SKELETONS do
@@ -190,7 +252,7 @@ local function redraw()
 		end
 	end
 	if #ready > 0 then
-		section("🔨 READY TO BUILD (earns x2!)", nextOrder())
+		section("🔨 READY TO BUILD (earns x5!)", nextOrder())
 		local g = grid(nextOrder(), 84)
 		for i, def in ready do
 			local tile = Widgets.PieceTile(g, Bones.PieceKey(def.id, "Skull"), 1, 84, function()

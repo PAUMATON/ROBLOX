@@ -4258,7 +4258,36 @@ for _, r in ipairs({ { -720, -400, -560, 560 }, { -600, 200, -640, -300 }, { -60
 		T:WriteVoxels(region, 4, mats, occ)
 	end
 end
-print(("Carrer: %d fanals, %d arbres de vorera; passeig, patis, bosc i turons fets (sense cotxes)"):format(nLamps, nTrees))
+-- ── parets invisibles del món: a la filera d'arbres de les vores, i per la
+-- platja i el mar fins on s'acaba (x = 1100), perquè ningú no pugui sortir
+-- vorejant el bosc per la sorra ni nedant fins al buit ──
+do
+	local m = Instance.new("Model")
+	m.Name = "WorldBounds"
+	local H, TH = 90, 2 -- alçada (no s'hi pot saltar per sobre) i gruix
+	local SEA_END = 1100
+	local function wall(x0, z0, x1, z1)
+		local w = P(V3(math.max(x1 - x0, TH), H, math.max(z1 - z0, TH)), CF((x0 + x1) / 2, H / 2 - 20, (z0 + z1) / 2), C(255, 255, 255), M.SmoothPlastic, m)
+		w.Transparency = 1
+		w.CanQuery = false
+		w.CanTouch = false
+		w.CastShadow = false
+	end
+	local WX = L.x0 + 3 -- a l'oest, entre els troncs (a x0 + 5) i el límit
+	local NZ, SZ = L.z0 + 1, L.z1 - 1 -- al nord i al sud, just darrere els arbres
+	local BZ = 305 -- a la platja, la sorra va una mica més enllà
+	wall(WX, NZ, WX, SZ) -- oest
+	wall(WX, NZ, LAYOUT.PROM.x0, NZ) -- nord (terra)
+	wall(WX, SZ, LAYOUT.PROM.x0, SZ) -- sud (terra)
+	wall(LAYOUT.PROM.x0, -BZ, LAYOUT.PROM.x0, NZ) -- tram que baixa a la platja (nord)
+	wall(LAYOUT.PROM.x0, SZ, LAYOUT.PROM.x0, BZ) -- (sud)
+	wall(LAYOUT.PROM.x0, -BZ, SEA_END, -BZ) -- nord (platja i mar)
+	wall(LAYOUT.PROM.x0, BZ, SEA_END, BZ) -- sud (platja i mar)
+	wall(SEA_END - 40, -BZ, SEA_END - 40, BZ) -- est: abans que s'acabi el mar
+	m.Parent = F
+end
+
+print(("Carrer: %d fanals, %d arbres de vorera; passeig, patis, bosc, turons i parets invisibles fets"):format(nLamps, nTrees))
 
 end }
 STEPS[#STEPS + 1] = { "09_toolshop", function()

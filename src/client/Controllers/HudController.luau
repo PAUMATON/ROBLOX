@@ -725,6 +725,22 @@ function HudController.Start()
 		if data.kind == "offline" then
 			-- Espera que la pantalla hagi carregat abans de celebrar-ho
 			task.delay(1.5, showWelcomeBack, data)
+		elseif data.kind == "event" then
+			-- munt daurat: tothom ho sap i hi corre
+			Effects.Toast(tostring(data.message), C.gold, "")
+			Theme.Fanfare(1)
+			Theme.Note("sparkle", 0.6, 1)
+			Effects.Confetti(fx, 40)
+		elseif data.kind == "announce" and data.userId ~= game:GetService("Players").LocalPlayer.UserId then
+			-- algú del servidor ha trobat una cosa grossa
+			local color = Bones.RARITY_COLORS[data.rarity] or C.purple
+			Effects.Toast(`📣 {tostring(data.message)}`, color, "")
+			if data.rarity == "Secret" then
+				Theme.Fanfare(2)
+				Effects.Flash(C.white, 0.35)
+			else
+				Theme.Note("notify", 0.5, 1.2)
+			end
 		elseif data.kind == "shop" then
 			if data.ok then
 				-- la festa que toca (ho diu el servidor): diners, fanfàrria o gran

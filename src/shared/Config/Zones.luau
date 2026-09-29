@@ -57,7 +57,7 @@ local LIST: { ZoneDef } = {
 		id = "beach",
 		name = "Fossil Beach",
 		number = 2,
-		unlockCost = 450000,
+		unlockCost = 320000,
 		coinsPerDig = 720,
 		icon = "🏖️",
 		unlockAt = "at the beach gate",
@@ -67,7 +67,7 @@ local LIST: { ZoneDef } = {
 		id = "egypt",
 		name = "Egypt",
 		number = 3,
-		unlockCost = 5000000,
+		unlockCost = 3200000,
 		coinsPerDig = 3600,
 		icon = "🐫",
 		requires = "beach",
@@ -104,7 +104,7 @@ do
 			end
 			local rarity = Bones.ById[skeletonId].rarity
 			byRarity[rarity] = byRarity[rarity] or {}
-			for _, piece in Bones.PIECES do
+			for _, piece in Bones.PiecesOf(skeletonId) do
 				table.insert(byRarity[rarity], Bones.PieceKey(skeletonId, piece.id))
 			end
 			local list = Zones.OfSkeleton[skeletonId] or {}

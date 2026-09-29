@@ -6,20 +6,23 @@
 Roblox. Excaves fòssils amb un minijoc de precisió: cada excavació dona UN
 fòssil (una peça d'un esquelet). Els guardes a la motxilla, els exposes al teu
 museu (10 vitrines) i **comercies peces amb altres jugadors**. Si tens la sort
-de reunir les 5 peces d'un esquelet, el muntes i rendeix el doble. L'índex
+de reunir totes les peces d'un esquelet (de 5 a 8: com més rar, més peces), el
+muntes i rendeix la suma de les peces x5. L'índex
 (a part de la motxilla) apunta tot el que has descobert. El museu genera renda
 passiva amb sostre.
 
 ## Loop
 Excavar → minijoc → fòssil amb raresa → motxilla (i índex) → l'exposes → renda →
 si et falta una peça d'un esquelet la comercies o segueixes excavant → muntes
-l'esquelet (x2) → millor eina a Dig & Co. (més sort) → repeteixes.
+l'esquelet (x5) → millor eina a Dig & Co. (més sort) → repeteixes.
 Els fòssils que sobren es venen a la Bonnie (Fossil Buyer, al costat de
 Dig & Co.): una peça val 4 minuts de la seva renda de museu.
 
 ## L'EIX DEL JOC: el comerç
 7 rareses: Common, Uncommon, Rare, Epic, Legendary, Mythic, Secret. Cada
-esquelet té UNA raresa i les seves 5 peces també. A la Zona 1 hi ha un esquelet
+esquelet té UNA raresa i totes les seves peces també (5 a 8 peces:
+Bones.luau `pieces`; les de més surten de partir-ne una de base: caixa
+toràcica, pelvis, mandíbula o coll). A la Zona 1 hi ha un esquelet
 per raresa (del Rat al T-Rex).
 Dins d'una raresa, TOTES les peces són igual de probables, i entre esquelets de
 la mateixa raresa també. Sense pietat: el que ja tens no fa més probable el que
@@ -119,13 +122,27 @@ Productes repetibles: x2 diners 15 min / 1 h, paquets de monedes.
 Els id de Roblox es posen a Monetization.luau quan es creen al Dashboard.
 
 ## RECOMPENSES GRATIS (Config/Rewards.luau)
-Diària en ratxa de 7 (dia 7 = fòssil Epic) · regals per estona de joc (5 a
-60 min, cada sessió) · invitacions (premi per a qui convida i qui entra, un
+Molt generoses (paquets de monedes + pocions + fòssil). Diària en ratxa de 7
+(dia 7 = fòssil Legendary) · regals per estona de joc (2 a 60 min, cada
+sessió) · invitacions (premi per a qui convida i qui entra, un
 cop per amic, màx. 20). Like/preferits: MAI amb premi (normes de Roblox);
 només es demana amablement després d'una troballa rara.
 
+## POCIONS (Config/Potions.luau)
+A la motxilla i a la barra de baix (HotbarController, en lloc de la de
+Roblox). Luck (x2 sort), Money (x2 diners), Haste (excavar 2x més sovint),
+Super (luck + money). Surten de recompenses, missions i, 1 de cada 100 cops,
+en excavar. Allarguen el boost en temps. No es comercien ni es venen per Robux.
+
+## ESDEVENIMENTS
+Munt daurat: cada 4–7 min un munt a l'atzar brilla 2 min (x3 sort, x3
+monedes i una Super Potion per al primer que el cava); s'avisa tot el
+servidor. Les troballes Legendary, Mythic i Secret també s'anuncien.
+
 ## MISSIONS (Config/Quests.luau)
-Una a la vegada, a dalt de la pantalla quan el tutorial s'acaba. El progrés
+Una a la vegada, a dalt de la pantalla quan el tutorial s'acaba. El raig i la
+fletxa es poden apagar (botó 🧭 GUIDE, es desa a la configuració). Vendre a
+la Bonnie no és cap missió (és secundari). El progrés
 surt del perfil (mai del client); el client només demana "claim". Premis en
 minuts de renda, com les recompenses; mai fòssils (no han de ser farmejables
 per passar-los a un altre compte).

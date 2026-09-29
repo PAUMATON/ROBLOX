@@ -121,7 +121,7 @@ function InventoryService.Assemble(player: Player, skeletonId: string): boolean
 	if not profile or not Bones.CanAssemble(profile.ownedBones, skeletonId) then
 		return false
 	end
-	for _, piece in Bones.PIECES do
+	for _, piece in Bones.PiecesOf(skeletonId) do
 		InventoryService.TakeBone(profile, Bones.PieceKey(skeletonId, piece.id))
 	end
 	profile.ownedSkeletons[skeletonId] = (profile.ownedSkeletons[skeletonId] or 0) + 1
@@ -170,6 +170,8 @@ function InventoryService.Push(player: Player)
 		money = Monetization.MoneyMultiplier(profile.gamepasses, profile.boostUntil),
 		boostLeft = math.max(0, profile.boostUntil - os.time()),
 		luckBoostLeft = math.max(0, profile.luckBoostUntil - os.time()),
+		hasteLeft = math.max(0, profile.digBoostUntil - os.time()),
+		potions = profile.potions,
 		persisted = DataService.IsPersisted(player),
 	})
 	InventoryService.Pushed:Fire(player, profile)

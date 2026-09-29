@@ -21,7 +21,7 @@ local RANGES: { [string]: { number } } = {
 	uiScale = { 0.7, 1.3 },
 	menuScale = { 0.7, 1.3 },
 }
-local FLAGS = { "lowGraphics", "allowTrades", "quickRewards" }
+local FLAGS = { "lowGraphics", "allowTrades", "quickRewards", "questGuide" }
 
 function SettingsService.Start()
 	Remotes.SettingsRequest.OnServerEvent:Connect(function(player: Player, payload: any)

@@ -32,6 +32,16 @@ Dig.SESSION_TIMEOUT = 20 -- una excavacio sense acabar es tanca sola
 -- Un munt excavat queda buit una estona: obliga a moure's per l'obra i
 -- fa que el mapa es vegi viu. Es per munt, no per jugador.
 Dig.RESPAWN_TIME = 20
+
+-- MUNT DAURAT (esdeveniment): cada GOLDEN_EVERY segons (a l'atzar entre els
+-- dos), un munt a l'atzar brilla GOLDEN_TIME segons. Qui l'excava té x3 de
+-- sort (dins del sostre), x3 de monedes i una poció de regal. Ho avisa a tot
+-- el servidor.
+Dig.GOLDEN_EVERY = { 240, 420 }
+Dig.GOLDEN_TIME = 120
+Dig.GOLDEN_LUCK = 3
+Dig.GOLDEN_COINS = 3
+Dig.GOLDEN_POTION = "super"
 Dig.DEPLETED_SCALE = 0.35 -- mida del munt buit respecte de l'original
 Dig.PROMPT_DISTANCE = 11 -- des d'on surt el boto "Dig" (mobil i teclat)
 

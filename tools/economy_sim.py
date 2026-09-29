@@ -25,22 +25,25 @@ RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret
 WEIGHTS = {"Common": 55, "Uncommon": 28, "Rare": 11, "Epic": 4.5, "Legendary": 1.2, "Mythic": 0.25, "Secret": 0.05}
 LUCKY_FROM = "Rare"
 PIECE_INCOME = {"Common": 60, "Uncommon": 120, "Rare": 240, "Epic": 600, "Legendary": 1500, "Mythic": 4200, "Secret": 12000}  # x60 (29/09/2026)
-SKELETON_BONUS = 2
-PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail"]
+SKELETON_BONUS = 5  # 29/09/2026: el muntat rendeix la suma de les peces x5
+PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail", "Ribs", "Pelvis", "Extra"]
+# quantes peces té cada esquelet (Bones.luau: `pieces`)
+PIECES_OF = {"Rat": 5, "Pigeon": 5, "Cat": 6, "Dog": 6, "Dodo": 7, "Sabertooth": 8, "TRex": 8,
+             "Seagull": 5, "Otter": 6, "Cormorant": 7, "Ibis": 6, "Jackal": 7, "Camel": 7, "Crocodile": 8}
 MAX_LUCK = 20  # la millor paleta (sense passis de Robux)
 ZONES = {
     "construction": {"cost": 0, "coins": 270, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
                                                    "Dodo": "Legendary", "Sabertooth": "Mythic", "TRex": "Secret"}},
-    "beach": {"cost": 450000, "coins": 720, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
+    "beach": {"cost": 320000, "coins": 720, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
     # illa (només en avió), demana la platja
-    "egypt": {"cost": 5000000, "coins": 3600, "sk": {"Ibis": "Rare", "Jackal": "Epic", "Camel": "Legendary", "Crocodile": "Mythic"}},
+    "egypt": {"cost": 3200000, "coins": 3600, "sk": {"Ibis": "Rare", "Jackal": "Epic", "Camel": "Legendary", "Crocodile": "Mythic"}},
 }
 # (id, preu, sort, zona que cal tenir oberta)
-TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 12000, 1.5, None), ("bronze_trowel", 45000, 2, None),
-         ("field_pickaxe", 110000, 3, None), ("pro_brush", 320000, 4, None), ("emerald_trowel", 900000, 5.5, None),
-         ("golden_shovel", 2500000, 7, None), ("sonic_drill", 6000000, 9, None),
-         ("scarab_trowel", 15000000, 12, "egypt"), ("anubis_trowel", 32000000, 15, "egypt"),
-         ("pharaoh_trowel", 65000000, 20, "egypt")]
+TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 9000, 1.5, None), ("bronze_trowel", 33000, 2, None),
+         ("field_pickaxe", 80000, 3, None), ("pro_brush", 240000, 4, None), ("emerald_trowel", 650000, 5.5, None),
+         ("golden_shovel", 1700000, 7, None), ("sonic_drill", 4200000, 9, None),
+         ("scarab_trowel", 10000000, 12, "egypt"), ("anubis_trowel", 22000000, 15, "egypt"),
+         ("pharaoh_trowel", 45000000, 20, "egypt")]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
 SLOTS, INCOME_CAP = 10, 360000
@@ -77,7 +80,7 @@ def roll(zone, luck):
     if rarity is None:
         rarity = min(present, key=RARITIES.index)
     # totes les peces d'aquesta raresa a la zona, igual de probables
-    pool = [(s, p) for s, rr in ZONES[zone]["sk"].items() if rr == rarity for p in PIECES]
+    pool = [(s, p) for s, rr in ZONES[zone]["sk"].items() if rr == rarity for p in PIECES[:PIECES_OF[s]]]
     return random.choice(pool)
 
 
@@ -88,20 +91,16 @@ def rarity_of(sk):
     raise KeyError(sk)
 
 
-# categories (valor, raresa, és_esquelet) ordenades de més a menys renda
-CATS = sorted([(PIECE_INCOME[r] * (len(PIECES) * SKELETON_BONUS if sk else 1), r, sk)
-               for r in RARITIES for sk in (True, False)], reverse=True)
-
-
 def museum_income(piece_count, skel_count):
-    left, total = SLOTS, 0
-    for value, r, sk in CATS:
-        n = min(left, (skel_count if sk else piece_count).get(r, 0))
-        total += n * value
-        left -= n
-        if left == 0:
-            break
-    return min(total, INCOME_CAP)
+    """piece_count: raresa -> peces soltes; skel_count: esquelet -> muntats.
+    Les 10 vitrines s'omplen amb el que més rendeix."""
+    items = []
+    for sk, n in skel_count.items():
+        items += [PIECE_INCOME[rarity_of(sk)] * PIECES_OF[sk] * SKELETON_BONUS] * n
+    for r, n in piece_count.items():
+        items += [PIECE_INCOME[r]] * min(n, SLOTS)
+    items.sort(reverse=True)
+    return min(sum(items[:SLOTS]), INCOME_CAP)
 
 
 def play(max_minutes=2400):
@@ -133,11 +132,12 @@ def play(max_minutes=2400):
         else:
             piece_count[rarity] = piece_count.get(rarity, 0) + 1
         # munta tot el que es pugui
-        if all(bones.get((sk, p), 0) > 0 for p in PIECES):
-            for p in PIECES:
+        mine = PIECES[:PIECES_OF[sk]]
+        if all(bones.get((sk, p), 0) > 0 for p in mine):
+            for p in mine:
                 bones[(sk, p)] -= 1
-            piece_count[rarity] -= len(PIECES)
-            skel_count[rarity] = skel_count.get(rarity, 0) + 1
+            piece_count[rarity] -= len(mine)
+            skel_count[sk] = skel_count.get(sk, 0) + 1
             events.setdefault(f"esquelet {rarity} muntat", t)
         income = museum_income(piece_count, skel_count)
         for milestone in (3000, 12000, 60000, INCOME_CAP):

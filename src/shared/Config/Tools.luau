@@ -42,17 +42,17 @@ local C3 = Color3.fromRGB
 local LIST: { ToolDef } = {
 	-- Dig & Co. (plaça)
 	{ id = "rusty_shovel", name = "Rusty Trowel", model = "trowel", price = 0, luck = 1.0, blade = C3(150, 96, 60), handle = C3(139, 111, 71), blurb = "Old, bent and yours. Every digger starts here." },
-	{ id = "steel_trowel", name = "Steel Trowel", model = "trowel", price = 12000, luck = 1.5, blade = C3(190, 196, 204), handle = C3(120, 84, 56), blurb = "A real archaeologist's trowel. +50% luck!" },
-	{ id = "bronze_trowel", name = "Bronze Trowel", model = "trowel", price = 45000, luck = 2, blade = C3(205, 127, 50), handle = C3(92, 62, 40), blurb = "Warm bronze, cool finds. DOUBLE luck!" },
-	{ id = "field_pickaxe", name = "Pro Trowel", model = "trowel", price = 110000, luck = 3, blade = C3(60, 140, 230), handle = C3(40, 44, 50), blurb = "Used by museum experts. TRIPLE luck!" },
-	{ id = "pro_brush", name = "Ruby Trowel", model = "trowel", price = 320000, luck = 4, blade = C3(230, 50, 80), handle = C3(60, 40, 30), blurb = "Shines red. Epic fossils love it." },
-	{ id = "emerald_trowel", name = "Emerald Trowel", model = "trowel", price = 900000, luck = 5.5, blade = C3(40, 200, 110), handle = C3(40, 50, 44), blurb = "Green as a jungle. Legendary bones wake up." },
-	{ id = "golden_shovel", name = "Golden Trowel", model = "trowel", price = 2500000, luck = 7, blade = C3(255, 200, 50), handle = C3(60, 40, 30), blurb = "Pure gold. Legends say it smells Mythic bones." },
-	{ id = "sonic_drill", name = "Diamond Trowel", model = "trowel", price = 6000000, luck = 9, blade = C3(120, 230, 255), handle = C3(34, 36, 40), blurb = "The best trowel in the city. x9 luck!" },
+	{ id = "steel_trowel", name = "Steel Trowel", model = "trowel", price = 9000, luck = 1.5, blade = C3(190, 196, 204), handle = C3(120, 84, 56), blurb = "A real archaeologist's trowel. +50% luck!" },
+	{ id = "bronze_trowel", name = "Bronze Trowel", model = "trowel", price = 33000, luck = 2, blade = C3(205, 127, 50), handle = C3(92, 62, 40), blurb = "Warm bronze, cool finds. DOUBLE luck!" },
+	{ id = "field_pickaxe", name = "Pro Trowel", model = "trowel", price = 80000, luck = 3, blade = C3(60, 140, 230), handle = C3(40, 44, 50), blurb = "Used by museum experts. TRIPLE luck!" },
+	{ id = "pro_brush", name = "Ruby Trowel", model = "trowel", price = 240000, luck = 4, blade = C3(230, 50, 80), handle = C3(60, 40, 30), blurb = "Shines red. Epic fossils love it." },
+	{ id = "emerald_trowel", name = "Emerald Trowel", model = "trowel", price = 650000, luck = 5.5, blade = C3(40, 200, 110), handle = C3(40, 50, 44), blurb = "Green as a jungle. Legendary bones wake up." },
+	{ id = "golden_shovel", name = "Golden Trowel", model = "trowel", price = 1700000, luck = 7, blade = C3(255, 200, 50), handle = C3(60, 40, 30), blurb = "Pure gold. Legends say it smells Mythic bones." },
+	{ id = "sonic_drill", name = "Diamond Trowel", model = "trowel", price = 4200000, luck = 9, blade = C3(120, 230, 255), handle = C3(34, 36, 40), blurb = "The best trowel in the city. x9 luck!" },
 	-- Egipte (mercat de l'illa): les millors
-	{ id = "scarab_trowel", name = "Scarab Trowel", model = "trowel", price = 15000000, luck = 12, blade = C3(30, 170, 160), handle = C3(214, 170, 72), blurb = "Blessed by the sacred scarab. x12 luck!", zone = "egypt" },
-	{ id = "anubis_trowel", name = "Anubis Trowel", model = "trowel", price = 32000000, luck = 15, blade = C3(36, 36, 44), handle = C3(214, 170, 72), blurb = "The jackal god guards the rarest bones. x15!", zone = "egypt" },
-	{ id = "pharaoh_trowel", name = "Pharaoh's Trowel", model = "trowel", price = 65000000, luck = 20, blade = C3(255, 214, 90), handle = C3(46, 84, 150), blurb = "The trowel of the Pharaoh himself. MAX luck x20!", zone = "egypt" },
+	{ id = "scarab_trowel", name = "Scarab Trowel", model = "trowel", price = 10000000, luck = 12, blade = C3(30, 170, 160), handle = C3(214, 170, 72), blurb = "Blessed by the sacred scarab. x12 luck!", zone = "egypt" },
+	{ id = "anubis_trowel", name = "Anubis Trowel", model = "trowel", price = 22000000, luck = 15, blade = C3(36, 36, 44), handle = C3(214, 170, 72), blurb = "The jackal god guards the rarest bones. x15!", zone = "egypt" },
+	{ id = "pharaoh_trowel", name = "Pharaoh's Trowel", model = "trowel", price = 45000000, luck = 20, blade = C3(255, 214, 90), handle = C3(46, 84, 150), blurb = "The trowel of the Pharaoh himself. MAX luck x20!", zone = "egypt" },
 }
 Tools.LIST = LIST
 

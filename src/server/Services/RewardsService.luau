@@ -23,6 +23,7 @@ local RateLimiter = require(Util:WaitForChild("RateLimiter"))
 
 local DataService = require(script.Parent.DataService)
 local InventoryService = require(script.Parent.InventoryService)
+local PotionService = require(script.Parent.PotionService)
 
 local log = Logger.new("RewardsService")
 
@@ -41,6 +42,19 @@ end
 
 -- Dona una recompensa i torna el text per ensenyar-la
 local function give(player: Player, reward: Rewards.Reward): string?
+	-- paquet: tot el que porta, i els textos junts ("+300 coins + a Luck Potion")
+	if reward.kind == "bundle" then
+		local texts = {}
+		for _, item in reward.items or {} do
+			local t = give(player, item)
+			if t then
+				table.insert(texts, t)
+			end
+		end
+		return if #texts > 0 then table.concat(texts, " + ") else nil
+	elseif reward.kind == "potion" then
+		return PotionService.Give(player, reward.potion or "", reward.count)
+	end
 	local profile = DataService.Get(player)
 	if not profile then
 		return nil

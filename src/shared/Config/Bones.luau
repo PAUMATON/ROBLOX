@@ -8,8 +8,9 @@
 --   · Dins d'una mateixa raresa, TOTES les peces són igual de probables.
 --     No hi ha "pietat": si tens 3 peces del T-Rex, les 2 que et falten
 --     surten igual de sovint que qualsevol altra peça Secret.
---   · Un fòssil sol ja es pot exposar al museu. Si reuneixes les 5 peces
---     d'un esquelet, el pots muntar i rendeix el doble (SKELETON_BONUS).
+--   · Un fòssil sol ja es pot exposar al museu. Si reuneixes TOTES les
+--     peces d'un esquelet (de 5 a 8, segons l'esquelet: `pieces`), el pots
+--     muntar i rendeix la suma de les peces x SKELETON_BONUS (x5).
 --
 -- Una peça es desa al perfil amb la clau "<esquelet>_<peça>", p.ex.
 -- "Rat_Skull". No la canviïs mai d'un esquelet ja publicat.
@@ -42,6 +43,9 @@ export type SkeletonDef = {
 	-- Només els esquelets de raresa molt alta poden sortir a més d'una zona
 	-- (Regla de zones). Zones.luau ho comprova.
 	multiZone: boolean?,
+	-- Quantes peces té (5..8). Les 5 de base i, per sobre, les d'EXTRA_PIECES
+	-- del seu tipus per ordre. Com més alta la raresa, més peces.
+	pieces: number?,
 }
 
 export type PieceInfo = {
@@ -115,8 +119,9 @@ local PIECE_INCOME: { [string]: number } = {
 }
 Bones.PIECE_INCOME = PIECE_INCOME
 
--- Un esquelet muntat rendeix com les seves 5 peces soltes multiplicat per això
-Bones.SKELETON_BONUS = 2
+-- Un esquelet muntat rendeix com TOTES les seves peces soltes sumades,
+-- multiplicat per això (29/09/2026: x5, decisió del propietari)
+Bones.SKELETON_BONUS = 5
 
 -- Ordre de cada raresa (per ordenar: 1 = Common)
 Bones.RARITY_ORDER = {} :: { [string]: number }
@@ -126,7 +131,7 @@ end
 
 -- ─────────────────────────── PECES ───────────────────────────
 
--- Les mateixes 5 peces per a tots els esquelets
+-- Les 5 peces de base, que tenen tots els esquelets
 local PIECES: { PieceDef } = {
 	{ id = "Skull" },
 	{ id = "Spine" },
@@ -136,6 +141,17 @@ local PIECES: { PieceDef } = {
 }
 Bones.PIECES = PIECES
 
+-- Les peces de més (fins a 8 en total), per ordre, segons el tipus. Surten
+-- de partir una peça de base (BoneBuilder): la caixa toràcica surt de la
+-- columna, la pelvis de les potes del darrere, la mandíbula del crani i el
+-- coll de la columna. Muntat, l'esquelet es veu igual de sencer.
+local EXTRA_PIECES: { [string]: { string } } = {
+	mammal = { "Ribs", "Pelvis", "Jaw" },
+	bird = { "Ribs", "Pelvis", "Neck" },
+	theropod = { "Ribs", "Pelvis", "Jaw" },
+}
+Bones.EXTRA_PIECES = EXTRA_PIECES
+
 local PIECE_NAMES: { [string]: { [string]: string } } = {
 	mammal = {
 		Skull = "Skull",
@@ -143,6 +159,9 @@ local PIECE_NAMES: { [string]: { [string]: string } } = {
 		ForeLimbs = "Front Legs",
 		HindLimbs = "Hind Legs",
 		Tail = "Tail",
+		Ribs = "Ribcage",
+		Pelvis = "Pelvis",
+		Jaw = "Jaw",
 	},
 	bird = {
 		Skull = "Skull & Beak",
@@ -150,6 +169,9 @@ local PIECE_NAMES: { [string]: { [string]: string } } = {
 		ForeLimbs = "Wings",
 		HindLimbs = "Legs",
 		Tail = "Tail Fan",
+		Ribs = "Ribcage & Keel",
+		Pelvis = "Pelvis",
+		Neck = "Neck",
 	},
 	theropod = {
 		Skull = "Skull",
@@ -157,6 +179,9 @@ local PIECE_NAMES: { [string]: { [string]: string } } = {
 		ForeLimbs = "Tiny Arms",
 		HindLimbs = "Legs",
 		Tail = "Tail",
+		Ribs = "Ribcage",
+		Pelvis = "Pelvis",
+		Jaw = "Jaw",
 	},
 }
 Bones.PIECE_NAMES = PIECE_NAMES
@@ -168,6 +193,10 @@ local PIECE_ICONS: { [string]: string } = {
 	ForeLimbs = "🦴",
 	HindLimbs = "🦴",
 	Tail = "🦴",
+	Ribs = "🦴",
+	Pelvis = "🦴",
+	Jaw = "💀",
+	Neck = "🦴",
 }
 Bones.PIECE_ICONS = PIECE_ICONS
 
@@ -177,22 +206,22 @@ Bones.PIECE_ICONS = PIECE_ICONS
 -- fins als extingits. Zona 2 · Fossil Beach: animals de costa.
 -- Zona 3 · Egypt (illa, només en avió): animals del Nil, de Rare a Mythic.
 local SKELETONS: { SkeletonDef } = {
-	{ id = "Rat", icon = "🐀", name = "Rat", rarity = "Common", kind = "mammal", s = 0.5, snout = 0.9, ribs = 5, tailLen = 2.2, tailSegs = 16 },
-	{ id = "Pigeon", icon = "🐦", name = "Pigeon", rarity = "Uncommon", kind = "bird", s = 0.7 },
-	{ id = "Cat", icon = "🐈", name = "Cat", rarity = "Rare", kind = "mammal", s = 1, snout = 0.45, ribs = 6 },
-	{ id = "Dog", icon = "🐕", name = "Dog", rarity = "Epic", kind = "mammal", s = 1.5, snout = 0.9, ribs = 7 },
-	{ id = "Dodo", icon = "🦤", name = "Dodo", rarity = "Legendary", kind = "bird", s = 1.1, beak = 1.8, stocky = true },
-	{ id = "Sabertooth", icon = "🐅", name = "Sabertooth", rarity = "Mythic", kind = "mammal", s = 1.7, snout = 0.5, ribs = 8, fangs = 1, tailLen = 0.8 },
-	{ id = "TRex", icon = "🦖", name = "T-Rex", rarity = "Secret", kind = "theropod", s = 1 },
+	{ id = "Rat", icon = "🐀", name = "Rat", rarity = "Common", kind = "mammal", s = 0.5, snout = 0.9, ribs = 5, tailLen = 2.2, tailSegs = 16, pieces = 5 },
+	{ id = "Pigeon", icon = "🐦", name = "Pigeon", rarity = "Uncommon", kind = "bird", s = 0.7, pieces = 5 },
+	{ id = "Cat", icon = "🐈", name = "Cat", rarity = "Rare", kind = "mammal", s = 1, snout = 0.45, ribs = 6, pieces = 6 },
+	{ id = "Dog", icon = "🐕", name = "Dog", rarity = "Epic", kind = "mammal", s = 1.5, snout = 0.9, ribs = 7, pieces = 6 },
+	{ id = "Dodo", icon = "🦤", name = "Dodo", rarity = "Legendary", kind = "bird", s = 1.1, beak = 1.8, stocky = true, pieces = 7 },
+	{ id = "Sabertooth", icon = "🐅", name = "Sabertooth", rarity = "Mythic", kind = "mammal", s = 1.7, snout = 0.5, ribs = 8, fangs = 1, tailLen = 0.8, pieces = 8 },
+	{ id = "TRex", icon = "🦖", name = "T-Rex", rarity = "Secret", kind = "theropod", s = 1, pieces = 8 },
 
-	{ id = "Seagull", icon = "🕊️", name = "Seagull", rarity = "Uncommon", kind = "bird", s = 0.9 },
-	{ id = "Otter", icon = "🦦", name = "Otter", rarity = "Rare", kind = "mammal", s = 0.9, snout = 0.35, ribs = 8, tailLen = 1.9, tailSegs = 14 },
-	{ id = "Cormorant", icon = "🦆", name = "Cormorant", rarity = "Epic", kind = "bird", s = 1.2 },
+	{ id = "Seagull", icon = "🕊️", name = "Seagull", rarity = "Uncommon", kind = "bird", s = 0.9, pieces = 5 },
+	{ id = "Otter", icon = "🦦", name = "Otter", rarity = "Rare", kind = "mammal", s = 0.9, snout = 0.35, ribs = 8, tailLen = 1.9, tailSegs = 14, pieces = 6 },
+	{ id = "Cormorant", icon = "🦆", name = "Cormorant", rarity = "Epic", kind = "bird", s = 1.2, pieces = 7 },
 
-	{ id = "Ibis", icon = "🦩", name = "Sacred Ibis", rarity = "Rare", kind = "bird", s = 1, beak = 1.6 },
-	{ id = "Jackal", icon = "🐺", name = "Jackal", rarity = "Epic", kind = "mammal", s = 1.2, snout = 0.85, ribs = 6, tailLen = 1.4 },
-	{ id = "Camel", icon = "🐪", name = "Camel", rarity = "Legendary", kind = "mammal", s = 1.9, snout = 0.7, ribs = 8, tailLen = 0.7 },
-	{ id = "Crocodile", icon = "🐊", name = "Nile Crocodile", rarity = "Mythic", kind = "mammal", s = 1.5, snout = 1.7, ribs = 9, tailLen = 3, tailSegs = 20 },
+	{ id = "Ibis", icon = "🦩", name = "Sacred Ibis", rarity = "Rare", kind = "bird", s = 1, beak = 1.6, pieces = 6 },
+	{ id = "Jackal", icon = "🐺", name = "Jackal", rarity = "Epic", kind = "mammal", s = 1.2, snout = 0.85, ribs = 6, tailLen = 1.4, pieces = 7 },
+	{ id = "Camel", icon = "🐪", name = "Camel", rarity = "Legendary", kind = "mammal", s = 1.9, snout = 0.7, ribs = 8, tailLen = 0.7, pieces = 7 },
+	{ id = "Crocodile", icon = "🐊", name = "Nile Crocodile", rarity = "Mythic", kind = "mammal", s = 1.5, snout = 1.7, ribs = 9, tailLen = 3, tailSegs = 20, pieces = 8 },
 }
 Bones.SKELETONS = SKELETONS
 
@@ -200,6 +229,7 @@ Bones.SKELETONS = SKELETONS
 -- Es calculen un sol cop en carregar. Ningú no els ha d'escriure a mà.
 
 Bones.ById = {} :: { [string]: SkeletonDef }
+Bones.PiecesById = {} :: { [string]: { PieceDef } } -- esquelet -> les seves peces
 Bones.PieceInfo = {} :: { [string]: PieceInfo } -- clau de peça -> info
 Bones.ALL_KEYS = {} :: { string } -- totes les peces, en ordre (per a l'índex)
 
@@ -219,7 +249,17 @@ do
 			error(`[Bones] {def.id}: tipus desconegut {def.kind}`, 0)
 		end
 		Bones.ById[def.id] = def
-		for _, piece in PIECES do
+		local n = def.pieces or #PIECES
+		local extras = EXTRA_PIECES[def.kind]
+		if n < #PIECES or n > #PIECES + #extras then
+			error(`[Bones] {def.id}: ha de tenir de {#PIECES} a {#PIECES + #extras} peces`, 0)
+		end
+		local list: { PieceDef } = table.clone(PIECES)
+		for i = 1, n - #PIECES do
+			table.insert(list, { id = extras[i] })
+		end
+		Bones.PiecesById[def.id] = list
+		for _, piece in list do
 			local key = Bones.PieceKey(def.id, piece.id)
 			Bones.PieceInfo[key] = {
 				key = key,
@@ -233,6 +273,21 @@ do
 end
 
 -- ─────────────────────────── AJUDES ───────────────────────────
+
+-- Les peces d'un esquelet (de 5 a 8); si no existeix, cap
+function Bones.PiecesOf(skeletonId: string): { PieceDef }
+	return Bones.PiecesById[skeletonId] or {}
+end
+
+-- Aquest esquelet té aquesta peça? (BoneBuilder: parteix o no les de base)
+function Bones.HasPiece(def: SkeletonDef, pieceId: string): boolean
+	for _, piece in Bones.PiecesById[def.id] or PIECES do
+		if piece.id == pieceId then
+			return true
+		end
+	end
+	return false
+end
 
 function Bones.IsPieceKey(key: any): boolean
 	return type(key) == "string" and Bones.PieceInfo[key] ~= nil
@@ -257,7 +312,7 @@ function Bones.CanAssemble(ownedBones: { [string]: number }, skeletonId: string)
 	if not Bones.ById[skeletonId] then
 		return false
 	end
-	for _, piece in PIECES do
+	for _, piece in Bones.PiecesOf(skeletonId) do
 		if (ownedBones[Bones.PieceKey(skeletonId, piece.id)] or 0) < 1 then
 			return false
 		end
@@ -276,7 +331,7 @@ function Bones.IncomeOf(item: any): number
 	end
 	local def = Bones.ById[item]
 	if def then
-		return PIECE_INCOME[def.rarity] * #PIECES * Bones.SKELETON_BONUS
+		return PIECE_INCOME[def.rarity] * #Bones.PiecesOf(def.id) * Bones.SKELETON_BONUS
 	end
 	return 0
 end
