@@ -126,7 +126,7 @@ local function redraw()
 	-- 1) les cadenes de sort i de diners: només el següent es pot comprar
 	local g: Frame
 	local i = 0
-	for _, chain in { { "luck", "🍀 LUCK MULTIPLIERS · rare fossils way more often!", C.green, "luck2" }, { "money", "💰 MONEY MULTIPLIERS · ALL coins x2, x4, x8", C.gold, "money2" } } do
+	for _, chain in { { "luck", "🍀 LUCK MULTIPLIERS · rare fossils way more often!", C.green, "luck2" }, { "money", "$ MONEY MULTIPLIERS · ALL coins x2, x4, x8", C.gold, "money2" } } do
 	section(chain[2], chain[3])
 	g = grid()
 	i = 0

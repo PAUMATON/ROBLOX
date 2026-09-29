@@ -171,7 +171,7 @@ local function sell(player: Player, action: any, payload: any)
 	profile.coins += coins
 	profile.stats.totalSold += sold
 	InventoryService.Push(player)
-	reply(player, true, if sold == 1 then `Sold for {coins} coins!` else `Sold {sold} fossils for {coins} coins!`, "💰")
+	reply(player, true, if sold == 1 then `Sold for {coins} coins!` else `Sold {sold} fossils for {coins} coins!`, "$")
 	log:Info(`{player.Name} ha venut {sold} fòssils per {coins}`)
 	task.spawn(DataService.Save, player)
 end
@@ -298,7 +298,7 @@ local function setupZoneUnlock(part: BasePart)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "UnlockZone"
 	prompt.ObjectText = zone.name
-	prompt.ActionText = `Unlock · {zone.unlockCost} 💰`
+	prompt.ActionText = `Unlock · {zone.unlockCost} $`
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.HoldDuration = 0.5
 	prompt.MaxActivationDistance = 12

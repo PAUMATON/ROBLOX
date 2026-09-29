@@ -83,13 +83,13 @@ local BONNIE: { [string]: Node } = {
 		options = {
 			{ label = function()
 				local d, dc = looseFossils(true)
-				return `🔁 Sell duplicates ({d}) · {Theme.Short(dc)} 💰`
+				return `🔁 Sell duplicates ({d}) · {Theme.Short(dc)} $`
 			end, color = C.green, run = function()
 				sellNow("dupes")
 			end },
 			{ label = function()
 				local n, coins = looseFossils(false)
-				return `💰 Sell ALL ({n}) · {Theme.Short(coins)} 💰`
+				return `$ Sell ALL ({n}) · {Theme.Short(coins)} $`
 			end, go = "confirmAll", color = C.orange },
 			{ label = "🎒 Sell just one...", go = "one" },
 			{ label = "📋 What's each fossil worth?", go = "prices" },

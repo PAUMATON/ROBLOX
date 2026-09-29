@@ -10,6 +10,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
 local Bones = require(Config:WaitForChild("Bones"))
 local Tools = require(Config:WaitForChild("Tools"))
+local Museum = require(Config:WaitForChild("Museum"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
@@ -150,7 +151,7 @@ local function buildLeft(gui: ScreenGui)
 		Size = UDim2.fromOffset(232, 70),
 		Position = UDim2.fromOffset(0, 0),
 	}, C.panel, 35)
-	coinIcon = Theme.Icon(coinPill, "💰", {
+	coinIcon = Theme.Icon(coinPill, "$", {
 		Size = UDim2.fromOffset(62, 62),
 		Position = UDim2.fromOffset(6, 4),
 		ZIndex = 3,
@@ -163,7 +164,7 @@ local function buildLeft(gui: ScreenGui)
 		StrokeThickness = 3.5,
 		ZIndex = 3,
 	})
-	rateLabel = Theme.Text(leftColumn, "+0/min", {
+	rateLabel = Theme.Text(leftColumn, "+0 $/s", {
 		Size = UDim2.fromOffset(200, 26),
 		Position = UDim2.fromOffset(22, 74),
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -296,7 +297,7 @@ local function buildRight(gui: ScreenGui)
 		Size = UDim2.new(1, -28, 0, 70),
 		Position = UDim2.fromOffset(14, 46),
 	}, C.white, 14)
-	incomeBig = Theme.Text(inner, "+0/min", {
+	incomeBig = Theme.Text(inner, "+0 $/s", {
 		Size = UDim2.new(1, -20, 1, -14),
 		Position = UDim2.fromOffset(10, 7),
 		TextColor3 = C.green,
@@ -415,21 +416,28 @@ end
 
 -- ─────────────────────────── REFRESC ───────────────────────────
 
-local function refresh(snapshot: ProfileController.Snapshot)
-	-- Monedes: compten cap amunt i salta un "+N"
-	if lastCoins and snapshot.coins > lastCoins then
-		local gain = snapshot.coins - lastCoins
-		Effects.Float(leftColumn, "+" .. Theme.Short(gain) .. " 💰", C.yellow, UDim2.fromOffset(170, 20), 130)
-		Effects.Pop(coinIcon, 0.3)
-		Theme.Play("pop", 0.3, 1.3)
+-- Monedes: compten cap amunt i salta un "+N $". `passive` = la renda del
+-- museu de cada segon: sense so (si no, sonaria un "pop" cada segon).
+local function showCoins(coins: number, passive: boolean?)
+	if lastCoins and coins > lastCoins then
+		local gain = coins - lastCoins
+		Effects.Float(leftColumn, "+" .. Theme.Short(gain) .. " $", C.green, UDim2.fromOffset(170, 20), 130)
+		Effects.Pop(coinIcon, if passive then 0.12 else 0.3)
+		if not passive then
+			Theme.Play("pop", 0.3, 1.3)
+		end
 	end
-	lastCoins = snapshot.coins
-	Effects.Tween(coinValue, 0.6, { Value = snapshot.coins })
+	lastCoins = coins
+	Effects.Tween(coinValue, if passive then 0.9 else 0.6, { Value = coins })
+end
+
+local function refresh(snapshot: ProfileController.Snapshot)
+	showCoins(snapshot.coins)
 
 	local money = (snapshot :: any).money or 1
 	local rate = snapshot.rate * money
-	rateLabel.Text = `+{Theme.Short(rate)}/min`
-	incomeBig.Text = `+{Theme.Short(rate)}/min`
+	rateLabel.Text = `+{Museum.PerSecondText(rate)} $/s`
+	incomeBig.Text = `+{Museum.PerSecondText(rate)} $/s`
 	local used = 0
 	for slot = 1, snapshot.slots do
 		if snapshot.museum[tostring(slot)] then
@@ -437,8 +445,8 @@ local function refresh(snapshot: ProfileController.Snapshot)
 		end
 	end
 	incomeSmall.Text = if money > 1
-		then `{used}/{snapshot.slots} cases · 💰 x{string.format("%g", math.floor(money * 10 + 0.5) / 10)} money`
-		else `{used}/{snapshot.slots} cases · max {Theme.Short(snapshot.cap)}/min`
+		then `{used}/{snapshot.slots} cases · $ x{string.format("%g", math.floor(money * 10 + 0.5) / 10)} money`
+		else `{used}/{snapshot.slots} cases · max {Museum.PerSecondText(snapshot.cap)} $/s`
 
 	-- Fòssils nous des de l'últim cop que es va obrir la motxilla
 	local total = 0
@@ -561,7 +569,7 @@ local function showWelcomeBack(data: any)
 		TextColor3 = C.cream,
 		ZIndex = 3,
 	})
-	local amount = Theme.Text(card, `+{Theme.Short(tonumber(data.coins) or 0)} 💰`, {
+	local amount = Theme.Text(card, `+{Theme.Short(tonumber(data.coins) or 0)} $`, {
 		Size = UDim2.new(1, -60, 0, 78),
 		Position = UDim2.fromOffset(30, 114),
 		TextColor3 = C.yellow,
@@ -586,7 +594,7 @@ local function showWelcomeBack(data: any)
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -22),
 		Color = C.green,
-		Icon = "💰",
+		Icon = "$",
 		Text = "COLLECT!",
 		Sound = "reward",
 		ZIndex = 3,
@@ -646,6 +654,9 @@ function HudController.Start()
 	end)
 
 	ProfileController.Changed:Connect(refresh)
+	ProfileController.CoinsChanged:Connect(function(coins: number)
+		showCoins(coins, true)
+	end)
 	-- Capa per al confeti de les compres
 	local fx = Instance.new("Frame")
 	fx.Name = "Fx"
@@ -665,7 +676,7 @@ function HudController.Start()
 				Effects.Toast((data.icon or "🎉") .. " " .. tostring(data.message), C.green, "reward")
 				Effects.Confetti(fx, 60)
 			else
-				Effects.Toast((data.icon or "💰") .. " " .. tostring(data.message), C.red, "error")
+				Effects.Toast((data.icon or "$") .. " " .. tostring(data.message), C.red, "error")
 			end
 		end
 	end)

@@ -172,7 +172,7 @@ local function fillAction(snapshot: ProfileController.Snapshot?, def: Tools.Tool
 	elseif coins >= def.price then
 		props.Color = C.green
 		props.Text = `BUY · {Theme.Short(def.price)}`
-		props.Icon = "💰"
+		props.Icon = "$"
 		props.OnClick = function()
 			Remotes.ShopRequest:FireServer("buy", def.id)
 		end
@@ -211,7 +211,7 @@ local function refresh()
 		compareLabel.TextColor3 = C.muted
 	end
 	blurbLabel.Text = def.blurb .. " Luck makes rarer fossils show up more often."
-	priceLabel.Text = if def.price > 0 then `💰 {Theme.Short(def.price)} coins` else "🎁 Free"
+	priceLabel.Text = if def.price > 0 then `$ {Theme.Short(def.price)} coins` else "🎁 Free"
 	fillAction(snapshot, def)
 end
 

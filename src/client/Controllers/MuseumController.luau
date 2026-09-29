@@ -56,7 +56,7 @@ local function coinBurst(slot: BasePart, amount: number)
 	bb.MaxDistance = 90
 	bb.Adornee = slot
 	bb.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
-	local label = Theme.Text(bb, `+{Theme.Short(math.max(1, amount))} 💰`, { TextColor3 = C.yellow, StrokeThickness = 3 })
+	local label = Theme.Text(bb, `+{Theme.Short(math.max(1, amount))} $`, { TextColor3 = C.yellow, StrokeThickness = 3 })
 	Effects.PopIn(label, 0.3)
 	Effects.Tween(bb, 1.3, { StudsOffset = Vector3.new(0, 13, 0) })
 	task.delay(0.9, function()
@@ -81,7 +81,7 @@ local function onIncome(snapshot: ProfileController.Snapshot)
 		local item = snapshot.museum[tostring(slot)]
 		local base = plot:FindFirstChild("Slot" .. slot)
 		if item and base and base:IsA("BasePart") then
-			task.delay(slot * 0.1, coinBurst, base, Bones.IncomeOf(item) * Museum.TICK / 60)
+			task.delay(slot * 0.1, coinBurst, base, Bones.IncomeOf(item) * Museum.TICK * Museum.PUSH_EVERY / 60)
 		end
 	end
 end
@@ -140,7 +140,7 @@ local function slotCard(slot: number, item: string?)
 		Position = UDim2.fromOffset(6, 66),
 		TextColor3 = Bones.RARITY_COLORS[rarity],
 	})
-	Theme.Text(card, `+{Bones.IncomeOf(item)}/min`, {
+	Theme.Text(card, `+{Museum.PerSecondText(Bones.IncomeOf(item))} $/s`, {
 		Size = UDim2.new(1, -12, 0, 18),
 		Position = UDim2.fromOffset(6, 88),
 		TextColor3 = C.green,
@@ -165,9 +165,9 @@ local function redraw()
 		return
 	end
 	Widgets.Clear(stats)
-	stat(stats, 0, "💰", Theme.Short(snapshot.coins), C.gold)
-	stat(stats, 256, "📈", `+{Theme.Short(snapshot.rate)}/min`, C.green)
-	stat(stats, 512, "🏆", `max {Theme.Short(snapshot.cap)}/min`, C.purple)
+	stat(stats, 0, "$", Theme.Short(snapshot.coins), C.gold)
+	stat(stats, 256, "📈", `+{Museum.PerSecondText(snapshot.rate)} $/s`, C.green)
+	stat(stats, 512, "🏆", `max {Museum.PerSecondText(snapshot.cap)} $/s`, C.purple)
 	Widgets.Clear(slotsGrid)
 	local used = 0
 	for slot = 1, snapshot.slots do

@@ -32,13 +32,13 @@ export type Quest = {
 }
 
 local function coins(minutes: number)
-	return { kind = "coins", minutes = minutes, label = "Coins", icon = "💰" }
+	return { kind = "coins", minutes = minutes, label = "Coins", icon = "$" }
 end
 local function luck(minutes: number)
 	return { kind = "luck", minutes = minutes, label = `x2 Luck {minutes}m`, icon = "🍀" }
 end
 local function money(minutes: number)
-	return { kind = "money", minutes = minutes, label = `x2 Money {minutes}m`, icon = "💰" }
+	return { kind = "money", minutes = minutes, label = `x2 Money {minutes}m`, icon = "$" }
 end
 
 -- La cadena: ensenya el joc pas a pas (el tutorial fa els 3 primers passos
@@ -54,7 +54,7 @@ local CHAIN: { Quest } = {
 	{ text = "Find a Rare fossil", stat = "finds", arg = "Rare", target = 1, delta = true, reward = coins(15), go = "construction" },
 	{ text = "Discover 12 different fossils", stat = "discovered", target = 12, delta = false, reward = money(15), go = "construction" },
 	{ text = "Build your first full skeleton", stat = "built", target = 1, delta = false, reward = coins(20), go = "backpack" },
-	{ text = "Make your museum earn 40/min", stat = "income", target = 40, delta = false, reward = coins(20), go = "backpack" },
+	{ text = `Make your museum earn {Museum.PerSecondText(40)} $/s`, stat = "income", target = 40, delta = false, reward = coins(20), go = "backpack" },
 	{ text = "Trade with another player", stat = "trades", target = 1, delta = true, reward = luck(15), go = "trade" },
 	{ text = "Dig 75 fossils", stat = "digs", target = 75, delta = true, reward = coins(25), go = "construction" },
 	{ text = "Fill all 10 museum cases", stat = "displayed", target = 10, delta = false, reward = coins(25), go = "backpack" },
@@ -63,7 +63,7 @@ local CHAIN: { Quest } = {
 	{ text = "Discover 25 different fossils", stat = "discovered", target = 25, delta = false, reward = money(20), go = "construction" },
 	{ text = "Build 3 full skeletons", stat = "built", target = 3, delta = false, reward = coins(40), go = "backpack" },
 	{ text = "Unlock Fossil Beach", stat = "zones", target = 2, delta = false, reward = coins(40), go = "beach" },
-	{ text = "Make your museum earn 200/min", stat = "income", target = 200, delta = false, reward = coins(45), go = "backpack" },
+	{ text = `Make your museum earn {Museum.PerSecondText(200)} $/s`, stat = "income", target = 200, delta = false, reward = coins(45), go = "backpack" },
 	{ text = "Find a Legendary fossil", stat = "finds", arg = "Legendary", target = 1, delta = true, reward = luck(30), go = "construction" },
 	{ text = "Sell 50 fossils to Bonnie", stat = "sold", target = 50, delta = true, reward = coins(50), go = "seller" },
 	{ text = "Discover every fossil in the Index", stat = "discovered", target = #Bones.ALL_KEYS, delta = false, reward = money(60), go = "construction" },

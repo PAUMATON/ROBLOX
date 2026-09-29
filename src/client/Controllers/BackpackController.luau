@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Bones = require(Shared:WaitForChild("Config"):WaitForChild("Bones"))
+local Museum = require(Shared:WaitForChild("Config"):WaitForChild("Museum"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
 local UI = script.Parent.Parent:WaitForChild("UI")
@@ -105,7 +106,7 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	local locked = if isPiece then (snapshot.locked or {})[item] or 0 else 0
-	local income = `+{Bones.IncomeOf(item)}/min in your museum`
+	local income = `+{Museum.PerSecondText(Bones.IncomeOf(item))} $/s in your museum`
 	if locked > 0 then
 		income ..= ` · 🔒 {locked} gift{if locked == 1 then "" else "s"}: can't trade`
 	end
@@ -126,7 +127,7 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 		Sound = "reward",
 		OnClick = function()
 			Remotes.MuseumAction:FireServer("display", item)
-			Effects.Toast(`🏛️ {name} is on display! +{Bones.IncomeOf(item)}/min`, C.green, "reward")
+			Effects.Toast(`🏛️ {name} is on display! +{Museum.PerSecondText(Bones.IncomeOf(item))} $/s`, C.green, "reward")
 		end,
 	})
 	Effects.Shine(show.button, 14, 1.8)
@@ -141,12 +142,12 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 				Position = UDim2.new(1, -204, 0.5, 0),
 				Color = C.gold,
 				Icon = "🔨",
-				Text = "BUILD x2 💰",
+				Text = "BUILD x2 $",
 				Sound = "reward",
 				OnClick = function()
 					Remotes.MuseumAction:FireServer("assemble", def.id)
 					selected = def.id
-					Effects.Toast(`🦴 {def.name} skeleton built! It earns double 💰`, C.gold, "reward")
+					Effects.Toast(`🦴 {def.name} skeleton built! It earns double $`, C.gold, "reward")
 				end,
 			})
 			Effects.Shine(build.button, 14, 1.2)
@@ -159,7 +160,7 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 			AnchorPoint = Vector2.new(1, 0.5),
 			Position = UDim2.new(1, -(204 + (if canBuild then 262 else 0)), 0.5, 0),
 			Color = C.orange,
-			Text = `SELL {Theme.Short(value)}💰`,
+			Text = `SELL {Theme.Short(value)} $`,
 			OnClick = function()
 				Remotes.SellRequest:FireServer("one", item)
 			end,

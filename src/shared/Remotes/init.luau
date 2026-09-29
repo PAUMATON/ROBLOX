@@ -37,6 +37,7 @@ local REMOTE_NAMES: { string } = {
 	"RewardUpdate", -- estat de les recompenses (diària, regals, invitacions)
 	"VisitorUpdate", -- visitants dels museus: spawn, tip, remove, snapshot
 	"QuestUpdate", -- la missió en curs: text, progrés, premi, cap on anar
+	"CoinsUpdate", -- (monedes): només el número, cada segon (renda del museu)
 }
 
 export type Remotes = {
@@ -51,6 +52,7 @@ export type Remotes = {
 	RewardRequest: RemoteEvent,
 	QuestRequest: RemoteEvent,
 	QuestUpdate: RemoteEvent,
+	CoinsUpdate: RemoteEvent,
 	RewardUpdate: RemoteEvent,
 	VisitorUpdate: RemoteEvent,
 	DigUpdate: RemoteEvent,

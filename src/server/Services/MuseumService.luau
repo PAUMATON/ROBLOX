@@ -318,15 +318,25 @@ function MuseumService.Start()
 	Remotes.MuseumAction.OnServerEvent:Connect(onAction)
 	Players.PlayerRemoving:Connect(releasePlot)
 
-	-- Renda en línia
+	-- Renda en línia: es cobra cada TICK (1 s) i el client veu pujar les
+	-- monedes cada segon (CoinsUpdate, només el número). El perfil sencer
+	-- (ProfileUpdate) només cada PUSH_EVERY ticks: enviar-lo cada segon faria
+	-- redibuixar la motxilla, el comerç... a tothom sense parar.
 	task.spawn(function()
+		local ticks = 0
 		while true do
 			task.wait(Museum.TICK)
+			ticks += 1
+			local full = ticks % Museum.PUSH_EVERY == 0
 			for _, player in Players:GetPlayers() do
 				local profile = DataService.Get(player)
 				if profile then
 					collect(profile)
-					InventoryService.Push(player)
+					if full then
+						InventoryService.Push(player)
+					else
+						Remotes.CoinsUpdate:FireClient(player, math.floor(profile.coins))
+					end
 				end
 			end
 		end

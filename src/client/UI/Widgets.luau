@@ -6,6 +6,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Bones = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Bones"))
+local Museum = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"):WaitForChild("Museum"))
 local Theme = require(script.Parent.Theme)
 local Effects = require(script.Parent.Effects)
 local Windows = require(script.Parent.Windows)
@@ -424,7 +425,7 @@ function Widgets.PieceTile(parent: Instance, key: string, count: number, size: n
 			StrokeThickness = 1.5,
 		})
 		local text, rar = Bones.Describe(key)
-		Widgets.Tooltip(tile, text, `{string.upper(rar)} · {Bones.IncomeOf(key)}/min · sells {Bones.SellValue(key)} 💰`, Bones.RARITY_COLORS[rar])
+		Widgets.Tooltip(tile, text, `{string.upper(rar)} · {Museum.PerSecondText(Bones.IncomeOf(key))} $/s · sells {Bones.SellValue(key)} $`, Bones.RARITY_COLORS[rar])
 	end
 	if count > 1 then
 		Theme.Text(tile, "x" .. count, {

@@ -6,7 +6,7 @@
 -- (Util/VisitorPath) a partir de l'hora del servidor.
 --   · només es dibuixen els museus que tens a prop (RENDER_DISTANCE);
 --   · camina amb l'animació de caminar de Roblox i s'atura a mirar;
---   · quan deixa propina, li surt "+X 💰" al damunt (i "WOW!" si és grossa).
+--   · quan deixa propina, li surt "+X $" al damunt (i "WOW!" si és grossa).
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -129,7 +129,7 @@ local function tipPop(v: Shown?, amount: number, wow: boolean)
 	bb.MaxDistance = 120
 	bb.Adornee = anchor
 	bb.Parent = folder
-	local icon = Theme.Icon(bb, "💰", {
+	local icon = Theme.Icon(bb, "$", {
 		Size = UDim2.fromScale(1, 0.55),
 	})
 	local label = Theme.Text(bb, (if wow then "WOW! +" else "+") .. Theme.Short(amount), {
@@ -172,7 +172,7 @@ local function onUpdate(msg: any)
 			local now = os.clock()
 			if msg.wow or now - lastOwnerToast > 25 then
 				lastOwnerToast = now
-				Effects.Toast((if msg.wow then "🤩 WOW! A visitor tipped you " else "👀 A visitor tipped you ") .. `+{Theme.Short(amount)} 💰`, C.gold, if msg.wow then "reward" else "pop")
+				Effects.Toast((if msg.wow then "🤩 WOW! A visitor tipped you " else "👀 A visitor tipped you ") .. `+{Theme.Short(amount)} $`, C.gold, if msg.wow then "reward" else "pop")
 			end
 		end
 	end

@@ -412,7 +412,7 @@ function RewardsController.Start()
 		local since = os.clock() - boostAt
 		local parts = {}
 		if snapshotBoosts.money - since > 0 then
-			table.insert(parts, `💰 x2 {clock(snapshotBoosts.money - since)}`)
+			table.insert(parts, `$ x2 {clock(snapshotBoosts.money - since)}`)
 		end
 		if snapshotBoosts.luck - since > 0 then
 			table.insert(parts, `🍀 x2 {clock(snapshotBoosts.luck - since)}`)

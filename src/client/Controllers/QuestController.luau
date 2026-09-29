@@ -88,7 +88,7 @@ local function redraw(previous: any?)
 	label.Text = `📜 {state.text}`
 	local target = math.max(1, tonumber(state.target) or 1)
 	local progress = math.clamp(tonumber(state.progress) or 0, 0, target)
-	bar.set(progress / target, if state.done then "✅ DONE!" else "", `{progress}/{target}`, if state.done then C.green else C.gold)
+	bar.set(progress / target, if state.done then "✅ DONE!" else "", if type(state.progressText) == "string" then state.progressText else `{progress}/{target}`, if state.done then C.green else C.gold)
 	rewardLabel.Text = tostring(state.reward or "")
 	claimButton.button.Visible = state.done == true
 	rewardLabel.Visible = not state.done

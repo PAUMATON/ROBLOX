@@ -193,7 +193,15 @@ function Theme.Text(parent: Instance, text: string, props: { [string]: any }?): 
 end
 
 -- Emoji com a icona (sense contorn: el contorn negre els embruta).
+-- El "$" dels diners no és un emoji: es fa verd i amb contorn, com les lletres.
 function Theme.Icon(parent: Instance, emoji: string, props: { [string]: any }?): TextLabel
+	if emoji == "$" then
+		local p: { [string]: any } = { TextColor3 = Theme.C.green, StrokeThickness = 3 }
+		for key, value in props or {} do
+			p[key] = value
+		end
+		return Theme.Text(parent, "$", p)
+	end
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)

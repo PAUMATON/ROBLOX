@@ -51,7 +51,7 @@ local function stateFor(profile: DataService.Profile): { [string]: any }
 	local progress, target = Quests.Progress(profile, quest, q.base)
 	local reward = quest.reward
 	local rewardText = if reward.kind == "coins"
-		then `+{Rewards.CoinsFor(Museum.IncomeRate(profile.museumLayout), reward.minutes)} 💰`
+		then `+{Rewards.CoinsFor(Museum.IncomeRate(profile.museumLayout), reward.minutes)} $`
 		else `{reward.icon} {reward.label}`
 	return {
 		index = q.index,
@@ -60,6 +60,10 @@ local function stateFor(profile: DataService.Profile): { [string]: any }
 		progress = progress,
 		target = target,
 		done = progress >= target,
+		-- la renda es compta per minut però es veu per segon
+		progressText = if quest.stat == "income"
+			then `{Museum.PerSecondText(progress)}/{Museum.PerSecondText(target)} $/s`
+			else nil,
 		go = quest.go,
 		reward = rewardText,
 	}

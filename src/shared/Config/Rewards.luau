@@ -26,9 +26,9 @@ export type Reward = {
 Rewards.MIN_RATE = 20 -- renda mínima per calcular les monedes (jugadors nous)
 
 Rewards.DAILY = {
-	{ kind = "coins", minutes = 10, label = "Coins", icon = "💰" },
-	{ kind = "coins", minutes = 20, label = "Coins", icon = "💰" },
-	{ kind = "money", minutes = 15, label = "x2 Money 15m", icon = "💰" },
+	{ kind = "coins", minutes = 10, label = "Coins", icon = "$" },
+	{ kind = "coins", minutes = 20, label = "Coins", icon = "$" },
+	{ kind = "money", minutes = 15, label = "x2 Money 15m", icon = "$" },
 	{ kind = "coins", minutes = 40, label = "Big coins", icon = "💸" },
 	{ kind = "luck", minutes = 15, label = "x2 Luck 15m", icon = "🍀" },
 	{ kind = "coins", minutes = 60, label = "Huge coins", icon = "🏦" },
@@ -37,16 +37,16 @@ Rewards.DAILY = {
 
 -- Regals d'una sessió: minut en què es poden obrir i què donen
 Rewards.GIFTS = {
-	{ at = 5, reward = { kind = "coins", minutes = 5, label = "Coins", icon = "💰" } },
-	{ at = 10, reward = { kind = "coins", minutes = 10, label = "Coins", icon = "💰" } },
+	{ at = 5, reward = { kind = "coins", minutes = 5, label = "Coins", icon = "$" } },
+	{ at = 10, reward = { kind = "coins", minutes = 10, label = "Coins", icon = "$" } },
 	{ at = 15, reward = { kind = "luck", minutes = 10, label = "x2 Luck 10m", icon = "🍀" } },
 	{ at = 25, reward = { kind = "coins", minutes = 20, label = "Big coins", icon = "💸" } },
-	{ at = 40, reward = { kind = "money", minutes = 15, label = "x2 Money 15m", icon = "💰" } },
+	{ at = 40, reward = { kind = "money", minutes = 15, label = "x2 Money 15m", icon = "$" } },
 	{ at = 60, reward = { kind = "fossil", rarity = "Epic", label = "EPIC fossil!", icon = "🦖" } },
 } :: { { at: number, reward: Reward } }
 
 Rewards.INVITER = { kind = "luck", minutes = 20, label = "x2 Luck 20m", icon = "🍀" } :: Reward
-Rewards.INVITER_COINS = { kind = "coins", minutes = 30, label = "Coins", icon = "💰" } :: Reward
+Rewards.INVITER_COINS = { kind = "coins", minutes = 30, label = "Coins", icon = "$" } :: Reward
 Rewards.INVITEE = { kind = "coins", minutes = 30, label = "Welcome coins", icon = "🎁" } :: Reward
 Rewards.MAX_INVITES = 20 -- amics diferents que et poden donar premi
 

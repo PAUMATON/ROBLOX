@@ -45,6 +45,8 @@ export type Snapshot = {
 local ProfileController = {}
 
 ProfileController.Changed = Signal.new() -- (snapshot)
+-- Només les monedes (renda del museu, cada segon): no redibuixa res més
+ProfileController.CoinsChanged = Signal.new() -- (coins)
 
 local current: Snapshot? = nil
 
@@ -60,6 +62,14 @@ function ProfileController.Init()
 		end
 		current = data :: Snapshot
 		ProfileController.Changed:Fire(current)
+	end)
+	Remotes.CoinsUpdate.OnClientEvent:Connect(function(coins: any)
+		local snapshot = current
+		if not snapshot or type(coins) ~= "number" then
+			return
+		end
+		snapshot.coins = coins
+		ProfileController.CoinsChanged:Fire(coins)
 	end)
 end
 

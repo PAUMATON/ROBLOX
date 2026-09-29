@@ -11,6 +11,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
 local Bones = require(Config:WaitForChild("Bones"))
 local Constants = require(Config:WaitForChild("Constants"))
+local Museum = require(Config:WaitForChild("Museum"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
 local UI = script.Parent.Parent:WaitForChild("UI")
@@ -169,7 +170,7 @@ local function drawActive()
 	-- el valor de cada oferta, perquè es vegi què s'hi posa
 	for _, side in { { state.myOffer, 10 }, { state.theirOffer, 404 } } do
 		local n, income = worth(side[1])
-		Theme.Text(content, `{n} fossil{if n == 1 then "" else "s"} · {income}/min in a museum`, {
+		Theme.Text(content, `{n} fossil{if n == 1 then "" else "s"} · {Museum.PerSecondText(income)} $/s in a museum`, {
 			Size = UDim2.fromOffset(370, 22),
 			Position = UDim2.fromOffset(side[2], 186),
 			TextXAlignment = Enum.TextXAlignment.Left,
