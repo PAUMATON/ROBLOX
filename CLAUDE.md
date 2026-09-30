@@ -59,8 +59,9 @@ Legendary, Mythic i Secret tenen la N més alta.)
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
 amunt: Secret 1/100.000 sense sort, ~1/5.000 amb la millor paleta (x20) i
 ~1/156 al sostre (x640). Mythic 1/20.000 → 1/1.000 → 1/31. Han de ser MOLT
-rares encara amb la sort màxima. Epic 1/16 i Legendary 1/300 (30/09/2026:
-x5 més fàcils, decisió del propietari; Mythic i Secret no es toquen: el
+rares encara amb la sort màxima. Epic 1/25 i Legendary 1/300 (30/09/2026:
+més fàcils, decisió del propietari; l'ordre es manté: Uncommon 1/4, Rare
+1/15, Epic 1/25, i sense sort el Common és el més probable, ~67%; Mythic i Secret no es toquen: el
 comerç continua sent la drecera per als esquelets de dalt).
 La sort surt de la paleta × els passis de sort (i els boosts x2 temporals);
 el minijoc només dona monedes. 11 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
