@@ -28,23 +28,24 @@ LUCKY_FROM = "Rare"
 PIECE_INCOME = {"Common": 60, "Uncommon": 120, "Rare": 240, "Epic": 600, "Legendary": 1500, "Mythic": 4200, "Secret": 12000}  # x60 (29/09/2026)
 SKELETON_BONUS = 5  # 29/09/2026: el muntat rendeix la suma de les peces x5
 
-# Estat dels fòssils (Bones.luau > ESTAT): Crushed … Pristine
-GRADE_MULT = [0.5, 0.75, 1.0, 1.25, 1.6, 2.2]
-GRADE_WEIGHT = [10, 18, 30, 22, 13, 7]
+# Estat dels fòssils (Bones.luau > ESTAT): Crushed … Mint, Pristine
+GRADE_MULT = [0.5, 0.7, 1.0, 1.4, 1.9, 2.5, 3.2]
+GRADE_WEIGHT = [10, 18, 30, 20, 12, 7, 3]
 GRADE_TILT_TOOL, GRADE_TILT_RARITY, GRADE_TILT_BASE, GRADE_TOOL_TOP = 0.8, 0.8, 0.1, 20
 SET_BONUS_STEP = 0.1  # bonus de conjunt: +10% per estat de la peça pitjor
 NOGRADE = "--nograde" in sys.argv  # com abans: tot Dusty i sense bonus de conjunt
 
 
 def roll_grade(rarity, tool_luck):
-    """1..6, com Bones.RollGrade (només la sort de la paleta)"""
+    """1..7, com Bones.RollGrade (només la sort de la paleta)"""
     if NOGRADE:
         return 3
     t = min(max(math.log(max(1, tool_luck)) / math.log(GRADE_TOOL_TOP), 0), 1)
     r = RARITIES.index(rarity) / (len(RARITIES) - 1)
     tilt = GRADE_TILT_TOOL * t - GRADE_TILT_RARITY * r + GRADE_TILT_BASE
-    w = [b * math.exp(tilt * (i - 2.5)) for i, b in enumerate(GRADE_WEIGHT)]
-    return random.choices(range(1, 7), weights=w)[0]
+    c = (len(GRADE_WEIGHT) - 1) / 2
+    w = [b * math.exp(tilt * (i - c)) for i, b in enumerate(GRADE_WEIGHT)]
+    return random.choices(range(1, len(GRADE_WEIGHT) + 1), weights=w)[0]
 
 
 def skeleton_value(rarity, grades):

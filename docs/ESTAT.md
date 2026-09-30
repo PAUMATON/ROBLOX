@@ -249,6 +249,12 @@ Studio**, sobretot el comerç (les claus han canviat) i la migració d'un
 perfil vell. En publicar: Shut down all servers (un servidor vell no entén
 les claus noves).
 
+**30/09/2026 (vespre)**: 7 estats (s'afegeix Mint entre Polished i
+Pristine) i multiplicadors que pugen cada cop més: x0,5 · 0,7 · 1 · 1,4 ·
+1,9 · 2,5 · 3,2. Mitjanes: Common x1,35 (Rusty) → x2,28 (Pharaoh's). Una
+peça "#6" d'abans d'aquest canvi (era Pristine) ara és Mint: no s'havia
+publicat. Economia sense tornar a simular.
+
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa
 alguna cosa.

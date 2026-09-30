@@ -31,13 +31,14 @@ la drecera. Qualsevol canvi que faci que tothom completi sol mata el joc.
 Els números es balancegen amb tools/economy_sim.py.
 
 ## ESTAT DELS FÒSSILS (30/09/2026, Bones.luau > ESTAT)
-Cada fòssil surt amb un de 6 estats: Crushed x0,5 · Cracked x0,75 · Dusty x1
-· Clean x1,25 · Polished x1,6 · Pristine x2,2 (renda i venda). Com més rara
+Cada fòssil surt amb un de 7 estats: Crushed x0,5 · Cracked x0,7 · Dusty x1
+· Clean x1,4 · Polished x1,9 · Mint x2,5 · Pristine x3,2 (renda i venda; cada
+salt és més gran que l'anterior). Com més rara
 la peça, més fàcil que surti malmesa; com millor la paleta (NOMÉS la sort de
-la paleta: ni passis ni pocions), més neta. Mitjana: Common x1,18 (Rusty) →
-x1,66 (Pharaoh's); Secret x0,81 → x1,18. Esquelet muntat = (suma de cada
+la paleta: ni passis ni pocions), més neta. Mitjana: Common x1,35 (Rusty) →
+x2,28 (Pharaoh's); Secret x0,81 → x1,35. Esquelet muntat = (suma de cada
 peça x el seu estat) x5 x bonus de conjunt (+10% per estat de la peça
-PITJOR: Crushed +0% … Pristine +50%). En muntar, el servidor tria la peça de
+PITJOR: Crushed +0% … Pristine +60%). En muntar, el servidor tria la peça de
 millor estat de cada. La clau porta l'estat: "Rat_Skull#4", "Rat#34425".
 Els perfils vells passen a Dusty (migració v4). El minijoc no toca l'estat.
 

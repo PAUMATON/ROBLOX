@@ -214,8 +214,11 @@ local function refresh()
 	end
 	-- la sort de la paleta també fa sortir els fòssils més nets (Bones > ESTAT)
 	local chances = Bones.GradeChances("Rare", def.luck)
-	local shiny = math.floor((chances[5] + chances[6]) * 100 + 0.5)
-	blurbLabel.Text = `{def.blurb} Rarer AND cleaner fossils: {shiny}% of Rare ones come out ✨Polished or Pristine.`
+	local shiny = 0
+	for i = 5, #chances do
+		shiny += chances[i]
+	end
+	blurbLabel.Text = `{def.blurb} Rarer AND cleaner fossils: {math.floor(shiny * 100 + 0.5)}% of Rare ones come out ✨Polished or better.`
 	priceLabel.Text = if def.price > 0 then `$ {Theme.Short(def.price)} coins` else "🎁 Free"
 	fillAction(snapshot, def)
 end

@@ -335,6 +335,9 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 				Theme.Arpeggio("sparkle", { 1, 1.25, 1.5, 2 }, 0.07, 0.5)
 				Effects.Confetti(card, 30)
 				Effects.Pulse(stamp, 0.1, 0.7)
+			elseif grade == #Bones.GRADES - 1 then
+				Theme.Arpeggio("sparkle", { 1, 1.4 }, 0.08, 0.45)
+				Effects.Confetti(card, 14)
 			elseif grade >= 5 then
 				Theme.Note("sparkle", 0.45, 1.3)
 			elseif grade <= 2 then

@@ -128,7 +128,9 @@ Bones.PIECE_INCOME = PIECE_INCOME
 Bones.SKELETON_BONUS = 5
 
 -- ─────────────────────────── ESTAT ───────────────────────────
--- Cada fòssil surt de terra en un de 6 estats, del pitjor al millor. L'estat
+-- Cada fòssil surt de terra en un de 7 estats, del pitjor al millor. Els
+-- multiplicadors pugen cada cop més (+0,2, +0,3, +0,4 … +0,7): cada graó
+-- val més que l'anterior. L'estat
 -- multiplica el que rendeix al museu i el que en paga la Bonnie.
 --   · Com més RARA la peça, més fàcil que surti malmesa (és més antiga).
 --   · Com millor la PALETA (la seva sort), més fàcil que surti neta. Només
@@ -137,7 +139,7 @@ Bones.SKELETON_BONUS = 5
 -- inclinació = 0,8·t − 0,8·r + 0,1, t = ln(sort paleta)/ln(20) (0 → 1) i
 -- r = (ordre de raresa − 1)/6 (0 → 1).
 -- Mitjana del multiplicador (tools/economy_sim.py): Common amb la Rusty
--- x1,18 i amb la Pharaoh's x1,66; Secret x0,81 → x1,18. Els perfils vells
+-- x1,35 i amb la Pharaoh's x2,28; Secret x0,81 → x1,35. Els perfils vells
 -- passen tots a Dusty (x1): ningú no hi perd.
 export type Grade = {
 	id: string,
@@ -148,11 +150,12 @@ export type Grade = {
 }
 local GRADES: { Grade } = {
 	{ id = "Crushed", name = "Crushed", mult = 0.5, color = Color3.fromRGB(122, 92, 70), weight = 10 },
-	{ id = "Cracked", name = "Cracked", mult = 0.75, color = Color3.fromRGB(190, 120, 70), weight = 18 },
+	{ id = "Cracked", name = "Cracked", mult = 0.7, color = Color3.fromRGB(190, 120, 70), weight = 18 },
 	{ id = "Dusty", name = "Dusty", mult = 1, color = Color3.fromRGB(205, 186, 150), weight = 30 },
-	{ id = "Clean", name = "Clean", mult = 1.25, color = Color3.fromRGB(110, 220, 120), weight = 22 },
-	{ id = "Polished", name = "Polished", mult = 1.6, color = Color3.fromRGB(70, 200, 255), weight = 13 },
-	{ id = "Pristine", name = "Pristine", mult = 2.2, color = Color3.fromRGB(255, 120, 230), weight = 7 },
+	{ id = "Clean", name = "Clean", mult = 1.4, color = Color3.fromRGB(120, 210, 90), weight = 20 },
+	{ id = "Polished", name = "Polished", mult = 1.9, color = Color3.fromRGB(70, 160, 255), weight = 12 },
+	{ id = "Mint", name = "Mint", mult = 2.5, color = Color3.fromRGB(80, 240, 200), weight = 7 },
+	{ id = "Pristine", name = "Pristine", mult = 3.2, color = Color3.fromRGB(255, 120, 230), weight = 3 },
 }
 Bones.GRADES = GRADES
 Bones.DEFAULT_GRADE = 3 -- Dusty: el de les peces d'abans que hi hagués estat
@@ -161,7 +164,7 @@ Bones.GRADE_TILT_RARITY = 0.8
 Bones.GRADE_TILT_BASE = 0.1
 Bones.GRADE_TOOL_TOP = 20 -- la sort de paleta que val t = 1 (la Pharaoh's)
 -- Esquelet muntat: bonus de conjunt segons la peça PITJOR (la baula feble):
--- +10% per cada estat per sobre de Crushed (Crushed +0% … Pristine +50%).
+-- +10% per cada estat per sobre de Crushed (Crushed +0% … Pristine +60%).
 -- Així val la pena canviar (comerç) o tornar a excavar una sola peça bruta.
 Bones.SET_BONUS_STEP = 0.1
 
@@ -363,7 +366,7 @@ function Bones.BaseOf(item: string): string
 	return (split(item))
 end
 
--- Una peça de la motxilla: la base amb un estat (1..6)
+-- Una peça de la motxilla: la base amb un estat (1..7)
 function Bones.PieceItem(baseKey: string, grade: number): string
 	return `{baseKey}#{grade}`
 end
@@ -438,7 +441,7 @@ end
 
 -- ─────────────────────────── ESTATS ───────────────────────────
 
--- Probabilitat de cada estat (1..6) per a una peça d'aquesta raresa trobada
+-- Probabilitat de cada estat (1..7) per a una peça d'aquesta raresa trobada
 -- amb una paleta d'aquesta sort (la fórmula és a dalt, a ESTAT)
 function Bones.GradeChances(rarity: string, toolLuck: number): { number }
 	local t = math.clamp(math.log(math.max(1, toolLuck)) / math.log(Bones.GRADE_TOOL_TOP), 0, 1)
@@ -466,7 +469,7 @@ function Bones.RollGrade(rarity: string, toolLuck: number, rng: Random): number
 	return #GRADES
 end
 
--- Bonus de conjunt d'un esquelet muntat (x1 … x1,5 segons la peça pitjor)
+-- Bonus de conjunt d'un esquelet muntat (x1 … x1,6 segons la peça pitjor)
 function Bones.SetBonus(item: string): number
 	local worst = #GRADES
 	for _, g in Bones.GradesOf(item) do
@@ -475,7 +478,7 @@ function Bones.SetBonus(item: string): number
 	return 1 + Bones.SET_BONUS_STEP * (worst - 1)
 end
 
--- "Pristine x2.2" (peça) o "Set +30%" (esquelet), per a la UI
+-- "Pristine x3.2" (peça) o "Set +30%" (esquelet), per a la UI
 function Bones.GradeText(item: string): string
 	if Bones.PieceInfo[item] then
 		local g = Bones.GradeDef(Bones.GradeOf(item))

@@ -735,8 +735,9 @@ local LOOKS: { { tint: Color3?, amount: number, wobble: number, shine: number, s
 	{ tint = RUST, amount = 0.4, wobble = 4, shine = 0 }, -- Cracked
 	{ tint = SAND, amount = 0.25, wobble = 0, shine = 0 }, -- Dusty
 	{ tint = nil, amount = 0, wobble = 0, shine = 0 }, -- Clean
-	{ tint = IVORY, amount = 0.45, wobble = 0, shine = 0.08 }, -- Polished
-	{ tint = IVORY, amount = 0.8, wobble = 0, shine = 0.15, sparkle = true }, -- Pristine
+	{ tint = IVORY, amount = 0.4, wobble = 0, shine = 0.06 }, -- Polished
+	{ tint = IVORY, amount = 0.65, wobble = 0, shine = 0.11 }, -- Mint
+	{ tint = IVORY, amount = 0.85, wobble = 0, shine = 0.16, sparkle = true }, -- Pristine
 }
 
 -- Aplica l'estat a un model ja fet. Determinista (sempre torç igual la

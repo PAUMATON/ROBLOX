@@ -47,7 +47,7 @@ local NODES: { [string]: Node } = {
 		options = { { label = "I'll find it!", go = "hello" }, { label = "Bye!" } },
 	},
 	coins = {
-		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find ALL the bones of one skeleton (5 to 8, the rarer the more) and BUILD it: a full skeleton earns x5! Cleaner bones earn more too (Pristine x2.2), and better trowels dig them up cleaner.",
+		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find ALL the bones of one skeleton (5 to 8, the rarer the more) and BUILD it: a full skeleton earns x5! Cleaner bones earn more too (Pristine x3.2!), and better trowels dig them up cleaner.",
 		options = { { label = "Thanks, Rex!", go = "hello" }, { label = "Bye!" } },
 	},
 }
@@ -139,7 +139,7 @@ local BONNIE: { [string]: Node } = {
 					table.insert(parts, `{r} {Bones.SellValue(any)}`)
 				end
 			end
-			return "I pay (Dusty): " .. table.concat(parts, " · ") .. ". Clean ones pay more, Pristine x2.2! Tip: in your museum a fossil earns that same amount every few minutes, so show your best ones!"
+			return "I pay (Dusty): " .. table.concat(parts, " · ") .. ". Clean ones pay more, Pristine x3.2! Tip: in your museum a fossil earns that same amount every few minutes, so show your best ones!"
 		end,
 		options = { { label = "Got it!", go = "hello" }, { label = "Bye!" } },
 	},
