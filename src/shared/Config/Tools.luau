@@ -17,7 +17,7 @@ export type ToolDef = {
 	id: string,
 	name: string,
 	price: number, -- monedes
-	luck: number, -- multiplicador de sort (x1 .. x32)
+	luck: number, -- multiplicador de sort (x1 .. x100)
 	model: string, -- "shovel" | "trowel" | "pickaxe" | "brush" | "drill" (Util/ToolModels)
 	blade: Color3, -- color de la part de metall (el jugador veu quina porta)
 	handle: Color3,
@@ -33,8 +33,9 @@ Tools.DEFAULT = "rusty_shovel" -- ha de coincidir amb ProfileSchema (ownedTools/
 -- 29/09/2026: de x3 a x20 (decisió del propietari). Perquè el Legendary,
 -- el Mythic i el Secret continuïn sent rars, les seves N van pujar alhora
 -- (Bones.RARITY_ODDS), i el sostre total (Constants.MAX_LUCK) és x20 × x32.
--- 30/09/2026: la glacera ven tres paletes més, fins a x32 (sostre x32 × x32).
-Tools.MAX_LUCK = 32
+-- 30/09/2026: la glacera ven tres paletes més, fins a x100 (decisió del
+-- propietari; sostre x100 × x32 = x3200).
+Tools.MAX_LUCK = 100
 
 local C3 = Color3.fromRGB
 
@@ -56,9 +57,9 @@ local LIST: { ToolDef } = {
 	{ id = "anubis_trowel", name = "Anubis Trowel", model = "trowel", price = 22000000, luck = 15, blade = C3(36, 36, 44), handle = C3(214, 170, 72), blurb = "The jackal god guards the rarest bones. x15!", zone = "egypt" },
 	{ id = "pharaoh_trowel", name = "Pharaoh's Trowel", model = "trowel", price = 45000000, luck = 20, blade = C3(255, 214, 90), handle = C3(46, 84, 150), blurb = "The trowel of the Pharaoh himself. x20 luck!", zone = "egypt" },
 	-- Glacera (cabana de l'expedició): encara millors
-	{ id = "frost_trowel", name = "Frost Trowel", model = "trowel", price = 110000000, luck = 24, blade = C3(170, 225, 255), handle = C3(60, 80, 110), blurb = "Forged in eternal ice. x24 luck!", zone = "glacier" },
-	{ id = "aurora_trowel", name = "Aurora Trowel", model = "trowel", price = 240000000, luck = 28, blade = C3(120, 255, 190), handle = C3(90, 60, 170), blurb = "Glows like the northern lights. x28!", zone = "glacier" },
-	{ id = "mammoth_trowel", name = "Mammoth Tusk Trowel", model = "trowel", price = 500000000, luck = 32, blade = C3(245, 236, 214), handle = C3(110, 76, 50), blurb = "Carved from a mammoth tusk. MAX luck x32!", zone = "glacier" },
+	{ id = "frost_trowel", name = "Frost Trowel", model = "trowel", price = 110000000, luck = 30, blade = C3(170, 225, 255), handle = C3(60, 80, 110), blurb = "Forged in eternal ice. x30 luck!", zone = "glacier" },
+	{ id = "aurora_trowel", name = "Aurora Trowel", model = "trowel", price = 240000000, luck = 50, blade = C3(120, 255, 190), handle = C3(90, 60, 170), blurb = "Glows like the northern lights. x50!", zone = "glacier" },
+	{ id = "mammoth_trowel", name = "Mammoth Tusk Trowel", model = "trowel", price = 500000000, luck = 100, blade = C3(245, 236, 214), handle = C3(110, 76, 50), blurb = "Carved from a mammoth tusk. INSANE x100 luck!", zone = "glacier" },
 }
 Tools.LIST = LIST
 

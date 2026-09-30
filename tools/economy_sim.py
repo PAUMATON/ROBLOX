@@ -56,7 +56,7 @@ PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail", "Ribs", "Pelvis", 
 PIECES_OF = {"Rat": 5, "Pigeon": 5, "Cat": 6, "Dog": 6, "Dodo": 7, "Sabertooth": 8, "TRex": 8,
              "Seagull": 5, "Otter": 6, "Cormorant": 7, "Ibis": 6, "Jackal": 7, "Camel": 7, "Crocodile": 8,
              "ArcticHare": 6, "DireWolf": 7, "GiantDeer": 7, "WoollyRhino": 7, "Mammoth": 8}
-MAX_LUCK = 32  # la millor paleta (sense passis de Robux): la Mammoth Tusk de la glacera
+MAX_LUCK = 100  # la millor paleta (sense passis de Robux): la Mammoth Tusk de la glacera
 ZONES = {
     "construction": {"cost": 0, "coins": 270, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
                                                    "Dodo": "Legendary", "Sabertooth": "Mythic", "TRex": "Secret"}},
@@ -73,8 +73,8 @@ TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 9000, 1.5, None), ("br
          ("golden_shovel", 1700000, 7, None), ("sonic_drill", 4200000, 9, None),
          ("scarab_trowel", 10000000, 12, "egypt"), ("anubis_trowel", 22000000, 15, "egypt"),
          ("pharaoh_trowel", 45000000, 20, "egypt"),
-         ("frost_trowel", 110000000, 24, "glacier"), ("aurora_trowel", 240000000, 28, "glacier"),
-         ("mammoth_trowel", 500000000, 32, "glacier")]
+         ("frost_trowel", 110000000, 30, "glacier"), ("aurora_trowel", 240000000, 50, "glacier"),
+         ("mammoth_trowel", 500000000, 100, "glacier")]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
 SLOTS, INCOME_CAP = 10, float("inf")  # 30/09/2026: sense sostre (decisió del propietari)

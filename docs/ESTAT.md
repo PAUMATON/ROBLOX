@@ -298,6 +298,11 @@ Glacera 2,3 h · Pharaoh's 3 h · Frost 4,4 h · Aurora 6,8 h · Mammoth Tusk
 10,7 h. **Cal construir-la a Studio** (`python tools/world/run.py 12`) i fer
 captures.
 
+**30/09/2026 (nit, 4)**: les paletes de la glacera pugen a x30 · x50 ·
+**x100** (Mammoth Tusk) i el sostre a x3200 (x100 × el passi de x32, que no
+es toca). Decisió del propietari, avisat que al final del joc el Mythic
+surt 1/20 i el Secret 1/200 a l'Obra (1/6 amb el passi de x32).
+
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa
 alguna cosa.

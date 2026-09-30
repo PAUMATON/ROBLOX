@@ -56,7 +56,7 @@ la glacera (a l'oest, x = -6000) són lluny de tot: només s'hi arriba amb
 ✈️ Travel (mai caminant; `Zones.flyOnly`) i es desbloquegen a la seva
 portalada (Egipte demana la platja; la glacera, Egipte).
 
-## Sort: paleta (x1 → x32) × passi de sort per Robux (x2 → x32). Sostre x1024.
+## Sort: paleta (x1 → x100) × passi de sort per Robux (x2 → x32). Sostre x3200.
 (29/09/2026: el propietari va pujar les paletes de x3 a x20; per compensar,
 Legendary, Mythic i Secret tenen la N més alta.)
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
@@ -73,8 +73,11 @@ continua necessitant el comerç).
 La sort surt de la paleta × els passis de sort (i els boosts x2 temporals);
 el minijoc només dona monedes. 14 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
 x4, x5.5, x7, x9), 3 al basar d'Egipte, que demanen Egipte obert (x12, x15,
-x20), i 3 a la cabana de la glacera, que demanen la glacera oberta (x24,
-x28, x32; 30/09/2026). Es talla el PRODUCTE a x1024 (Constants.MAX_LUCK).
+x20), i 3 a la cabana de la glacera, que demanen la glacera oberta (x30,
+x50, x100; 30/09/2026, decisió del propietari: "ha de pujar molt", i els
+passis es queden igual). Es talla el PRODUCTE a x3200 (Constants.MAX_LUCK).
+Amb la x100 i sense passis, a l'Obra: Legendary 1/3, Mythic 1/20, Secret
+1/200; amb el passi de x32, el Secret ~1/6 (el propietari ho sap).
 L'estat dels fòssils només mira la paleta fins a x20 (Bones.GRADE_TOOL_TOP):
 les de la glacera fan fòssils tan nets com la Pharaoh's. Totes les eines són
 paletes d'arqueòleg i NOMÉS donen sort (de raresa i, des del 30/09/2026, també
