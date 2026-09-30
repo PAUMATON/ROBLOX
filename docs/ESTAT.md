@@ -2,7 +2,7 @@
 
 Document de context per a qualsevol sessió nova de Claude Code. Les REGLES
 del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ falta.
-Última actualització: 28/09/2026.
+Última actualització: 29/09/2026 (revisió al núvol, sense Studio).
 
 ---
 
@@ -25,28 +25,34 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 | Sistema | On és | Resum |
 |---|---|---|
 | Excavar | `DigService`, `DigController`, `Config/Dig` | Minijoc de 3 cops: la franja verda salta a cada cop i la línia va més ràpid. El client diu quan ha clicat (±0,07 s de marge); el servidor calcula el resultat. |
-| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 10 esquelets × 5 peces = 50. 7 rareses "1 de cada N" (Secret 1/25.000). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
-| Zones | `Config/Zones` | Obra (gratis, Rat → T-Rex) i Platja (25.000, Seagull/Otter/Cormorant). |
-| Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 6 paletes (x1 → x3 de sort) a Dig & Co. (plaça). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
+| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 14 esquelets × 5 peces = 70 (els 4 d'Egipte, 29/09/2026). 7 rareses "1 de cada N" (Secret 1/20.000, Mythic 1/2.000, Legendary 1/300, Epic 1/25 a la zona 1 — més fàcils des del 30/09/2026; Mythic i Secret més difícils a les zones de lluny; la sort les divideix). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
+| Zones | `Config/Zones` | Obra (gratis, 270/excavació, Rat → T-Rex), Platja (450.000, 720/exc., Seagull/Otter/Cormorant) i **Egipte** (5.000.000, 3.600/exc., cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és un desert que arriba fins a l'horitzó a x = 6000 (`tools/world/11_egypt.luau`; zona jugable ±480 amb parets invisibles, dunes fins a la boira, piràmides gegants, forats repartits a l'atzar): només s'hi arriba amb ✈️ Travel → Egypt (la icona són piràmides dibuixades: `Theme.Icon("PYRAMIDS")`), i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
+| Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 11 paletes d'arqueòleg (NOMÉS sort): 8 a Dig & Co. (plaça): Rusty x1 · Steel x1.5 (12K) · Bronze x2 (45K) · Pro x3 (110K) · Ruby x4 (320K) · Emerald x5.5 (900K) · Golden x7 (2,5 M) · Diamond x9 (6 M); i 3 al basar de l'illa d'Egipte (`zone = "egypt"`, cal Egipte obert): Scarab x12 (15 M) · Anubis x15 (32 M) · Pharaoh's x20 (65 M). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
 | Vendre | `ShopService` (sell), `DialogController` (Bonnie) | La Bonnie (Fossil Buyer, al costat de Dig & Co.) compra repetits / tot / una peça. Val 4 min de renda. |
-| Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda/min amb sostre 6.000, esquelet muntat x2, renda offline (8 h, 24 h amb passi). |
+| Museu | `MuseumService`, `MuseumController`, `Config/Museum` | 10 vitrines, renda SENSE sostre (des del 30/09/2026; abans 6.000 $/s i després 12.000), esquelet muntat (suma de les peces x5 x bonus de conjunt), renda offline (8 h, 24 h amb passi). La renda es COMPTA per minut (economia i simulador) però el jugador la VEU per segon (`Museum.PerSecondText`: un Common exposat fa 60/min = "+1 $/s") i entra cada segon: el servidor cobra cada `TICK` (1 s) i envia només les monedes (`CoinsUpdate`); el perfil sencer, cada `PUSH_EVERY` (10 s). Els diners es marquen amb **$** (verd amb contorn, `Theme.Icon("$")`), no amb 💰. **29/09/2026: TOTS els diners x60** (renda, monedes d'excavar, preus de les paletes, platja, sostre, venda, propines, renda mínima de premis i packs; migració de perfil v3 que multiplica les monedes que ja tenies): el ritme del joc és el mateix, els números 60 vegades més grossos. |
 | Visitants | `VisitorService`, `VisitorController`, `Config/Visitors`, `Util/VisitorPath` | NPC amb l'avatar dels amics de tots els jugadors del servidor. Miren vitrines i de tant en tant deixen propina (💰 +X sobre el cap). El servidor decideix; el client els dibuixa. |
 | Comerç | `TradeService`, `TradeController` | Amb tot el servidor, escrow atòmic, rètols al passar el ratolí. Es pot desactivar a la configuració. Proteccions: 30 min de joc abans de comerciar (`stats.playSeconds`; a Studio no compta), els fòssils de recompensa van bloquejats (`lockedBones`, 🔒 a la motxilla; exposar-los no els desbloqueja: `museumLocked`), cal que el perfil es desi de debò, registre `tradeLog` amb el mateix id als dos perfils, avís de canvi desigual (x3 de renda). Després d'un canvi els dos perfils es desen alhora (`DataService.SaveMany`) i no poden tornar a comerciar fins que acaben. |
 | Robux | `MonetizationService`, `StoreController`, `Config/Monetization` | Cadena de sort x2→x32, cadena de diners x2→x8, boosts, VIP, productes. **Els `id` encara són 0**: cal crear-los al Creator Dashboard. |
 | Recompenses | `RewardsService`, `RewardsController`, `Config/Rewards` | Diària (7 dies), regals per estona de joc, invitacions. El like NO té premi (normes de Roblox). |
-| Missions | `QuestService`, `QuestController`, `Config/Quests` | Cadena de 23 missions i després repetibles. El progrés surt del perfil (stats: `totalDigs`, `rarityFinds`, `totalSold`, `totalAssembled`...): res d'esdeveniments. Es veu a dalt quan el tutorial s'acaba, amb CLAIM i el raig de llum cap on anar. |
+| Missions | `QuestService`, `QuestController`, `Config/Quests` | Cadena de 24 missions (la 23 és "Fly to Egypt and unlock it") i després repetibles. La base de cada missió porta `baseFor` (el text de la missió): si es canvia l'ordre de la cadena, una base d'una altra missió no es fa servir. El progrés surt del perfil (stats: `totalDigs`, `rarityFinds`, `totalSold`, `totalAssembled`...): res d'esdeveniments. Es veu a dalt quan el tutorial s'acaba, amb CLAIM i el raig de llum cap on anar. |
 | Guia | `UI/Guide` | El raig de llum + fletxa (tutorial i missions; `owner` perquè no es trepitgin) i on són els llocs (entrada de zona, munt més proper, botiguers). |
 | Configuració | `SettingsService`, `SettingsController` | Mida del HUD, mida dels menús, música, efectes, gràfics, trades, premis ràpids. Es desa al perfil. |
 | Dades | `DataService`, `Config/ProfileSchema` | Session locking, autosave, migracions (esquema v2). Cada desat porta un `saveSeq` que puja: un desat vell que arriba tard no trepitja un de nou, i cap desat normal torna a agafar un lock ja alliberat. El lloc està publicat: el DataStore funciona. |
 | UI | `src/client/UI/*` | `Theme` (estil), `Widgets`, `Windows`, `Effects`, `PieceView` (peça 3D dins la UI). Al mòbil (`Theme.IsCompact`) el HUD es reorganitza (rajoles 4x2 a dalt, sense barra d'índex) per no tapar el joystick ni el salt, i les finestres creixen fins a omplir la pantalla. A Studio es pot simular un mòbil amb els atributs `EmulateViewport` (Vector2) i `EmulateTouch` al LocalPlayer. |
-| So | `AmbienceController` | Ocells a la ciutat, onades a la platja, aigua a la font. Música de fons en roda (llista `MUSIC`: **encara buida**, cal posar-hi pistes de la biblioteca de Roblox). |
+| So | `AmbienceController`, `UI/Theme` | Ocells a la ciutat, onades a la platja i a l'illa, aigua a la font. Música de fons en roda, de DistroKid (biblioteca amb llicència de Roblox): 5 pistes alegres per a la ciutat i 3 d'egípcies que entren en fosa quan vas a l'illa (x > 1500). Efectes de ProSoundEffects i del compte Roblox a `Theme.SOUNDS` (pala, terra, monedes, caixa registradora, espurnes, compra): `Theme.Dig`, `Theme.Tip`, `Theme.Cash`, `Theme.Fanfare`. Triats pel nom a la Creator Store (no s'han pogut escoltar): si algun no agrada, es canvia l'id. |
 
 ## 3. El món 3D
 
 El món NO és al codi del joc: el construeixen els scripts de `tools/world/`
 (01 terra i llum · 02 carrers · 03 cases · 04 museus · 05 plaça · 06 platja ·
 07 obra · 08 arbres i fanals · 09 Dig & Co. i la parada de la Bonnie ·
-10 indicadors a les cruïlles cap a la plaça, l'obra i la platja), amb
+10 indicadors a les cruïlles cap a la plaça, l'obra i la platja ·
+11 Egipte: el desert infinit amb la plaça d'arribada, la portalada, els
+cràters a l'atzar, tres piràmides gegants, l'esfinx, temple, oasi, mercat i
+el basar de paletes; construït per primer cop el 29/09/2026 i refet a
+petició del propietari: desert en lloc d'illa, piràmides x3, forats a l'atzar ·
+12 Glacera de l'Edat de Gel, a l'oest: neu i gel fins a l'horitzó, mamut
+congelat, iglús, campament, cabana de paletes i aurora; 30/09/2026), amb
 `tools/world/lib.luau` com a biblioteca comuna (peces, Toolbox, forats CSG).
 Els models de la Toolbox es carreguen per id i sense scripts (`ASSETS` a
 `lib.luau`).
@@ -94,7 +100,8 @@ o no es planten. Regla: deixar sempre **0,05** entre cares paral·leles.
 
 1. **Crear els passis i productes** al Creator Dashboard i posar els `id` a
    `Config/Monetization.luau`.
-2. **Provar el comerç amb 2 jugadors reals** (mai s'ha provat de debò). A
+2. **Provar el comerç amb 2 jugadors reals** (mai s'ha provat de debò). Tot el codi del 28/09 s'ha revisat al núvol però
+   no s'ha executat mai (veure §6): cal una partida de prova sencera a Studio. A
    Studio: Test > Clients and Servers amb 2 jugadors (a Studio no cal la
    mitja hora de joc).
 3. **Protegir l'economia del comerç**: fet (28/09/2026) menys el sostre per
@@ -109,11 +116,198 @@ o no es planten. Regla: deixar sempre **0,05** entre cares paral·leles.
    de debò.
 6. Llançament: tot a **`docs/LLANÇAMENT.md`** (qüestionari d'edat, que és
    per què en Luca no hi podia entrar; nom, descripció, icona, passis).
-   Música: omplir `MUSIC` a `AmbienceController`.
+   Música: ja hi és (29/09/2026); escoltar-la i canviar el que no agradi.
 7. Idees parlades: rebirth (només diners, mai sort), neteja de fòssils amb
    pinzell, desar menys sovint quan es compren molts passis seguits.
 
-## 6. Fitxers que no s'han de fer servir
+## 6. Revisió al núvol (29/09/2026)
+
+Tot el codi del 28/09 es va revisar SENSE Studio: analitzador de tipus
+(luau-lsp amb les definicions de Roblox i el sourcemap de Rojo) sobre `src/`
+i sobre cada mòdul de `tools/world/` amb `lib.luau` al davant, i revisió a mà
+del servidor, del client i del món. Les eines no són al repositori (es
+compilen de la font oficial: `cargo install rojo` i luau-lsp amb cmake).
+
+**Analitzador**: cap error real. El que surt són limitacions de les
+definicions (`for x in t or {}`, taules amb tipus barrejats, `nil` a taules
+tipades) i avisos d'estil. `Player:IsFriendsWith` surt com a obsolet
+(Roblox recomana `IsFriendsWithAsync`); no s'ha tocat perquè encara funciona.
+
+**Arreglat**:
+- `DataService`: si el jugador marxava MENTRE es carregava el perfil, el
+  perfil arribava després del seu PlayerRemoving: el lock quedava agafat
+  (en tornar a entrar l'expulsaven, "profile still open") i ell i el seu
+  museu quedaven a les taules per sempre. Ara es desa, s'allibera i es
+  neteja al moment.
+- `DataService`: el batec recorria `profiles` mentre cedia el control (hi
+  entren i en surten jugadors); això pot petar i aturar el batec per
+  sempre, i llavors els locks caducarien amb els jugadors dins. Ara recorre
+  una llista feta abans.
+- `TradeService`: no es pot confirmar un canvi sense cap fòssil a cap banda
+  (servia per cobrar la missió "Trade with another player" sense donar res).
+- HUD: el 👆 de la missió a Backpack/Trade/Store l'esborrava el refresc del
+  HUD (cada 10 s). Ara hi ha `HudController.SetBadge` (la guia: tutorial i
+  missions) i `HudController.AutoBadge` (comptadors i avisos), i les
+  automàtiques no trepitgen el 👆.
+- `MonetizationService.processReceipt`: si el desat fallava, s'esborrava el
+  registre de la compra però les monedes ja eren al perfil, i el reintent
+  de Roblox les tornava a donar. Ara el registre es queda i el reintent
+  només torna a provar de desar.
+- `Theme.AutoScale`: cada UIScale quedava per sempre en una llista, i la
+  targeta de cada troballa en fa una (una per excavació). Ara les que ja
+  no hi són es treuen.
+- Detall de UI no arreglat: SHOW a la motxilla ensenya "is on display!"
+  encara que el museu sigui ple (el servidor també avisa en vermell).
+
+**Revisat i bé**: saveSeq/SaveMany (un desat vell no trepitja un de nou),
+escrow del comerç (validació sencera i mutació sense yield), invitacions que
+caduquen, ACCEPT amb retard, cooldown, audit; `lockedBones`/`museumLocked`
+(exposar o muntar no desbloqueja); missions (cap yield entre comprovar i
+cobrar: no es poden cobrar dos cops); cicles de `require` (cap); taules per
+jugador (totes es buiden a PlayerRemoving); tots els remotes (Settings,
+Travel, Shop, Sell, Museum, Dig, Quest, Reward, Purchase: validen tipus i
+rate limit, i el client no decideix cap resultat); connexions del client
+(totes un sol cop a `Start`); probabilitats de l'Índex (mateixa fórmula que
+el servidor); `08_props`, `10_signs`, `gableRoof`. Els retocs de 02/03/04/
+06/07/09 només s'han pogut passar per l'analitzador: si es veuen bé cal
+mirar-ho amb captures a Studio.
+
+**Economia de les missions** (simulació amb la cadena de `Config/Quests`,
+300 partides, jugant sol): els premis en monedes (mínim 20/min de renda, ara 1.200/min amb el x60)
+pesen molt al principi. Sense missions → amb missions:
+Steel Trowel 6,7 → 2,0 min · Pro Trowel 33 → 6,5 min · Platja 91 → 64 min
+(44 min si el comerç de la missió 12 es fa als 35 min). A partir de la Ruby
+Trowel l'efecte és petit. **Pendent de decidir** (no s'ha tocat): rebaixar
+les monedes de les 11 primeres missions o la renda mínima per a missions.
+A més, la missió 12 ("Trade with another player") arriba cap als 6 min,
+però no es pot comerciar fins als 30 min de joc: **la cadena queda aturada
+~25 min** per a tothom i per sempre per a qui juga sol. Proposta: moure-la
+més avall (després de "Dig 75 fossils") o fer-la opcional.
+
+**29/09/2026 (tarda)**: economia ~2x més ràpida (simulació: Steel Trowel
+6,5 → 2,8 min · Pro 32 → 18 min · Platja 89 → 54 min · Ruby 2,5 → 1,5 h ·
+Golden 6,1 → 3,7 h · Diamond 17 → 11 h · Egipte als ~5,7 h); la sort no es
+toca, així que els esquelets alts continuen igual de lents (el comerç
+continua sent la drecera). Tutorial redissenyat (targeta gran amb icona,
+títol, consell i punts de progrés, celebració en acabar). Els avisos
+(toasts) han baixat a y = 172 perquè no els tapi.
+
+**29/09/2026 (vespre)**: sort fins a x20 (11 paletes, 3 a Egipte), sostre
+x640, N més altes per a Legendary/Mythic/Secret; corba de preus més ràpida;
+Egipte x2 de monedes per excavació; la missió del comerç va després de "Dig
+75 fossils" (ja no bloqueja la cadena). Simulació (100 partides, sol):
+Steel 1,2 min · Bronze 6,7 min · Pro 15 min · Ruby 32 min · Platja 49 min ·
+Emerald 73 min · Golden 2,1 h · Egipte 3,3 h · Diamond 4,4 h · Scarab 6,9 h
+· Anubis 11,7 h · Pharaoh's 19 h. L'esquelet Mythic sol: 33 h, el 49% (com
+abans). Dopamina: `Theme.Note/Arpeggio/Fanfare/Cash/CoinTick` (melodies amb
+els sons oficials, cada nota és un Sound nou), `Effects.Flash` i
+`Effects.ShakeCamera`; el servidor diu la festa amb `Notify.fx` ("cash",
+"fanfare", "big"). A l'excavació, els cops pugen de to i tres PERFECT fan
+"PERFECT x3!". Els sons són els 7 oficials de Roblox que ja teníem: si se'n
+volen de nous (moneda, caixa registradora...), triar-los a la Creator Store
+i posar-ne l'id a `Theme.SOUNDS`.
+
+**29/09/2026 (nit)**: música, so de pala a cada cop del minijoc, propines
+dels visitants amb dring i caixa registradora, i celebracions de fites de
+diners (1K, 10K, 100K, 1M "MILLIONAIRE!", ... 1T) al HUD.
+
+**29/09/2026 (matinada)**: esquelets de 5 a 8 peces (Rat/Pigeon/Seagull 5 ·
+Cat/Dog/Otter/Ibis 6 · Dodo/Cormorant/Jackal/Camel 7 · Sabertooth/T-Rex/
+Crocodile 8; `Bones.PiecesOf`, les peces de més a `BoneBuilder`), muntat x5,
+fora les missions de vendre, economia més ràpida (simulació: platja 28 min ·
+Egipte 1,5 h · Pharaoh's 7,3 h · Legendary 8 h · Mythic de 8 peces sol: el 9%
+en 40 h), pocions (`Config/Potions`, `PotionService`), barra de baix nova
+(`HotbarController`, amaga la de Roblox), recompenses molt més generoses
+(paquets), munt daurat (`DigService` + `EventController`), avisos de
+troballes grosses a tot el servidor, botó 🧭 GUIDE per apagar la fletxa de la
+missió (`settings.questGuide`) i parets invisibles al voltant del món
+(`08_props`: a la filera d'arbres i per la platja i el mar). El simulador no
+compta les pocions ni les recompenses: al joc real anirà una mica més ràpid.
+
+**30/09/2026**: botó de tancar únic (`Widgets.CloseButton`): vermell, a dalt
+a la dreta, amb la creu DIBUIXADA (FredokaOne no té el símbol ✕ i sortia un
+quadrat); a totes les finestres, la fitxa de les paletes, la targeta de
+troballa, els diàlegs, el recordatori del like, el "Welcome back" i el
+botó de treure de la vitrina. Al museu, cada vitrina té un rètol petit a
+sobre (`MuseumService.infoSign`, només es veu de prop): nom i raresa, +X $/s
+i una frase de l'animal (`Bones.FACTS`).
+
+**30/09/2026 (tarda)**: ESTAT DELS FÒSSILS (regles a `CLAUDE.md`). 6 estats
+(`Bones.GRADES`, `Bones.RollGrade` amb la sort de la paleta sola), claus amb
+estat ("Rat_Skull#4", "Rat#34425"; `PieceInfo`/`ById` també responen a
+aquestes claus; per validar, `IsPieceKey` / `IsSkeletonItem`; l'índex i
+`discovered` van per la base), migració de perfil v4 (tot a Dusty), el
+servidor munta amb la millor peça de cada (`Bones.BestPieces`), "vendre
+repetits" es queda la de millor estat. Es veu: ossos bruts i torts o blancs
+i brillants (`BoneBuilder.Weather`, les Pristine amb espurnes), barreta de 6
+nivells a les rajoles (`Widgets.GradeBar`), segell a la carta de troballa,
+estat al rètol de la vitrina i a la motxilla, % de fòssils nets a la fitxa de
+cada paleta. Simulació (100 partides, sol) sense → amb estat: Platja 28 → 22
+min · Egipte 92 → 70 min · Pharaoh's 7,3 → 4,8 h · esquelet Legendary 7,9 →
+6,2 h · el Mythic sol continua gairebé impossible (el 8-11% en 40 h). Com
+que el sostre de renda s'atrapava a les 3 h, ha passat a 12.000 $/s
+(720.000/min): ara s'hi arriba a les ~14 h, com abans. **Cal provar-ho a
+Studio**, sobretot el comerç (les claus han canviat) i la migració d'un
+perfil vell. En publicar: Shut down all servers (un servidor vell no entén
+les claus noves).
+
+**30/09/2026 (vespre)**: 7 estats (s'afegeix Mint entre Polished i
+Pristine) i multiplicadors que pugen cada cop més: x0,5 · 0,7 · 1 · 1,4 ·
+1,9 · 2,5 · 3,2. Mitjanes: Common x1,35 (Rusty) → x2,28 (Pharaoh's). Una
+peça "#6" d'abans d'aquest canvi (era Pristine) ara és Mint: no s'havia
+publicat. Després: Mint x3,2 i Pristine x6 (mitjanes Common x1,53 → x3,3) i
+**fora el sostre de renda** (decisió del propietari: molestava). El límit
+són les 10 vitrines (màxim teòric, 10 T-Rex tot Pristine: ~770.000 $/s). La renda
+offline, les recompenses, les missions i les propines van en minuts de
+renda: al final del joc també creixen sense límit. Economia sense tornar a
+simular.
+
+**30/09/2026 (nit)**: Epic 1/80 → 1/16 i Legendary 1/1.500 → 1/300 (x5 més
+fàcils, decisió del propietari). Simulació (60 partides, sol, sense sostre):
+Platja 17 min · Egipte 40 min · esquelet Epic 12 min · esquelet Legendary
+1,9 h · Pharaoh's 2,4 h · renda 12.000 $/s a les 1,4 h · Mythic sol el 15% en
+40 h. Després, Epic a 1/25 perquè l'ordre de rareses torni a tenir sentit
+(sense sort: Common 67% · Uncommon 22% · Rare 6,4% · Epic 4%). Simulació:
+1a Rare 0,8 min · 1a Epic 1,9 min · 1a Legendary 11 min · esquelet Epic
+16 min · Platja 18 min · Egipte 46 min · esquelet Legendary 2 h ·
+Pharaoh's 2,7 h · Mythic sol el 8% en 40 h.
+
+**30/09/2026 (nit, 2)**: Mythic 1/2.000 i Secret 1/20.000 a la zona 1, i
+dificultat per zona per a Mythic i Secret (`Zones.rareHardness`: platja
+x1,5, Egipte x2; `Dig.RarityChances` la rep, també a l'Índex). Simulació
+(60 partides, sol): 1a Mythic 47 min · 1a Secret 7,6 h · esquelet Mythic
+sol 11,8 h (el 100% en 40 h) · esquelet T-Rex sol: cap en 40 h.
+
+**30/09/2026 (nit, 3)**: ZONA 4, la **Glacera de l'Edat de Gel**
+(`tools/world/12_glacier.luau`), amb els criteris d'Egipte: a l'oest del tot
+(x = -6000), només en avió (✈️ Travel → Glacier, `Zones.flyOnly`), plana de
+neu i gel fins a l'horitzó sense mar, parets invisibles a ±480, 12 forats
+a l'atzar (estil "ice": neu, piolet i fanal), moll de fusta amb banderes,
+portalada de gel (ZoneUnlock), mamut congelat dins un bloc de gel (x1,8),
+tres muntanyes de gel gegants, llac glaçat, iglús, campament amb foguera,
+cabana "FROST TROWELS", cristalls de gel, pins, roques i una aurora boreal.
+Neva (partícules al client) i sona vent + música d'hivern de DistroKid
+(`AmbienceController`, x < -1500). 5 esquelets (Arctic Hare Rare 6 · Dire
+Wolf Epic 7 · Giant Deer Legendary 7 · Woolly Rhino Legendary 7 · Mammoth
+Mythic 8; ullals, banyes i banya nous a `BoneBuilder`), obrir-la costa 25 M
+i cal Egipte, 12.000 per excavació, Mythic x2,5 més difícil. 3 paletes
+noves (Frost x24 110 M · Aurora x28 240 M · Mammoth Tusk x32 500 M) i sostre
+de sort x1024. Missions noves: "Find a Mythic fossil" i "Fly to the Ice Age
+Glacier and unlock it". Simulació (60 partides, sol): Egipte 45 min ·
+Glacera 2,3 h · Pharaoh's 3 h · Frost 4,4 h · Aurora 6,8 h · Mammoth Tusk
+10,7 h. **Cal construir-la a Studio** (`python tools/world/run.py 12`) i fer
+captures.
+
+**30/09/2026 (nit, 4)**: les paletes de la glacera pugen a x30 · x50 ·
+**x100** (Mammoth Tusk) i el sostre a x3200 (x100 × el passi de x32, que no
+es toca). Decisió del propietari, avisat que al final del joc el Mythic
+surt 1/20 i el Secret 1/200 a l'Obra (1/6 amb el passi de x32).
+
+**Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
+el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa
+alguna cosa.
+
+## 7. Fitxers que no s'han de fer servir
 
 - `INSTALL.lua`: instal·lador antic de la primera versió de l'obra (80x80).
   Obsolet; el món actual es fa amb `tools/world/`.

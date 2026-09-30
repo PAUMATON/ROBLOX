@@ -242,7 +242,7 @@ local function tip(v: Visit, stop: number)
 		return -- l'han tret mentrestant
 	end
 	local chance = Visitors.TIP_CHANCE[Bones.RarityOf(item)] or 0
-	if Bones.IsSkeletonId(item) then
+	if Bones.IsSkeletonItem(item) then
 		chance *= Visitors.SKELETON_CHANCE
 	end
 	if rng:NextNumber() >= chance then

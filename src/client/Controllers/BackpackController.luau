@@ -10,6 +10,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Bones = require(Shared:WaitForChild("Config"):WaitForChild("Bones"))
+local Museum = require(Shared:WaitForChild("Config"):WaitForChild("Museum"))
+local Potions = require(Shared:WaitForChild("Config"):WaitForChild("Potions"))
+local Tools = require(Shared:WaitForChild("Config"):WaitForChild("Tools"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
 local UI = script.Parent.Parent:WaitForChild("UI")
@@ -56,7 +59,7 @@ end
 local function sortedKeys(counts: { [string]: number }, isPiece: boolean): { string }
 	local keys = {}
 	for key, n in counts do
-		if n > 0 and (if isPiece then Bones.IsPieceKey(key) else Bones.IsSkeletonId(key)) then
+		if n > 0 and (if isPiece then Bones.IsPieceKey(key) else Bones.IsSkeletonItem(key)) then
 			table.insert(keys, key)
 		end
 	end
@@ -65,7 +68,12 @@ local function sortedKeys(counts: { [string]: number }, isPiece: boolean): { str
 		if ra ~= rb then
 			return ra > rb
 		end
-		return a < b
+		-- la mateixa peça en estats diferents, una al costat de l'altra, la millor primer
+		local ba, bb = Bones.BaseOf(a), Bones.BaseOf(b)
+		if ba ~= bb then
+			return ba < bb
+		end
+		return Bones.IncomeOf(a) > Bones.IncomeOf(b)
 	end)
 	return keys
 end
@@ -96,16 +104,25 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 	Theme.Corner(pill, 15)
 	Theme.Stroke(pill, 2)
 	Theme.Text(pill, string.upper(rarity), { Size = UDim2.new(1, -16, 1, -8), Position = UDim2.fromOffset(8, 4) })
+	-- l'estat (peça) o el bonus de conjunt (esquelet), al costat
+	local gradePill = Instance.new("Frame")
+	gradePill.Size = UDim2.fromOffset(150, 30)
+	gradePill.Position = UDim2.fromOffset(152, 10)
+	gradePill.BackgroundColor3 = if isPiece then Bones.GradeDef(Bones.GradeOf(item)).color else C.gold
+	gradePill.Parent = detail
+	Theme.Corner(gradePill, 15)
+	Theme.Stroke(gradePill, 2)
+	Theme.Text(gradePill, string.upper(Bones.GradeText(item)), { Size = UDim2.new(1, -16, 1, -8), Position = UDim2.fromOffset(8, 4) })
 	local canBuild = isPiece and Bones.CanAssemble(snapshot.bones, Bones.PieceInfo[item].skeleton)
 	-- espai que ocupen els botons de la dreta (SHOW, BUILD i SELL)
 	local rightUsed = 204 + (if canBuild then 262 else 0) + (if isPiece then 172 else 0)
 	Theme.Text(detail, name, {
-		Size = UDim2.new(1, -(rightUsed + 160), 0, 30),
-		Position = UDim2.fromOffset(154, 10),
+		Size = UDim2.new(1, -(rightUsed + 322), 0, 30),
+		Position = UDim2.fromOffset(312, 10),
 		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 	local locked = if isPiece then (snapshot.locked or {})[item] or 0 else 0
-	local income = `+{Bones.IncomeOf(item)}/min in your museum`
+	local income = `+{Museum.PerSecondText(Bones.IncomeOf(item))} $/s in your museum`
 	if locked > 0 then
 		income ..= ` · 🔒 {locked} gift{if locked == 1 then "" else "s"}: can't trade`
 	end
@@ -126,14 +143,21 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 		Sound = "reward",
 		OnClick = function()
 			Remotes.MuseumAction:FireServer("display", item)
-			Effects.Toast(`🏛️ {name} is on display! +{Bones.IncomeOf(item)}/min`, C.green, "reward")
+			Effects.Toast(`🏛️ {name} is on display! +{Museum.PerSecondText(Bones.IncomeOf(item))} $/s`, C.green, "reward")
 		end,
 	})
 	Effects.Shine(show.button, 14, 1.8)
 	if isPiece then
 		local info = Bones.PieceInfo[item]
-		if Bones.CanAssemble(snapshot.bones, info.skeleton) then
+		local chosen = Bones.BestPieces(snapshot.bones, info.skeleton)
+		if chosen then
 			local def = Bones.ById[info.skeleton]
+			-- el que rendirà, amb la millor peça de cada (el servidor tria igual)
+			local grades = {}
+			for i, piece in chosen do
+				grades[i] = Bones.GradeOf(piece)
+			end
+			local skeleton = Bones.SkeletonItem(def.id, grades)
 			local build = Widgets.Button({
 				Parent = detail,
 				Size = UDim2.fromOffset(250, 60),
@@ -141,12 +165,12 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 				Position = UDim2.new(1, -204, 0.5, 0),
 				Color = C.gold,
 				Icon = "🔨",
-				Text = "BUILD x2 💰",
+				Text = "BUILD x5 $",
 				Sound = "reward",
 				OnClick = function()
 					Remotes.MuseumAction:FireServer("assemble", def.id)
 					selected = def.id
-					Effects.Toast(`🦴 {def.name} skeleton built! It earns double 💰`, C.gold, "reward")
+					Effects.Toast(`🦴 {def.name} skeleton built! +{Museum.PerSecondText(Bones.IncomeOf(skeleton))} $/s · {Bones.GradeText(skeleton)}`, C.gold, "reward")
 				end,
 			})
 			Effects.Shine(build.button, 14, 1.2)
@@ -159,7 +183,7 @@ local function drawDetail(snapshot: ProfileController.Snapshot)
 			AnchorPoint = Vector2.new(1, 0.5),
 			Position = UDim2.new(1, -(204 + (if canBuild then 262 else 0)), 0.5, 0),
 			Color = C.orange,
-			Text = `SELL {Theme.Short(value)}💰`,
+			Text = `SELL {Theme.Short(value)} $`,
 			OnClick = function()
 				Remotes.SellRequest:FireServer("one", item)
 			end,
@@ -181,6 +205,66 @@ local function redraw()
 		return order
 	end
 
+	-- pocions: clic = fer-la servir (el servidor ho valida)
+	local potionRow = {}
+	for _, def in Potions.LIST do
+		local n = (snapshot.potions or {})[def.id] or 0
+		if n > 0 then
+			table.insert(potionRow, { def = def, n = n })
+		end
+	end
+	if #potionRow > 0 then
+		section("🧪 POTIONS (tap to use)", nextOrder())
+		local g = grid(nextOrder(), 84)
+		for i, item in potionRow do
+			local def = item.def
+			local b = Widgets.Button({
+				Parent = g,
+				Size = UDim2.fromOffset(84, 84),
+				Color = def.color,
+				Icon = def.icon,
+				Text = `x{item.n}`,
+				Layout = "tile",
+				LayoutOrder = i,
+				OnClick = function()
+					Remotes.PotionRequest:FireServer("use", def.id)
+				end,
+			})
+			Widgets.Tooltip(b.button, def.name, def.text, def.color)
+		end
+	end
+
+	-- paletes que tens: clic = equipar-la (la de la mà, amb contorn groc)
+	section("⛏️ TROWELS (tap to equip)", nextOrder())
+	do
+		local g = grid(nextOrder(), 84)
+		for i, def in Tools.LIST do
+			if table.find(snapshot.tools or {}, def.id) then
+				local equipped = snapshot.equippedTool == def.id
+				local b = Widgets.Button({
+					Parent = g,
+					Size = UDim2.fromOffset(84, 84),
+					Color = def.blade:Lerp(C.panel, 0.3),
+					Icon = "⛏️",
+					Text = Tools.LuckText(def.luck),
+					Layout = "tile",
+					LayoutOrder = i,
+					OnClick = function()
+						if not equipped then
+							Remotes.ShopRequest:FireServer("equip", def.id)
+						end
+					end,
+				})
+				local st = b.button:FindFirstChildOfClass("UIStroke")
+				if st and equipped then
+					st.Color = C.yellow
+					st.Thickness = 5
+				end
+				Widgets.Tooltip(b.button, def.name, if equipped then "In your hands" else `{Tools.LuckText(def.luck)} luck · tap to equip`, def.blade)
+			end
+		end
+	end
+
 	-- esquelets que ja pots muntar
 	local ready = {}
 	for _, def in Bones.SKELETONS do
@@ -189,11 +273,13 @@ local function redraw()
 		end
 	end
 	if #ready > 0 then
-		section("🔨 READY TO BUILD (earns x2!)", nextOrder())
+		section("🔨 READY TO BUILD (earns x5!)", nextOrder())
 		local g = grid(nextOrder(), 84)
 		for i, def in ready do
-			local tile = Widgets.PieceTile(g, Bones.PieceKey(def.id, "Skull"), 1, 84, function()
-				selected = Bones.PieceKey(def.id, "Skull")
+			local best = Bones.BestPieces(snapshot.bones, def.id) or {}
+			local first = best[1] or Bones.PieceKey(def.id, "Skull")
+			local tile = Widgets.PieceTile(g, first, 1, 84, function()
+				selected = first
 				drawDetail(snapshot)
 			end, i)
 			Widgets.Badge(tile, 30).set("🔨", C.gold)

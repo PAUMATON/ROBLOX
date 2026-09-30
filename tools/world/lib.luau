@@ -608,13 +608,29 @@ local PIT_STYLES = {
 		mat = M.Sand,
 		pebble = C(240, 206, 196), -- petxines
 	},
+	-- Egipte: sorra daurada del desert, més càlida que la de la platja
+	desert = {
+		slab = C(226, 190, 128),
+		floor = C(184, 142, 86),
+		mound = C(214, 172, 108),
+		mat = M.Sand,
+		pebble = C(196, 168, 120),
+	},
+	-- Glacera: neu trepitjada, fons de gel blau i pedretes de glaç
+	ice = {
+		slab = C(236, 242, 250),
+		floor = C(150, 186, 214),
+		mound = C(214, 226, 240),
+		mat = M.Snow,
+		pebble = C(186, 222, 246),
+	},
 }
 local TOY = { C(240, 80, 80), C(70, 160, 230), C(250, 200, 60), C(90, 200, 120) }
 local PIT_TILE, PIT_R, PIT_LEDGE, PIT_DEPTH = 8, 2.7, 3.4, 2.4
 local CRATER_R, CRATER_H = 12, 1.5 -- esfera del cràter de la platja i quant surt
 -- alçada del terra del forat a `d` del centre (a la platja, el casquet)
 local function pitGround(style, d)
-	if style ~= "sand" then
+	if style == "earth" then
 		return 0
 	end
 	return math.max(0, math.sqrt(math.max(CRATER_R * CRATER_R - d * d, 0)) - (CRATER_R - CRATER_H))
@@ -656,7 +672,7 @@ local function digPit(g, zone, name, style, r, parent)
 	-- a l'obra, lloses quadrades en quadrícula; a la platja, un cràter: una
 	-- esfera gran enterrada de la qual només surt el casquet (vora suau)
 	local slab
-	if style == "sand" then
+	if style ~= "earth" then
 		slab = Ball(CRATER_R * 2, g + UP * (CRATER_H - CRATER_R), S.slab, S.mat, m)
 	else
 		slab = P(V3(T, 3.2, T), CF(g - UP * 1.6), S.slab, S.mat, m)
@@ -746,6 +762,33 @@ local function digPit(g, zone, name, style, r, parent)
 		local brcf = CF(g:Lerp(corner[2], 0.8) + UP * 0.12) * CFrame.Angles(0, ta, rad(90))
 		P(V3(0.14, 1, 0.14), brcf, C(200, 60, 50), M.SmoothPlastic, m, true)
 		P(V3(0.4, 0.4, 0.3), brcf * CF(0, -0.6, 0), C(236, 220, 170), M.Fabric, m, true)
+	elseif style == "desert" then
+		-- àmfora de fang mig enterrada, a un cantó
+		local ap = g:Lerp(corner[1], 0.8) + cornerUp
+		local acf = CF(ap + UP * 0.7) * CFrame.Angles(rad(12), ta, 0)
+		Ellipsoid(V3(1.3, 1.6, 1.3), acf, C(178, 96, 58), M.SmoothPlastic, m).CanCollide = false
+		VCyl(0.5, 0.55, (acf * CF(0, 0.95, 0)).Position, C(160, 84, 50), M.SmoothPlastic, m, true)
+		P(V3(0.9, 0.12, 1.5), acf * CF(0, 0.2, 0), C(62, 118, 150), M.SmoothPlastic, m, true) -- franja pintada
+		-- pinzell d'arqueòleg a l'altre
+		local brcf = CF(g:Lerp(corner[2], 0.8) + cornerUp + UP * 0.12) * CFrame.Angles(0, ta, rad(90))
+		P(V3(0.14, 1, 0.14), brcf, COL.woodDark, M.Wood, m, true)
+		P(V3(0.4, 0.4, 0.3), brcf * CF(0, -0.6, 0), C(236, 220, 170), M.Fabric, m, true)
+	elseif style == "ice" then
+		-- piolet clavat a la neu, a un cantó
+		local ip = g:Lerp(corner[1], 0.8) + cornerUp
+		local icf = CF(ip + UP * 0.8) * CFrame.Angles(rad(15), ta, rad(10))
+		P(V3(0.14, 1.6, 0.14), icf, COL.woodDark, M.Wood, m, true)
+		P(V3(0.12, 0.16, 1.1), icf * CF(0, 0.8, 0), C(70, 74, 82), M.Metal, m, true)
+		-- fanal de campanya (llum càlida) a l'altre
+		local lp = g:Lerp(corner[2], 0.8) + cornerUp
+		P(V3(0.6, 0.12, 0.6), CF(lp + UP * 0.06), C(40, 40, 44), M.Metal, m, true)
+		local glass = P(V3(0.45, 0.6, 0.45), CF(lp + UP * 0.42), C(255, 214, 140), M.Neon, m, true)
+		P(V3(0.6, 0.1, 0.6), CF(lp + UP * 0.77), C(40, 40, 44), M.Metal, m, true)
+		local light = Instance.new("PointLight")
+		light.Color = C(255, 190, 120)
+		light.Range = 8
+		light.Brightness = 0.8
+		light.Parent = glass
 	else
 		-- galleda i pala de joguina, de colors
 		local col = TOY[r:NextInteger(1, #TOY)]

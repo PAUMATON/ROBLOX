@@ -11,11 +11,12 @@ Model del jugador (mitja):
   - cada excavacio triga: cooldown (1.2 s) + ~2.5 s de minijoc + ~3.5 s de
     caminar fins al munt seguent (els munts es buiden 20 s).
   - cada clic: 30% perfecte, 40% be, 30% fallat (l'eina no hi fa res).
-  - sort = la del minijoc (fins a x1.5) x la de l'eina (fins a x2), sostre x3.
+  - sort = la de la paleta (x1 .. x20; el minijoc ja no en dona), sense passis.
   - al museu (10 vitrines) hi posa sempre el que mes rendeix; munta un
     esquelet quan en te les 5 peces (rendeix x2).
   - compra l'eina seguent quan hi arriba i obre la platja quan pot.
 """
+import math
 import random
 import statistics
 import sys
@@ -24,21 +25,59 @@ import sys
 RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret"]
 WEIGHTS = {"Common": 55, "Uncommon": 28, "Rare": 11, "Epic": 4.5, "Legendary": 1.2, "Mythic": 0.25, "Secret": 0.05}
 LUCKY_FROM = "Rare"
-PIECE_INCOME = {"Common": 1, "Uncommon": 2, "Rare": 4, "Epic": 10, "Legendary": 25, "Mythic": 70, "Secret": 200}
-SKELETON_BONUS = 2
-PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail"]
-MAX_LUCK = 3
+PIECE_INCOME = {"Common": 60, "Uncommon": 120, "Rare": 240, "Epic": 600, "Legendary": 1500, "Mythic": 4200, "Secret": 12000}  # x60 (29/09/2026)
+SKELETON_BONUS = 5  # 29/09/2026: el muntat rendeix la suma de les peces x5
+
+# Estat dels fòssils (Bones.luau > ESTAT): Crushed … Mint, Pristine
+GRADE_MULT = [0.5, 0.7, 1.0, 1.4, 1.9, 3.2, 6.0]
+GRADE_WEIGHT = [10, 18, 30, 20, 12, 7, 3]
+GRADE_TILT_TOOL, GRADE_TILT_RARITY, GRADE_TILT_BASE, GRADE_TOOL_TOP = 0.8, 0.8, 0.1, 20
+SET_BONUS_STEP = 0.1  # bonus de conjunt: +10% per estat de la peça pitjor
+NOGRADE = "--nograde" in sys.argv  # com abans: tot Dusty i sense bonus de conjunt
+
+
+def roll_grade(rarity, tool_luck):
+    """1..7, com Bones.RollGrade (només la sort de la paleta)"""
+    if NOGRADE:
+        return 3
+    t = min(max(math.log(max(1, tool_luck)) / math.log(GRADE_TOOL_TOP), 0), 1)
+    r = RARITIES.index(rarity) / (len(RARITIES) - 1)
+    tilt = GRADE_TILT_TOOL * t - GRADE_TILT_RARITY * r + GRADE_TILT_BASE
+    c = (len(GRADE_WEIGHT) - 1) / 2
+    w = [b * math.exp(tilt * (i - c)) for i, b in enumerate(GRADE_WEIGHT)]
+    return random.choices(range(1, len(GRADE_WEIGHT) + 1), weights=w)[0]
+
+
+def skeleton_value(rarity, grades):
+    bonus = 1 if NOGRADE else 1 + SET_BONUS_STEP * (min(grades) - 1)
+    return sum(PIECE_INCOME[rarity] * GRADE_MULT[g - 1] for g in grades) * SKELETON_BONUS * bonus
+PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail", "Ribs", "Pelvis", "Extra"]
+# quantes peces té cada esquelet (Bones.luau: `pieces`)
+PIECES_OF = {"Rat": 5, "Pigeon": 5, "Cat": 6, "Dog": 6, "Dodo": 7, "Sabertooth": 8, "TRex": 8,
+             "Seagull": 5, "Otter": 6, "Cormorant": 7, "Ibis": 6, "Jackal": 7, "Camel": 7, "Crocodile": 8,
+             "ArcticHare": 6, "DireWolf": 7, "GiantDeer": 7, "WoollyRhino": 7, "Mammoth": 8}
+MAX_LUCK = 100  # la millor paleta (sense passis de Robux): la Mammoth Tusk de la glacera
 ZONES = {
-    "construction": {"cost": 0, "coins": 3, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
+    "construction": {"cost": 0, "coins": 270, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
                                                    "Dodo": "Legendary", "Sabertooth": "Mythic", "TRex": "Secret"}},
-    "beach": {"cost": 25000, "coins": 8, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
+    "beach": {"cost": 320000, "coins": 720, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
+    # illa (només en avió), demana la platja
+    "egypt": {"cost": 3200000, "coins": 3600, "sk": {"Ibis": "Rare", "Jackal": "Epic", "Camel": "Legendary", "Crocodile": "Mythic"}},
+    # glacera (només en avió), demana Egipte
+    "glacier": {"cost": 25000000, "coins": 12000, "sk": {"ArcticHare": "Rare", "DireWolf": "Epic", "GiantDeer": "Legendary",
+                                                       "WoollyRhino": "Legendary", "Mammoth": "Mythic"}},
 }
-# (id, preu, sort)
-TOOLS = [("rusty_shovel", 0, 1.0), ("steel_trowel", 750, 1.5), ("field_pickaxe", 6000, 2.0),
-         ("pro_brush", 40000, 2.4), ("golden_shovel", 200000, 2.7), ("sonic_drill", 900000, 3.0)]
+# (id, preu, sort, zona que cal tenir oberta)
+TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 9000, 1.5, None), ("bronze_trowel", 33000, 2, None),
+         ("field_pickaxe", 80000, 3, None), ("pro_brush", 240000, 4, None), ("emerald_trowel", 650000, 5.5, None),
+         ("golden_shovel", 1700000, 7, None), ("sonic_drill", 4200000, 9, None),
+         ("scarab_trowel", 10000000, 12, "egypt"), ("anubis_trowel", 22000000, 15, "egypt"),
+         ("pharaoh_trowel", 45000000, 20, "egypt"),
+         ("frost_trowel", 110000000, 30, "glacier"), ("aurora_trowel", 240000000, 50, "glacier"),
+         ("mammoth_trowel", 500000000, 100, "glacier")]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
-SLOTS, INCOME_CAP = 10, 6000
+SLOTS, INCOME_CAP = 10, float("inf")  # 30/09/2026: sense sostre (decisió del propietari)
 SELL_MINUTES = 4
 SELL = "--nosell" not in sys.argv
 PERFECT_BONUS, GOOD_BONUS, ATTEMPTS = 50, 30, 3
@@ -56,7 +95,9 @@ def luck_of(bonus, tool_luck):
     return min(max(minigame * tool_luck, 1), MAX_LUCK)
 
 
-ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 80, "Legendary": 600, "Mythic": 4000, "Secret": 25000}
+ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 25, "Legendary": 300, "Mythic": 2000, "Secret": 20000}
+ZONE_HARD_FROM = "Mythic"  # Zones.rareHardness multiplica la N d'aquí cap amunt
+HARDNESS = {"construction": 1, "beach": 1.5, "egypt": 2, "glacier": 2.5}
 
 
 def roll(zone, luck):
@@ -66,13 +107,14 @@ def roll(zone, luck):
     for r in reversed(RARITIES[1:]):
         if r in present:
             l = luck if RARITIES.index(r) >= RARITIES.index(LUCKY_FROM) else 1
-            if random.random() < min(l / ODDS[r], 0.9):
+            n = ODDS[r] * (HARDNESS[zone] if RARITIES.index(r) >= RARITIES.index(ZONE_HARD_FROM) else 1)
+            if random.random() < min(l / n, 0.9):
                 rarity = r
                 break
     if rarity is None:
         rarity = min(present, key=RARITIES.index)
     # totes les peces d'aquesta raresa a la zona, igual de probables
-    pool = [(s, p) for s, rr in ZONES[zone]["sk"].items() if rr == rarity for p in PIECES]
+    pool = [(s, p) for s, rr in ZONES[zone]["sk"].items() if rr == rarity for p in PIECES[:PIECES_OF[s]]]
     return random.choice(pool)
 
 
@@ -83,63 +125,70 @@ def rarity_of(sk):
     raise KeyError(sk)
 
 
-# categories (valor, raresa, és_esquelet) ordenades de més a menys renda
-CATS = sorted([(PIECE_INCOME[r] * (len(PIECES) * SKELETON_BONUS if sk else 1), r, sk)
-               for r in RARITIES for sk in (True, False)], reverse=True)
-
-
-def museum_income(piece_count, skel_count):
-    left, total = SLOTS, 0
-    for value, r, sk in CATS:
-        n = min(left, (skel_count if sk else piece_count).get(r, 0))
-        total += n * value
-        left -= n
-        if left == 0:
+def museum_income(loose, skels):
+    """loose: renda d'una peça solta -> quantes; skels: rendes dels esquelets
+    muntats. Les 10 vitrines s'omplen amb el que més rendeix."""
+    items = sorted(skels, reverse=True)[:SLOTS]
+    for v in sorted(loose, reverse=True):
+        if len(items) >= SLOTS and v <= min(items):
             break
-    return min(total, INCOME_CAP)
+        items += [v] * min(loose[v], SLOTS)
+    items.sort(reverse=True)
+    return min(sum(items[:SLOTS]), INCOME_CAP)
 
 
 def play(max_minutes=2400):
     t = 0.0
-    coins = 100.0
+    coins = 6000.0
     tool = 0
     zones = ["construction"]
     zone = "construction"
-    bones = {}
-    piece_count, skel_count = {}, {}
+    bones = {}  # (esquelet, peça) -> llista d'estats
+    loose, skels = {}, []  # renda de peça solta -> quantes · rendes dels esquelets
     events = {}
     income = 0
     while t < max_minutes * 60:
-        _, _, tool_luck = TOOLS[tool]
+        tool_luck = TOOLS[tool][2]
         dt = DIG_COOLDOWN + MINIGAME_S + WALK_S
         t += dt
         coins += income * dt / 60
         bonus = sum(click_bonus() for _ in range(ATTEMPTS))
         coins += int(ZONES[zone]["coins"] * (1 + bonus / 100))
         sk, piece = roll(zone, luck_of(bonus, tool_luck))
-        bones[(sk, piece)] = bones.get((sk, piece), 0) + 1
         rarity = rarity_of(sk)
+        grade = roll_grade(rarity, tool_luck)
+        value = PIECE_INCOME[rarity] * GRADE_MULT[grade - 1]
         events.setdefault(f"1a peça {rarity}", t)
-        # venda (Fossil Buyer): les repetides fins a Rare es venen; la resta es guarda
-        if SELL and bones[(sk, piece)] > 1 and RARITIES.index(rarity) <= RARITIES.index("Rare"):
-            bones[(sk, piece)] -= 1
-            coins += PIECE_INCOME[rarity] * SELL_MINUTES
-            continue_sell = True
+        have = bones.setdefault((sk, piece), [])
+        # venda (Fossil Buyer): les repetides fins a Rare es venen (la pitjor); la resta es guarda
+        if SELL and have and RARITIES.index(rarity) <= RARITIES.index("Rare"):
+            worst = min(have + [grade])
+            if worst != grade:
+                have.remove(worst)
+                have.append(grade)
+                loose[PIECE_INCOME[rarity] * GRADE_MULT[worst - 1]] -= 1
+                loose[value] = loose.get(value, 0) + 1
+            coins += PIECE_INCOME[rarity] * GRADE_MULT[worst - 1] * SELL_MINUTES
         else:
-            piece_count[rarity] = piece_count.get(rarity, 0) + 1
-        # munta tot el que es pugui
-        if all(bones.get((sk, p), 0) > 0 for p in PIECES):
-            for p in PIECES:
-                bones[(sk, p)] -= 1
-            piece_count[rarity] -= len(PIECES)
-            skel_count[rarity] = skel_count.get(rarity, 0) + 1
+            have.append(grade)
+            loose[value] = loose.get(value, 0) + 1
+        # munta tot el que es pugui (amb la millor peça de cada)
+        mine = PIECES[:PIECES_OF[sk]]
+        if all(bones.get((sk, p)) for p in mine):
+            grades = []
+            for p in mine:
+                g = max(bones[(sk, p)])
+                bones[(sk, p)].remove(g)
+                loose[PIECE_INCOME[rarity] * GRADE_MULT[g - 1]] -= 1
+                grades.append(g)
+            skels.append(skeleton_value(rarity, grades))
             events.setdefault(f"esquelet {rarity} muntat", t)
-        income = museum_income(piece_count, skel_count)
-        for milestone in (50, 200, 1000, INCOME_CAP):
+        income = museum_income({v: n for v, n in loose.items() if n > 0}, skels)
+        for milestone in (3000, 12000, 60000, 360000, 720000, 3600000):
             if income >= milestone:
                 events.setdefault(f"renda >= {milestone}/min", t)
         # compres
-        if tool + 1 < len(TOOLS) and coins >= TOOLS[tool + 1][1]:
+        if tool + 1 < len(TOOLS) and coins >= TOOLS[tool + 1][1] and (TOOLS[tool + 1][3] is None or TOOLS[tool + 1][3] in zones):
             coins -= TOOLS[tool + 1][1]
             tool += 1
             events.setdefault(f"eina {TOOLS[tool][0]}", t)
@@ -147,8 +196,23 @@ def play(max_minutes=2400):
             coins -= ZONES["beach"]["cost"]
             zones.append("beach")
             events.setdefault("obre la Platja", t)
-        # alterna zona: la platja no té Common però tampoc Legendary+
-        zone = "beach" if ("beach" in zones and random.random() < 0.35) else "construction"
+        elif "beach" in zones and "egypt" not in zones and coins >= ZONES["egypt"]["cost"]:
+            coins -= ZONES["egypt"]["cost"]
+            zones.append("egypt")
+            events.setdefault("obre Egipte", t)
+        elif "egypt" in zones and "glacier" not in zones and coins >= ZONES["glacier"]["cost"]:
+            coins -= ZONES["glacier"]["cost"]
+            zones.append("glacier")
+            events.setdefault("obre la Glacera", t)
+        # alterna zona: la platja no té Common però tampoc Legendary+;
+        # a Egipte (Rare → Mythic) hi va sobretot, però el T-Rex és a l'obra
+        r = random.random()
+        if "glacier" in zones:
+            zone = "glacier" if r < 0.6 else ("egypt" if r < 0.8 else "construction")
+        elif "egypt" in zones:
+            zone = "egypt" if r < 0.6 else ("construction" if r < 0.85 else "beach")
+        else:
+            zone = "beach" if ("beach" in zones and r < 0.35) else "construction"
     return events
 
 

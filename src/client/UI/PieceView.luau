@@ -51,10 +51,13 @@ end
 
 local function build(item: string): Model?
 	local ok, model = pcall(function()
+		-- amb estat ("Rat_Skull#4", "Rat#34425") es veu brut o net; la base
+		-- sola (l'índex) es veu com una peça Clean
 		local info = Bones.PieceInfo[item]
+		local graded = string.find(item, "#", 1, true) ~= nil
 		if info then
-			return BoneBuilder.Piece(info.skeleton, info.piece)
-		elseif Bones.IsSkeletonId(item) then
+			return BoneBuilder.Piece(info.skeleton, info.piece, if graded then Bones.GradeOf(item) else nil)
+		elseif Bones.ById[item] then
 			return BoneBuilder.Assembled(item)
 		end
 		return nil

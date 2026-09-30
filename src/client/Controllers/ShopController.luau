@@ -17,6 +17,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
+local Bones = require(Config:WaitForChild("Bones"))
 local Tools = require(Config:WaitForChild("Tools"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
@@ -78,14 +79,9 @@ local function build()
 		TextXAlignment = Enum.TextXAlignment.Left,
 		StrokeThickness = 3,
 	})
-	Widgets.Button({
-		Parent = header,
-		Size = UDim2.fromOffset(46, 46),
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -8, 0.5, 0),
-		Color = C.red,
-		Text = "✕",
-		Radius = 14,
+	Widgets.CloseButton({
+		Parent = card,
+		ZIndex = 8,
 		OnClick = function()
 			ShopController.Close()
 		end,
@@ -169,10 +165,16 @@ local function fillAction(snapshot: ProfileController.Snapshot?, def: Tools.Tool
 		props.OnClick = function()
 			Remotes.ShopRequest:FireServer("equip", def.id)
 		end
+	elseif def.zone and not Zones.IsUnlocked(snapshot and snapshot.zones or {}, def.zone) then
+		-- les d'Egipte: primer cal obrir Egipte
+		props.Color = C.grey
+		props.Text = `UNLOCK {string.upper(Zones.ById[def.zone].name)} FIRST`
+		props.Icon = "🔒"
+		props.Sound = "error"
 	elseif coins >= def.price then
 		props.Color = C.green
 		props.Text = `BUY · {Theme.Short(def.price)}`
-		props.Icon = "💰"
+		props.Icon = "$"
 		props.OnClick = function()
 			Remotes.ShopRequest:FireServer("buy", def.id)
 		end
@@ -210,8 +212,14 @@ local function refresh()
 		compareLabel.Text = `Your {mine.name} is already {Tools.LuckText(mine.luck)}`
 		compareLabel.TextColor3 = C.muted
 	end
-	blurbLabel.Text = def.blurb .. " Luck makes rarer fossils show up more often."
-	priceLabel.Text = if def.price > 0 then `💰 {Theme.Short(def.price)} coins` else "🎁 Free"
+	-- la sort de la paleta també fa sortir els fòssils més nets (Bones > ESTAT)
+	local chances = Bones.GradeChances("Rare", def.luck)
+	local shiny = 0
+	for i = 5, #chances do
+		shiny += chances[i]
+	end
+	blurbLabel.Text = `{def.blurb} Rarer AND cleaner fossils: {math.floor(shiny * 100 + 0.5)}% of Rare ones come out ✨Polished or better.`
+	priceLabel.Text = if def.price > 0 then `$ {Theme.Short(def.price)} coins` else "🎁 Free"
 	fillAction(snapshot, def)
 end
 

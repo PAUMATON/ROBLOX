@@ -273,13 +273,9 @@ local function showLikeReminder()
 		Position = UDim2.fromOffset(20, 60),
 		TextColor3 = C.cream,
 	})
-	Widgets.Button({
+	Widgets.CloseButton({
 		Parent = card,
-		Size = UDim2.fromOffset(52, 52),
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, -14, 0.5, 0),
-		Color = C.red,
-		Text = "✕",
+		Size = 50,
 		OnClick = function()
 			gui:Destroy()
 		end,
@@ -412,7 +408,7 @@ function RewardsController.Start()
 		local since = os.clock() - boostAt
 		local parts = {}
 		if snapshotBoosts.money - since > 0 then
-			table.insert(parts, `💰 x2 {clock(snapshotBoosts.money - since)}`)
+			table.insert(parts, `$ x2 {clock(snapshotBoosts.money - since)}`)
 		end
 		if snapshotBoosts.luck - since > 0 then
 			table.insert(parts, `🍀 x2 {clock(snapshotBoosts.luck - since)}`)

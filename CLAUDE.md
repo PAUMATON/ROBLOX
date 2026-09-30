@@ -6,20 +6,24 @@
 Roblox. Excaves fòssils amb un minijoc de precisió: cada excavació dona UN
 fòssil (una peça d'un esquelet). Els guardes a la motxilla, els exposes al teu
 museu (10 vitrines) i **comercies peces amb altres jugadors**. Si tens la sort
-de reunir les 5 peces d'un esquelet, el muntes i rendeix el doble. L'índex
+de reunir totes les peces d'un esquelet (de 5 a 8: com més rar, més peces), el
+muntes i rendeix la suma de les peces x5. L'índex
 (a part de la motxilla) apunta tot el que has descobert. El museu genera renda
-passiva amb sostre.
+passiva SENSE sostre (30/09/2026, decisió del propietari): el límit
+natural són les 10 vitrines.
 
 ## Loop
 Excavar → minijoc → fòssil amb raresa → motxilla (i índex) → l'exposes → renda →
 si et falta una peça d'un esquelet la comercies o segueixes excavant → muntes
-l'esquelet (x2) → millor eina a Dig & Co. (més sort) → repeteixes.
+l'esquelet (x5) → millor eina a Dig & Co. (més sort) → repeteixes.
 Els fòssils que sobren es venen a la Bonnie (Fossil Buyer, al costat de
 Dig & Co.): una peça val 4 minuts de la seva renda de museu.
 
 ## L'EIX DEL JOC: el comerç
 7 rareses: Common, Uncommon, Rare, Epic, Legendary, Mythic, Secret. Cada
-esquelet té UNA raresa i les seves 5 peces també. A la Zona 1 hi ha un esquelet
+esquelet té UNA raresa i totes les seves peces també (5 a 8 peces:
+Bones.luau `pieces`; les de més surten de partir-ne una de base: caixa
+toràcica, pelvis, mandíbula o coll). A la Zona 1 hi ha un esquelet
 per raresa (del Rat al T-Rex).
 Dins d'una raresa, TOTES les peces són igual de probables, i entre esquelets de
 la mateixa raresa també. Sense pietat: el que ja tens no fa més probable el que
@@ -27,20 +31,57 @@ et falta. Per això completar un esquelet alt sol és molt lent, i el comerç n'
 la drecera. Qualsevol canvi que faci que tothom completi sol mata el joc.
 Els números es balancegen amb tools/economy_sim.py.
 
+## ESTAT DELS FÒSSILS (30/09/2026, Bones.luau > ESTAT)
+Cada fòssil surt amb un de 7 estats: Crushed x0,5 · Cracked x0,7 · Dusty x1
+· Clean x1,4 · Polished x1,9 · Mint x3,2 · Pristine x6 (renda i venda; cada
+salt és més gran que l'anterior). Com més rara
+la peça, més fàcil que surti malmesa; com millor la paleta (NOMÉS la sort de
+la paleta: ni passis ni pocions), més neta. Mitjana: Common x1,53 (Rusty) →
+x3,3 (Pharaoh's); Secret x0,82 → x1,53. Esquelet muntat = (suma de cada
+peça x el seu estat) x5 x bonus de conjunt (+10% per estat de la peça
+PITJOR: Crushed +0% … Pristine +60%). En muntar, el servidor tria la peça de
+millor estat de cada. La clau porta l'estat: "Rat_Skull#4", "Rat#34425".
+Els perfils vells passen a Dusty (migració v4). El minijoc no toca l'estat.
+
 ## Regla de zones
 Cada esquelet és completable DINS de la seva zona. No reparteixis peces d'un
 mateix conjunt entre zones — un jugador de zona 1 no pot comerciar amb un
 d'Egipte (poder de compra asimètric, no hi ha intercanvi possible). Només els
 esquelets de raresa molt alta poden tenir peces en més d'una zona.
+Quatre zones: Obra (Rat → T-Rex), Platja (Seagull, Otter, Cormorant),
+**Egipte** (Ibis, Jackal, Camel, Crocodile: de Rare a Mythic) i, des del
+30/09/2026, la **Glacera de l'Edat de Gel** (Arctic Hare, Dire Wolf, Giant
+Deer, Woolly Rhino, Mammoth: de Rare a Mythic). Egipte (a l'est, x = 6000) i
+la glacera (a l'oest, x = -6000) són lluny de tot: només s'hi arriba amb
+✈️ Travel (mai caminant; `Zones.flyOnly`) i es desbloquegen a la seva
+portalada (Egipte demana la platja; la glacera, Egipte).
 
-## Sort: paleta (x1 → x3) × passi de sort per Robux (x2 → x32). Sostre x96.
+## Sort: paleta (x1 → x100) × passi de sort per Robux (x2 → x32). Sostre x3200.
+(29/09/2026: el propietari va pujar les paletes de x3 a x20; per compensar,
+Legendary, Mythic i Secret tenen la N més alta.)
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
-amunt: Secret 1/25.000 sense sort, 1/260 a x96, 1/150 a x164. Han de ser MOLT
-rares encara amb la sort màxima.
-La sort surt de la paleta (x1, x1.5, x2, x2.4, x2.7, x3) × els passis de sort
-(i els boosts x2 temporals); el minijoc només dona monedes. Es talla el
-PRODUCTE a x96 (Constants.MAX_LUCK). Totes les eines són paletes d'arqueòleg
-i NOMÉS donen sort: no toquen el minijoc ni la velocitat.
+amunt. 30/09/2026 (decisió del propietari, més fàcil que abans): Uncommon
+1/4 · Rare 1/15 · Epic 1/25 · Legendary 1/300 · Mythic 1/2.000 · Secret
+1/20.000 a la zona 1. Com més lluny la zona, més difícils Mythic i Secret
+(Zones.rareHardness: platja x1,5, Egipte x2 → el Crocodile 1/4.000,
+glacera x2,5 → el Mammoth 1/5.000). Sense
+sort el Common és el més probable (~67%). Secret a la zona 1: 1/1.000 amb
+la millor paleta (x20), ~1/31 al sostre (x640). Mythic: 1/100 i ~1/3.
+(Abans: Mythic 1/20.000 i Secret 1/100.000; el propietari sap que així
+l'esquelet Mythic es pot fer sol en unes hores; el Secret de 8 peces
+continua necessitant el comerç).
+La sort surt de la paleta × els passis de sort (i els boosts x2 temporals);
+el minijoc només dona monedes. 14 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
+x4, x5.5, x7, x9), 3 al basar d'Egipte, que demanen Egipte obert (x12, x15,
+x20), i 3 a la cabana de la glacera, que demanen la glacera oberta (x30,
+x50, x100; 30/09/2026, decisió del propietari: "ha de pujar molt", i els
+passis es queden igual). Es talla el PRODUCTE a x3200 (Constants.MAX_LUCK).
+Amb la x100 i sense passis, a l'Obra: Legendary 1/3, Mythic 1/20, Secret
+1/200; amb el passi de x32, el Secret ~1/6 (el propietari ho sap).
+L'estat dels fòssils només mira la paleta fins a x20 (Bones.GRADE_TOOL_TOP):
+les de la glacera fan fòssils tan nets com la Pharaoh's. Totes les eines són
+paletes d'arqueòleg i NOMÉS donen sort (de raresa i, des del 30/09/2026, també
+d'estat del fòssil): no toquen el minijoc ni la velocitat.
 
 ## Stack
 Roblox Studio + Luau + Rojo. Els ossos es fan amb parts (Util/BoneBuilder:
@@ -83,8 +124,9 @@ rosa, arc de Sant Martí), contorns negres gruixuts, lletra FredokaOne amb
 contorn, botons grossos amb volum, rebots, números que salten, cartes de
 raresa amb raigs i confeti. Tot l'estil de la UI viu a src/client/UI/Theme.luau.
 Materials: Sand, Slate, WoodPlanks, Marble, Brick, Glass, Concrete, Metal,
-SmoothPlastic, Ground, Grass, Limestone (els ossos). Neon només per a
-efectes i llums.
+SmoothPlastic, Ground, Grass, Limestone (els ossos); a la glacera també
+Snow i Glacier (terreny). Neon només per a efectes i llums (l'aurora boreal
+de la glacera és un efecte).
 Lighting Technology = "Future".
 
 ## ESCALES
@@ -93,7 +135,14 @@ Zona 1 (Obra): 60x60, amb cases al voltant · Tanca: 4 alt
 Excavadora: 12–14 alt · Oficina de contenidors: 8x4x3 · Grua: 22 alt
 Edifici en construcció: 24x18 d'ocupació
 Museus: 70x52 · Botiga Dig & Co.: 24x14, a la plaça (racó nord-est)
-Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja)
+Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja i Egipte)
+Egipte: desert fins a l'horitzó a x = 6000 (zona jugable de ±480 amb parets
+invisibles; el mar del continent acaba a 1100 i entremig no hi ha res).
+Glacera: plana de neu i gel fins a l'horitzó a x = -6000, igual (±480 amb
+parets invisibles), sense mar: neu, turons i muntanyes de gel.
+Excepció d'escala: les tres piràmides d'Egipte són GEGANTS (fins a 130 d'alt),
+i les muntanyes de gel de la glacera (terreny) també; el mamut congelat va
+dins un bloc de gel transparent a propòsit.
 Cap element de decoració es fa fora d'aquest rang.
 Dues cares paral·leles mai al mateix pla (fan pampallugues): deixar 0,05.
 Res dins d'una altra peça que es vegi (arbres dins de cases, etc.).
@@ -108,13 +157,27 @@ Productes repetibles: x2 diners 15 min / 1 h, paquets de monedes.
 Els id de Roblox es posen a Monetization.luau quan es creen al Dashboard.
 
 ## RECOMPENSES GRATIS (Config/Rewards.luau)
-Diària en ratxa de 7 (dia 7 = fòssil Epic) · regals per estona de joc (5 a
-60 min, cada sessió) · invitacions (premi per a qui convida i qui entra, un
+Molt generoses (paquets de monedes + pocions + fòssil). Diària en ratxa de 7
+(dia 7 = fòssil Legendary) · regals per estona de joc (2 a 60 min, cada
+sessió) · invitacions (premi per a qui convida i qui entra, un
 cop per amic, màx. 20). Like/preferits: MAI amb premi (normes de Roblox);
 només es demana amablement després d'una troballa rara.
 
+## POCIONS (Config/Potions.luau)
+A la motxilla i a la barra de baix (HotbarController, en lloc de la de
+Roblox). Luck (x2 sort), Money (x2 diners), Haste (excavar 2x més sovint),
+Super (luck + money). Surten de recompenses, missions i, 1 de cada 100 cops,
+en excavar. Allarguen el boost en temps. No es comercien ni es venen per Robux.
+
+## ESDEVENIMENTS
+Munt daurat: cada 4–7 min un munt a l'atzar brilla 2 min (x3 sort, x3
+monedes i una Super Potion per al primer que el cava); s'avisa tot el
+servidor. Les troballes Legendary, Mythic i Secret també s'anuncien.
+
 ## MISSIONS (Config/Quests.luau)
-Una a la vegada, a dalt de la pantalla quan el tutorial s'acaba. El progrés
+Una a la vegada, a dalt de la pantalla quan el tutorial s'acaba. El raig i la
+fletxa es poden apagar (botó 🧭 GUIDE, es desa a la configuració). Vendre a
+la Bonnie no és cap missió (és secundari). El progrés
 surt del perfil (mai del client); el client només demana "claim". Premis en
 minuts de renda, com les recompenses; mai fòssils (no han de ser farmejables
 per passar-los a un altre compte).
@@ -125,7 +188,8 @@ museus i de tant en tant deixen propina (💰 +X sobre el cap). El servidor
 decideix les visites i les propines; el client només els dibuixa.
 
 ## FORA D'ABAST
-PvP, robatori, treballadors NPC, tercera zona, guàrdies.
+PvP, robatori, treballadors NPC, guàrdies. (La quarta zona hi era; el
+30/09/2026 el propietari va demanar la glacera.)
 
 ## IDIOMA
 Tot el que veu el jugador (UI, missatges, rètols del mapa) en ANGLÈS.

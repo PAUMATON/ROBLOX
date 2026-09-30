@@ -32,6 +32,16 @@ Dig.SESSION_TIMEOUT = 20 -- una excavacio sense acabar es tanca sola
 -- Un munt excavat queda buit una estona: obliga a moure's per l'obra i
 -- fa que el mapa es vegi viu. Es per munt, no per jugador.
 Dig.RESPAWN_TIME = 20
+
+-- MUNT DAURAT (esdeveniment): cada GOLDEN_EVERY segons (a l'atzar entre els
+-- dos), un munt a l'atzar brilla GOLDEN_TIME segons. Qui l'excava té x3 de
+-- sort (dins del sostre), x3 de monedes i una poció de regal. Ho avisa a tot
+-- el servidor.
+Dig.GOLDEN_EVERY = { 240, 420 }
+Dig.GOLDEN_TIME = 120
+Dig.GOLDEN_LUCK = 3
+Dig.GOLDEN_COINS = 3
+Dig.GOLDEN_POTION = "super"
 Dig.DEPLETED_SCALE = 0.35 -- mida del munt buit respecte de l'original
 Dig.PROMPT_DISTANCE = 11 -- des d'on surt el boto "Dig" (mobil i teclat)
 
@@ -106,16 +116,21 @@ end
 
 -- Probabilitat de cada raresa amb aquesta sort (només les que hi ha a la
 -- zona, `present`). Es tira de la més rara cap avall: 1 de cada N/sort.
-function Dig.RarityChances(luck: number, present: { [string]: any }?): { [string]: number }
+-- `hardness` (Zones.rareHardness) multiplica la N de Mythic i Secret.
+function Dig.RarityChances(luck: number, present: { [string]: any }?, hardness: number?): { [string]: number }
 	local out = {}
 	local left = 1
 	local from = Bones.RARITY_ORDER[Bones.LUCKY_FROM]
+	local hardFrom = Bones.RARITY_ORDER[Bones.ZONE_HARD_FROM]
 	local lowest: string? = nil
 	for i = #Bones.RARITIES, 1, -1 do
 		local rarity = Bones.RARITIES[i]
 		if not present or present[rarity] then
 			lowest = rarity
 			local n = Bones.RARITY_ODDS[rarity]
+			if n and Bones.RARITY_ORDER[rarity] >= hardFrom then
+				n *= math.max(1, hardness or 1)
+			end
 			if n then
 				local l = if Bones.RARITY_ORDER[rarity] >= from then luck else 1
 				local p = math.min(l / n, Bones.MAX_CHANCE)

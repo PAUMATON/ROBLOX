@@ -47,7 +47,7 @@ local NODES: { [string]: Node } = {
 		options = { { label = "I'll find it!", go = "hello" }, { label = "Bye!" } },
 	},
 	coins = {
-		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find all 5 bones of one skeleton and BUILD it: a full skeleton earns double!",
+		text = "Put your fossils on display in your museum: the rarer, the more they earn. Find ALL the bones of one skeleton (5 to 8, the rarer the more) and BUILD it: a full skeleton earns x5! Cleaner bones earn more too (Pristine x6!), and better trowels dig them up cleaner.",
 		options = { { label = "Thanks, Rex!", go = "hello" }, { label = "Bye!" } },
 	},
 }
@@ -56,8 +56,16 @@ local NODES: { [string]: Node } = {
 local function looseFossils(dupesOnly: boolean): (number, number)
 	local snapshot = ProfileController.Get()
 	local n, coins = 0, 0
+	-- repetits: de cada peça en queda una, la de millor estat (igual que el servidor)
+	local keep: { [string]: string } = {}
+	for key in (if snapshot then snapshot.bones else {}) do
+		local base = Bones.BaseOf(key)
+		if not keep[base] or Bones.GradeOf(key) > Bones.GradeOf(keep[base]) then
+			keep[base] = key
+		end
+	end
 	for key, c in (if snapshot then snapshot.bones else {}) do
-		local amount = if dupesOnly then c - 1 else c
+		local amount = if dupesOnly and keep[Bones.BaseOf(key)] == key then c - 1 else c
 		if amount > 0 then
 			n += amount
 			coins += Bones.SellValue(key) * amount
@@ -83,13 +91,13 @@ local BONNIE: { [string]: Node } = {
 		options = {
 			{ label = function()
 				local d, dc = looseFossils(true)
-				return `🔁 Sell duplicates ({d}) · {Theme.Short(dc)} 💰`
+				return `🔁 Sell duplicates ({d}) · {Theme.Short(dc)} $`
 			end, color = C.green, run = function()
 				sellNow("dupes")
 			end },
 			{ label = function()
 				local n, coins = looseFossils(false)
-				return `💰 Sell ALL ({n}) · {Theme.Short(coins)} 💰`
+				return `$ Sell ALL ({n}) · {Theme.Short(coins)} $`
 			end, go = "confirmAll", color = C.orange },
 			{ label = "🎒 Sell just one...", go = "one" },
 			{ label = "📋 What's each fossil worth?", go = "prices" },
@@ -131,7 +139,7 @@ local BONNIE: { [string]: Node } = {
 					table.insert(parts, `{r} {Bones.SellValue(any)}`)
 				end
 			end
-			return "I pay: " .. table.concat(parts, " · ") .. ". Tip: in your museum a fossil earns that same amount every few minutes, so show your best ones!"
+			return "I pay (Dusty): " .. table.concat(parts, " · ") .. ". Clean ones pay more, Pristine x6! Tip: in your museum a fossil earns that same amount every few minutes, so show your best ones!"
 		end,
 		options = { { label = "Got it!", go = "hello" }, { label = "Bye!" } },
 	},
@@ -234,17 +242,7 @@ function DialogController.Start()
 		TextSize = 26,
 	})
 	-- ✕ petit per tancar sense haver de triar cap resposta
-	Widgets.Button({
-		Parent = card,
-		Size = UDim2.fromOffset(46, 46),
-		AnchorPoint = Vector2.new(1, 0),
-		Position = UDim2.new(1, -12, 0, 12),
-		Color = C.red,
-		Text = "✕",
-		Radius = 14,
-		ZIndex = 4,
-		OnClick = close,
-	})
+	Widgets.CloseButton({ Parent = card, Size = 52, ZIndex = 6, OnClick = close })
 	options = Instance.new("Frame")
 	options.BackgroundTransparency = 1
 	options.Position = UDim2.fromOffset(20, 150)

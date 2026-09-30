@@ -268,7 +268,10 @@ local function gableRoof(cf, L, Sp, pitch, eave, gov, roofC, roofMat, gableC, ga
 			end
 		end
 	end
-	P(V3(L + 2 * gov + 0.3, t, t * 1.8), cf * CF(0, h + t / cp - 0.1, 0), roofC:Lerp(C(0, 0, 0), 0.15), roofMat, parent)
+	-- el carener passa 0,05 per fora de les vores: si acabés al mateix pla
+	-- (+0,3 → L/2+gov+0,15, com la cara de fora de la vora) les dues cares
+	-- es barallarien i farien pampallugues
+	P(V3(L + 2 * gov + 0.4, t, t * 1.8), cf * CF(0, h + t / cp - 0.1, 0), roofC:Lerp(C(0, 0, 0), 0.15), roofMat, parent)
 	return h
 end
 
@@ -619,13 +622,29 @@ local PIT_STYLES = {
 		mat = M.Sand,
 		pebble = C(240, 206, 196), -- petxines
 	},
+	-- Egipte: sorra daurada del desert, més càlida que la de la platja
+	desert = {
+		slab = C(226, 190, 128),
+		floor = C(184, 142, 86),
+		mound = C(214, 172, 108),
+		mat = M.Sand,
+		pebble = C(196, 168, 120),
+	},
+	-- Glacera: neu trepitjada, fons de gel blau i pedretes de glaç
+	ice = {
+		slab = C(236, 242, 250),
+		floor = C(150, 186, 214),
+		mound = C(214, 226, 240),
+		mat = M.Snow,
+		pebble = C(186, 222, 246),
+	},
 }
 local TOY = { C(240, 80, 80), C(70, 160, 230), C(250, 200, 60), C(90, 200, 120) }
 local PIT_TILE, PIT_R, PIT_LEDGE, PIT_DEPTH = 8, 2.7, 3.4, 2.4
 local CRATER_R, CRATER_H = 12, 1.5 -- esfera del cràter de la platja i quant surt
 -- alçada del terra del forat a `d` del centre (a la platja, el casquet)
 local function pitGround(style, d)
-	if style ~= "sand" then
+	if style == "earth" then
 		return 0
 	end
 	return math.max(0, math.sqrt(math.max(CRATER_R * CRATER_R - d * d, 0)) - (CRATER_R - CRATER_H))
@@ -667,7 +686,7 @@ local function digPit(g, zone, name, style, r, parent)
 	-- a l'obra, lloses quadrades en quadrícula; a la platja, un cràter: una
 	-- esfera gran enterrada de la qual només surt el casquet (vora suau)
 	local slab
-	if style == "sand" then
+	if style ~= "earth" then
 		slab = Ball(CRATER_R * 2, g + UP * (CRATER_H - CRATER_R), S.slab, S.mat, m)
 	else
 		slab = P(V3(T, 3.2, T), CF(g - UP * 1.6), S.slab, S.mat, m)
@@ -757,6 +776,33 @@ local function digPit(g, zone, name, style, r, parent)
 		local brcf = CF(g:Lerp(corner[2], 0.8) + UP * 0.12) * CFrame.Angles(0, ta, rad(90))
 		P(V3(0.14, 1, 0.14), brcf, C(200, 60, 50), M.SmoothPlastic, m, true)
 		P(V3(0.4, 0.4, 0.3), brcf * CF(0, -0.6, 0), C(236, 220, 170), M.Fabric, m, true)
+	elseif style == "desert" then
+		-- àmfora de fang mig enterrada, a un cantó
+		local ap = g:Lerp(corner[1], 0.8) + cornerUp
+		local acf = CF(ap + UP * 0.7) * CFrame.Angles(rad(12), ta, 0)
+		Ellipsoid(V3(1.3, 1.6, 1.3), acf, C(178, 96, 58), M.SmoothPlastic, m).CanCollide = false
+		VCyl(0.5, 0.55, (acf * CF(0, 0.95, 0)).Position, C(160, 84, 50), M.SmoothPlastic, m, true)
+		P(V3(0.9, 0.12, 1.5), acf * CF(0, 0.2, 0), C(62, 118, 150), M.SmoothPlastic, m, true) -- franja pintada
+		-- pinzell d'arqueòleg a l'altre
+		local brcf = CF(g:Lerp(corner[2], 0.8) + cornerUp + UP * 0.12) * CFrame.Angles(0, ta, rad(90))
+		P(V3(0.14, 1, 0.14), brcf, COL.woodDark, M.Wood, m, true)
+		P(V3(0.4, 0.4, 0.3), brcf * CF(0, -0.6, 0), C(236, 220, 170), M.Fabric, m, true)
+	elseif style == "ice" then
+		-- piolet clavat a la neu, a un cantó
+		local ip = g:Lerp(corner[1], 0.8) + cornerUp
+		local icf = CF(ip + UP * 0.8) * CFrame.Angles(rad(15), ta, rad(10))
+		P(V3(0.14, 1.6, 0.14), icf, COL.woodDark, M.Wood, m, true)
+		P(V3(0.12, 0.16, 1.1), icf * CF(0, 0.8, 0), C(70, 74, 82), M.Metal, m, true)
+		-- fanal de campanya (llum càlida) a l'altre
+		local lp = g:Lerp(corner[2], 0.8) + cornerUp
+		P(V3(0.6, 0.12, 0.6), CF(lp + UP * 0.06), C(40, 40, 44), M.Metal, m, true)
+		local glass = P(V3(0.45, 0.6, 0.45), CF(lp + UP * 0.42), C(255, 214, 140), M.Neon, m, true)
+		P(V3(0.6, 0.1, 0.6), CF(lp + UP * 0.77), C(40, 40, 44), M.Metal, m, true)
+		local light = Instance.new("PointLight")
+		light.Color = C(255, 190, 120)
+		light.Range = 8
+		light.Brightness = 0.8
+		light.Parent = glass
 	else
 		-- galleda i pala de joguina, de colors
 		local col = TOY[r:NextInteger(1, #TOY)]
@@ -1175,7 +1221,9 @@ for i, rd in ipairs(roads) do
 	for _, iv in ipairs(freeIntervals(rd, rd.cuts)) do
 		for s = -1, 1, 2 do
 			strip(rd, iv[1], iv[2], s * (rd.w / 2 - WALK_W / 2), WALK_W, WALK_TOP, 1.3, COL.pave, M.SmoothPlastic, m)
-			strip(rd, iv[1], iv[2], s * (roadW / 2 + 0.3), 0.6, WALK_TOP + 0.02, 1.3, COL.cream, M.SmoothPlastic, m, true)
+			-- vorada 0,05 més curta a cada punta: si acaba on acaba la vorera, les
+			-- dues cares del final queden al mateix pla i fan pampallugues
+			strip(rd, iv[1] + 0.05, iv[2] - 0.05, s * (roadW / 2 + 0.3), 0.6, WALK_TOP + 0.02, 1.3, COL.cream, M.SmoothPlastic, m, true)
 		end
 		local a = iv[1] + 4
 		while a + 5 < iv[2] - 4 do
@@ -1458,7 +1506,10 @@ local function houseTown(cf, w, d, floors, rng, opt)
 	local roofC = ROOFS[rng:NextInteger(1, #ROOFS)]
 	local Hw = floors * FH + 1
 	local A = opt.arcade or 0 -- fondària dels porxos (els pisos volen per sobre)
-	P(V3(w + 0.4, 1.4, d + 0.4), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
+	-- sòcol: 0,25 per fora de la paret. Amb +0,4 les seves cares quedaven al
+	-- mateix pla que les de fora de les pilastres de cantonada (w/2 - 0,4 + 0,6)
+	-- i feien pampallugues a totes les cantonades
+	P(V3(w + 0.5, 1.4, d + 0.5), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
 	P(V3(w, Hw, d), cf * CF(0, Hw / 2, 0), wall, M.SmoothPlastic, m)
 	if A > 0 then
 		local hU = Hw - (FH + 1)
@@ -1549,10 +1600,13 @@ local function houseCottage(cf, w, d, rng)
 	local shut = SHUTTERS[rng:NextInteger(1, #SHUTTERS)]
 	local roofC = rng:NextNumber() < 0.5 and COL.slate or COL.terracotta
 	local Hw = FH + 1.5
-	P(V3(w + 0.4, 1.4, d + 0.4), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
+	-- sòcol: veure houseTown (no al pla de les pilastres)
+	P(V3(w + 0.5, 1.4, d + 0.5), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
 	P(V3(w, Hw, d), cf * CF(0, Hw / 2, 0), wall, brick and M.Brick or M.SmoothPlastic, m)
 	for _, q in ipairs({ { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } }) do
-		P(V3(1.2, Hw, 1.2), cf * CF(q[1] * (w / 2 - 0.4), Hw / 2, q[2] * (d / 2 - 0.4)), COL.cream, M.SmoothPlastic, m, true)
+		-- 0,1 més altes que la paret: el cap queda dins de la teulada i no al
+		-- mateix pla que el de la paret (pampallugues)
+		P(V3(1.2, Hw + 0.1, 1.2), cf * CF(q[1] * (w / 2 - 0.4), (Hw + 0.1) / 2, q[2] * (d / 2 - 0.4)), COL.cream, M.SmoothPlastic, m, true)
 	end
 	local pitch = rad(rng:NextNumber(38, 44))
 	local gableC = brick and COL.cream or wall
@@ -1600,7 +1654,8 @@ local function houseVilla(cf, w, d, rng)
 	local roofC = ROOFS[rng:NextInteger(1, #ROOFS)]
 	local rmat = roofC == COL.slate and M.Slate or M.SmoothPlastic
 	local Hw = 2 * FH + 1
-	P(V3(w + 0.4, 1.4, d + 0.4), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
+	-- sòcol: veure houseTown (no al pla de les pilastres)
+	P(V3(w + 0.5, 1.4, d + 0.5), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
 	P(V3(w, Hw, d), cf * CF(0, Hw / 2, 0), wall, M.SmoothPlastic, m)
 	P(V3(w + 0.3, 0.5, d + 0.3), cf * CF(0, 1 + FH, 0), COL.cream, M.SmoothPlastic, m)
 	P(V3(w + 1.3, 1.0, d + 1.3), cf * CF(0, Hw - 0.2, 0), COL.cream, M.SmoothPlastic, m)
@@ -1622,6 +1677,21 @@ local function houseVilla(cf, w, d, rng)
 		local c, n, tg = face(tcf, tw, tw, which)
 		window(m, c + UP * (Hw + FH * 0.5), n, tg, { shut = shut, w = 3.0, h = 4.4 })
 	end
+	-- Una finestra de la casa (amb l'ampit d'1 de fondària i els finestrons,
+	-- fins a 4 de costat) no pot tocar la torre. La torre surt 1 per davant i
+	-- 1 pel costat: l'ampit hi quedava enterrat amb la cara al mateix pla que
+	-- la de la torre, i feia pampallugues.
+	local function hitsTower(base, n, tg)
+		for _, a in ipairs({ -4.1, 0, 4.1 }) do
+			for _, b in ipairs({ 0.05, 1.1 }) do
+				local l = tcf:PointToObjectSpace(base + tg * a + n * b)
+				if math.abs(l.X) < tw / 2 + 0.05 and math.abs(l.Z) < tw / 2 + 0.05 then
+					return true
+				end
+			end
+		end
+		return false
+	end
 	-- façanes principals
 	for _, which in ipairs({ "F", "L", "R", "B" }) do
 		local c, n, tg, len = face(cf, w, d, which)
@@ -1629,7 +1699,7 @@ local function houseVilla(cf, w, d, rng)
 		local doorAt = which == "F" and math.ceil(#sl / 2) or -1
 		for i, o in ipairs(sl) do
 			local base = c + tg * o
-			local inTower = which == "F" and math.abs((base - tcf.Position):Dot(tg)) < tw / 2 + 1
+			local inTower = hitsTower(base, n, tg)
 			if not inTower then
 				if i == doorAt then
 					door(m, base + UP * 1.2, n, tg, shut, rng)
@@ -1638,7 +1708,9 @@ local function houseVilla(cf, w, d, rng)
 						VCyl(FH, 1.2, base + n * 3.2 + tg * (s * 3.6) + UP * (1 + FH / 2), COL.cream, M.SmoothPlastic, m)
 					end
 					P(V3(9, 0.8, 4.2), CFrame.lookAt(base + n * 2.1 + UP * (FH + 1.3), base + n * 3 + UP * (FH + 1.3)), COL.cream, M.SmoothPlastic, m)
-					balcony(m, base + n * 1.3 + UP * (FH + 1.7), n, tg, 8.6)
+					-- +1,75 i no +1,7: el terra del balcó queda 0,05 per sobre
+					-- de la llosa del porxo (al mateix pla feia pampallugues)
+					balcony(m, base + n * 1.3 + UP * (FH + 1.75), n, tg, 8.6)
 				else
 					window(m, base + UP * (1 + FH * 0.5), n, tg, { shut = which ~= "B" and shut or nil, h = 5.4 })
 				end
@@ -1656,7 +1728,8 @@ local function houseBeach(cf, w, d, rng)
 	local wall = rng:NextNumber() < 0.6 and COL.cream or PLASTERS[rng:NextInteger(1, 4)]
 	local shut = rng:NextNumber() < 0.5 and C(84, 124, 136) or COL.green
 	local Hw = 2 * FH + 1
-	P(V3(w + 0.4, 1.4, d + 0.4), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
+	-- sòcol: veure houseTown (no al pla de les pilastres)
+	P(V3(w + 0.5, 1.4, d + 0.5), cf * CF(0, 0.7, 0), STONE, M.SmoothPlastic, m)
 	P(V3(w, Hw, d), cf * CF(0, Hw / 2, 0), wall, M.SmoothPlastic, m)
 	P(V3(w + 0.3, 0.5, d + 0.3), cf * CF(0, 1 + FH, 0), COL.bone, M.SmoothPlastic, m)
 	-- terrat amb ampit
@@ -1992,8 +2065,10 @@ local function showcase(m, O, k, x, z)
 	for _, q in ipairs({ { 1, 1 }, { 1, -1 }, { -1, 1 }, { -1, -1 } }) do
 		Bx(m, O, x + q[1] * 4.1, ytop + GH / 2, z + q[2] * 4.1, 0.22, GH, 0.22, DARK, M.Metal, true)
 	end
+	-- perfil de la tapa: 0,28 d'alt perquè la seva cara de sota quedi 0,04
+	-- per sota de la del vidre (amb 0,22 hi quedava a 0,01 i feien pampallugues)
 	for _, e in ipairs({ { 0, 4.1, 8.4, 0.22 }, { 0, -4.1, 8.4, 0.22 }, { 4.1, 0, 0.22, 8.4 }, { -4.1, 0, 0.22, 8.4 } }) do
-		Bx(m, O, x + e[1], ytop + GH + 0.1, z + e[2], e[3], 0.22, e[4], DARK, M.Metal, true)
+		Bx(m, O, x + e[1], ytop + GH + 0.1, z + e[2], e[3], 0.28, e[4], DARK, M.Metal, true)
 	end
 	-- focus penjat del sostre
 	Bx(m, O, x, TOP - 0.5, z, 1.2, 0.8, 1.2, DARK, M.Metal, true)
@@ -2994,7 +3069,8 @@ for row = 0, 1 do
 			local tc = TOWELS[rng:NextInteger(1, #TOWELS)]
 			P(V3(2.8, 0.1, 5.2), tcf, tc, M.Fabric, m, true)
 			for q = -1, 1, 2 do
-				P(V3(2.8, 0.12, 0.5), tcf * CF(0, 0.01, q * 1.6), tc:Lerp(C(255, 255, 255), 0.6), M.Fabric, m, true)
+				-- franja: més estreta que la tovallola i 0,03 més alta (no al mateix pla)
+				P(V3(2.74, 0.14, 0.5), tcf * CF(0, 0.02, q * 1.6), tc:Lerp(C(255, 255, 255), 0.6), M.Fabric, m, true)
 			end
 			m.Parent = F
 		end
@@ -3110,9 +3186,12 @@ for _, bp in ipairs({ { PX1 + 52, -70, 20 }, { PX1 + 48, 110, -30 }, { PX1 + 58,
 	P(V3(4.4, 1.6, 10), O, MOD.white, M.SmoothPlastic, m)
 	Wd(V3(4.4, 1.6, 3), O * CF(0, 0, -6.5) * CFrame.Angles(0, math.pi, 0) * WEDGE_FIX, MOD.white, M.SmoothPlastic, m)
 	P(V3(4.5, 0.4, 10.1), O * CF(0, -0.2, 0), col, M.SmoothPlastic, m, true)
-	P(V3(3.6, 0.3, 9.4), O * CF(0, 0.7, 0.3), C(150, 140, 128), M.WoodPlanks, m, true)
+	-- el terra acaba 0,1 abans de la popa (a 5,0 quedava al pla de la cara del buc)
+	P(V3(3.6, 0.3, 9.3), O * CF(0, 0.7, 0.25), C(150, 140, 128), M.WoodPlanks, m, true)
+	-- bancs una mica més estrets que el terra (3,6): si no, els costats
+	-- quedaven al mateix pla i feien pampallugues
 	for k = -1, 1 do
-		P(V3(3.6, 0.4, 0.8), O * CF(0, 0.9, k * 3), MOD.white, M.SmoothPlastic, m, true)
+		P(V3(3.5, 0.4, 0.8), O * CF(0, 0.9, k * 3), MOD.white, M.SmoothPlastic, m, true)
 	end
 	m.Parent = F
 end
@@ -3551,7 +3630,9 @@ local function hoarding(a, b)
 	local n = math.max(1, math.floor(L / 6))
 	for k = 0, n do
 		local p = a:Lerp(b, k / n)
-		P(V3(0.5, 4.3, 0.5), CF(p + UP * 2.15), MOD.steel, M.Metal, zone)
+		-- 0,56 de gruix: 0,05 més que les franges (0,46), perquè les cares no
+		-- quedin al mateix pla (amb 0,5 hi quedaven a 0,02 i feien pampallugues)
+		P(V3(0.56, 4.3, 0.56), CF(p + UP * 2.15), MOD.steel, M.Metal, zone)
 		P(V3(1.2, 0.5, 1.2), CF(p + UP * 0.25), MOD.concD, M.Concrete, zone, true)
 	end
 	-- rètol imprès a la cara de fora, als trams llargs
@@ -3950,26 +4031,80 @@ local rng = Random.new(7)
 local WALK_TOP = 0.65
 local PZ = LAYOUT.PLAZA
 
+-- ── cap arbre dins d'un edifici ──
+-- Els arbres de vorera són a 2 de la façana i la capçada en fa 4-5 de radi:
+-- es ficaven dins de les cases. Abans de plantar-ne un, es mira si la seva
+-- capçada toca alguna peça d'un edifici (ja fets: 03-05 van abans); si la
+-- toca, es fa més petit, i si ni així hi cap, no es planta.
+local fitParams = OverlapParams.new()
+fitParams.FilterType = Enum.RaycastFilterType.Include
+do
+	local list = {}
+	for _, f in ipairs({ WORLD:FindFirstChild("Houses"), WORLD:FindFirstChild("Plaza"), WORLD:FindFirstChild("ToolShop"), MUSEUMS, ZONES }) do
+		if f then
+			table.insert(list, f)
+		end
+	end
+	fitParams.FilterDescendantsInstances = list
+end
+local MIN_TREE = 9
+-- caixa que ocupa la capçada: `reach` de radi (en fracció de h), de y0 a y1
+local function clearFor(p, h, reach, y0, y1)
+	local size = V3(2 * reach * h + 0.4, (y1 - y0) * h, 2 * reach * h + 0.4)
+	return #Workspace:GetPartBoundsInBox(CF(p + UP * ((y0 + y1) / 2 * h)), size, fitParams) == 0
+end
+-- torna l'alçada que hi cap (<= h) i si cal la capçada recollida, o nil
+local function fitRound(p, h)
+	while h >= MIN_TREE do
+		if clearFor(p, h, 0.39, 0.42, 1.06) then
+			return h, false
+		end
+		-- capçada recollida (les boles de sobre gairebé centrades)
+		if clearFor(p, h, 0.33, 0.42, 1.06) then
+			return h, true
+		end
+		h -= 1
+	end
+	return nil
+end
+
 -- ── arbres (capçades ovalades de diversos verds, no boles perfectes) ──
 local function roundTree(p, h, parent)
+	local fh, tight = fitRound(p, h)
+	-- (els números a l'atzar es treuen igualment: així la resta del món
+	-- surt igual tant si l'arbre hi cap com si no)
+	local r1, r2, r3, r4, r5 = rng:NextNumber(0.1, 0.8), rng:NextNumber(-1, 1), rng:NextNumber(-1, 1), rng:NextNumber(-1, 1), rng:NextNumber(-1, 1)
+	if not fh then
+		return nil
+	end
+	h = fh
+	local s2, s3 = if tight then 0.03 else 0.08, if tight then 0.05 else 0.16
 	local m = Instance.new("Model")
 	m.Name = "Tree"
 	VCyl(h * 0.5, 1.1 + h * 0.03, p + UP * (h * 0.25), C(112, 90, 66), M.Wood, m)
 	beam(p + UP * (h * 0.42), p + UP * (h * 0.58) + V3(h * 0.12, 0, h * 0.05), 0.6, C(112, 90, 66), M.Wood, m, true)
-	local col = COL.leaf:Lerp(COL.leafDark, rng:NextNumber(0.1, 0.8))
+	local col = COL.leaf:Lerp(COL.leafDark, r1)
 	Ellipsoid(V3(h * 0.62, h * 0.46, h * 0.62), CF(p + UP * (h * 0.68)), col, M.SmoothPlastic, m)
-	Ellipsoid(V3(h * 0.46, h * 0.38, h * 0.46), CF(p + UP * (h * 0.86) + V3(rng:NextNumber(-1, 1), 0, rng:NextNumber(-1, 1)) * h * 0.08), col:Lerp(C(255, 255, 255), 0.07), M.SmoothPlastic, m)
-	Ellipsoid(V3(h * 0.42, h * 0.32, h * 0.42), CF(p + UP * (h * 0.6) + V3(rng:NextNumber(-1, 1), 0, rng:NextNumber(-1, 1)) * h * 0.16), col:Lerp(C(0, 0, 0), 0.1), M.SmoothPlastic, m)
+	Ellipsoid(V3(h * 0.46, h * 0.38, h * 0.46), CF(p + UP * (h * 0.86) + V3(r2, 0, r3) * h * s2), col:Lerp(C(255, 255, 255), 0.07), M.SmoothPlastic, m)
+	Ellipsoid(V3(h * 0.42, h * 0.32, h * 0.42), CF(p + UP * (h * 0.6) + V3(r4, 0, r5) * h * s3), col:Lerp(C(0, 0, 0), 0.1), M.SmoothPlastic, m)
 	m.Parent = parent or TREES
 	return m
 end
 local function conifer(p, h, parent)
+	-- base de 0,5h girada: arriba a 0,36h del tronc
+	while h >= MIN_TREE * 1.5 and not clearFor(p, h, 0.36, 0.1, 0.9) do
+		h -= 1.5
+	end
+	local rots = { rng:NextNumber(), rng:NextNumber(0, 1.5), rng:NextNumber(0, 1.5), rng:NextNumber(0, 1.5) }
+	if not clearFor(p, h, 0.36, 0.1, 0.9) then
+		return nil
+	end
 	local m = Instance.new("Model")
 	m.Name = "Pine"
 	VCyl(h * 0.25, 1.3, p + UP * (h * 0.125), C(100, 80, 60), M.Wood, m)
-	local col = C(52, 92, 62):Lerp(C(72, 112, 72), rng:NextNumber())
+	local col = C(52, 92, 62):Lerp(C(72, 112, 72), rots[1])
 	for k = 0, 2 do
-		Pyramid(CF(p + UP * (h * 0.14 + k * h * 0.24)) * CFrame.Angles(0, rng:NextNumber(0, 1.5), 0), h * 0.5 * (1 - k * 0.25), h * 0.38, col, M.SmoothPlastic, m)
+		Pyramid(CF(p + UP * (h * 0.14 + k * h * 0.24)) * CFrame.Angles(0, rots[k + 2], 0), h * 0.5 * (1 - k * 0.25), h * 0.38, col, M.SmoothPlastic, m)
 	end
 	m.Parent = parent or TREES
 	return m
@@ -4031,11 +4166,14 @@ for _, rd in ipairs(roads) do
 					nLamps += 1
 				end
 			end
-			local tp = pt(rd, a + 9, -s * (rd.w / 2 - 2), WALK_TOP)
+			-- a 2,5 de la façana (i no a 2): més lloc per a la capçada, i
+			-- l'escocell (2,8) encara no trepitja la calçada
+			local tp = pt(rd, a + 9, -s * (rd.w / 2 - 2.5), WALK_TOP)
 			if not blocked(tp) then
-				P(V3(2.8, 0.2, 2.8), CF(tp + UP * 0.05), C(96, 76, 54), M.SmoothPlastic, TREES, true)
-				roundTree(tp, rng:NextNumber(12, 15))
-				nTrees += 1
+				if roundTree(tp, rng:NextNumber(12, 15)) then
+					P(V3(2.8, 0.2, 2.8), CF(tp + UP * 0.05), C(96, 76, 54), M.SmoothPlastic, TREES, true)
+					nTrees += 1
+				end
 			end
 		end
 		a += 17
@@ -4144,7 +4282,36 @@ for _, r in ipairs({ { -720, -400, -560, 560 }, { -600, 200, -640, -300 }, { -60
 		T:WriteVoxels(region, 4, mats, occ)
 	end
 end
-print(("Carrer: %d fanals, %d arbres de vorera; passeig, patis, bosc i turons fets (sense cotxes)"):format(nLamps, nTrees))
+-- ── parets invisibles del món: a la filera d'arbres de les vores, i per la
+-- platja i el mar fins on s'acaba (x = 1100), perquè ningú no pugui sortir
+-- vorejant el bosc per la sorra ni nedant fins al buit ──
+do
+	local m = Instance.new("Model")
+	m.Name = "WorldBounds"
+	local H, TH = 90, 2 -- alçada (no s'hi pot saltar per sobre) i gruix
+	local SEA_END = 1100
+	local function wall(x0, z0, x1, z1)
+		local w = P(V3(math.max(x1 - x0, TH), H, math.max(z1 - z0, TH)), CF((x0 + x1) / 2, H / 2 - 20, (z0 + z1) / 2), C(255, 255, 255), M.SmoothPlastic, m)
+		w.Transparency = 1
+		w.CanQuery = false
+		w.CanTouch = false
+		w.CastShadow = false
+	end
+	local WX = L.x0 + 3 -- a l'oest, entre els troncs (a x0 + 5) i el límit
+	local NZ, SZ = L.z0 + 1, L.z1 - 1 -- al nord i al sud, just darrere els arbres
+	local BZ = 305 -- a la platja, la sorra va una mica més enllà
+	wall(WX, NZ, WX, SZ) -- oest
+	wall(WX, NZ, LAYOUT.PROM.x0, NZ) -- nord (terra)
+	wall(WX, SZ, LAYOUT.PROM.x0, SZ) -- sud (terra)
+	wall(LAYOUT.PROM.x0, -BZ, LAYOUT.PROM.x0, NZ) -- tram que baixa a la platja (nord)
+	wall(LAYOUT.PROM.x0, SZ, LAYOUT.PROM.x0, BZ) -- (sud)
+	wall(LAYOUT.PROM.x0, -BZ, SEA_END, -BZ) -- nord (platja i mar)
+	wall(LAYOUT.PROM.x0, BZ, SEA_END, BZ) -- sud (platja i mar)
+	wall(SEA_END - 40, -BZ, SEA_END - 40, BZ) -- est: abans que s'acabi el mar
+	m.Parent = F
+end
+
+print(("Carrer: %d fanals, %d arbres de vorera; passeig, patis, bosc, turons i parets invisibles fets"):format(nLamps, nTrees))
 
 end }
 STEPS[#STEPS + 1] = { "09_toolshop", function()
@@ -4169,9 +4336,10 @@ local WOODL = C(196, 150, 104)
 local DARKM = MOD.steel
 local ORANGE = C(240, 130, 50)
 local CREAM = C(250, 240, 218)
-local TOOL_IDS = { "rusty_shovel", "steel_trowel", "field_pickaxe", "pro_brush", "golden_shovel", "sonic_drill" }
-local TOOL_NAMES = { "RUSTY TROWEL", "STEEL TROWEL", "PRO TROWEL", "RUBY TROWEL", "GOLDEN TROWEL", "DIAMOND TROWEL" }
-local TOOL_COLS = { C(150, 96, 60), C(190, 196, 204), C(60, 140, 230), C(230, 50, 80), C(255, 200, 50), C(120, 230, 255) }
+-- les 8 de Dig & Co. (les 3 d'Egipte són al basar de l'illa, 11_egypt)
+local TOOL_IDS = { "rusty_shovel", "steel_trowel", "bronze_trowel", "field_pickaxe", "pro_brush", "emerald_trowel", "golden_shovel", "sonic_drill" }
+local TOOL_NAMES = { "RUSTY TROWEL", "STEEL TROWEL", "BRONZE TROWEL", "PRO TROWEL", "RUBY TROWEL", "EMERALD TROWEL", "GOLDEN TROWEL", "DIAMOND TROWEL" }
+local TOOL_COLS = { C(150, 96, 60), C(190, 196, 204), C(205, 127, 50), C(60, 140, 230), C(230, 50, 80), C(40, 200, 110), C(255, 200, 50), C(120, 230, 255) }
 local rng = Random.new(909)
 
 local m = Instance.new("Model")
@@ -4180,8 +4348,10 @@ m.Name = "DigAndCo"
 -- ── terra: plataforma de fusta davant la botiga, amb un graó ──
 P(V3(W + 4, 0.5, D + 2), L(0, 0.25, 1), MOD.concD, M.Concrete, m)
 P(V3(W + 2, 0.3, 5), L(0, 0.55, FRONT - 2.4), WOODL, M.WoodPlanks, m)
+-- juntes entre taulons: 0,03 per sobre de la plataforma i una mica més
+-- curtes, perquè cap cara quedi al mateix pla que les de la plataforma
 for k = -5, 5 do
-	P(V3(0.15, 0.32, 5), L(k * 2.2, 0.56, FRONT - 2.4), C(170, 124, 84), M.WoodPlanks, m, true)
+	P(V3(0.15, 0.36, 4.9), L(k * 2.2, 0.56, FRONT - 2.4), C(170, 124, 84), M.WoodPlanks, m, true)
 end
 
 -- ── l'edifici: sòcol fosc, parets de fusta, davant obert amb aparadors ──
@@ -4196,8 +4366,10 @@ for s = -1, 1, 2 do
 end
 P(V3(W + 0.4, 1, D + 0.4), L(0, 1, 0), DARKM, M.Metal, m, true)
 -- façana: pilars d'acer, aparadors a banda i banda, obertura amb taulell al mig
+-- 0,9 de gruix centrats on hi hauria el de 0,8: sobresurten 0,05 de la
+-- paret i del terra (a tocar, les cares de fusta i d'acer feien pampallugues)
 for _, x in ipairs({ -W / 2 + 0.4, -4.6, 4.6, W / 2 - 0.4 }) do
-	P(V3(0.8, H, 0.8), L(x, H / 2 + 0.5, FRONT + 0.4), DARKM, M.Metal, m)
+	P(V3(0.9, H, 0.9), L(x, H / 2 + 0.5, FRONT + 0.4), DARKM, M.Metal, m)
 end
 for s = -1, 1, 2 do
 	local cx = s * 8.3
@@ -4416,11 +4588,11 @@ end
 -- ── les eines, soltes en semicercle davant la botiga ──
 local stands = Instance.new("Model")
 stands.Name = "ToolStands"
-local RING = 13 -- distància des del centre de la façana
+local RING = 14 -- distància des del centre de la façana (8 sòcols: ~5 entre centres)
 local centre = L(0, 0, FRONT - 1)
 for i, id in ipairs(TOOL_IDS) do
-	-- de -62° a +62° al voltant de la direcció de la façana
-	local a = rad(-62 + (i - 1) * 124 / (#TOOL_IDS - 1))
+	-- de -72° a +72° al voltant de la direcció de la façana
+	local a = rad(-72 + (i - 1) * 144 / (#TOOL_IDS - 1))
 	local pos = (centre * CFrame.Angles(0, a, 0) * CF(0, 0, -RING)).Position
 	local face = CFrame.lookAt(V3(pos.X, TOP, pos.Z), V3(centre.Position.X, TOP, centre.Position.Z))
 	-- sòcol: base de formigó fosc, cos de fusta i tapa d'acer amb filet de llum
@@ -4456,6 +4628,887 @@ do
 	tag(tp, "TravelPoint")
 end
 print("Dig & Co. a la plaça: botiga, en Rex, " .. #TOOL_IDS .. " eines en semicercle i la parada de la Bonnie (Fossil Buyer)")
+
+end }
+STEPS[#STEPS + 1] = { "10_signs", function()
+-- ═══════════════════════════ 10 · INDICADORS ═══════════════════════════
+-- Pals indicadors moderns a les cruïlles: rètols de colors amb fletxa cap
+-- a la plaça, l'obra (Dig Site) i la platja. Decoren i, sobretot, fan que
+-- el mapa s'entengui (un provador va dir que costava orientar-s'hi).
+--
+-- Cada rètol apunta pel carrer que més s'acosta al destí. Abans de posar un
+-- pal es mira que ni el pal ni els rètols toquin cap arbre, fanal o casa: si
+-- a una cantonada no hi cap, es prova a la següent.
+local F = folder("Signs", WORLD)
+local WALK_TOP = 0.65
+local PZ = LAYOUT.PLAZA
+local PC = LAYOUT.PLAZA_CORE
+local OB = LAYOUT.OBRA
+
+local DESTS = {
+	{ text = "⛲ PLAZA", color = C(64, 176, 96), pos = V3((PC.x0 + PC.x1) / 2, 0, (PC.z0 + PC.z1) / 2) },
+	{ text = "🏗️ DIG SITE", color = C(230, 150, 30), pos = V3((OB.x0 + OB.x1) / 2, 0, (OB.z0 + OB.z1) / 2) },
+	{ text = "🏖️ BEACH", color = C(40, 160, 210), pos = nil }, -- sempre cap a l'est
+}
+local BOARD_L, BOARD_H = 6.4, 1.15
+
+-- què hi ha al voltant (tot menys els carrers, on el pal s'aguanta)
+local around = OverlapParams.new()
+around.FilterType = Enum.RaycastFilterType.Include
+do
+	local list = {}
+	for _, name in ipairs({ "Houses", "Props", "Plaza", "ToolShop", "Beach", "Signs" }) do
+		local f = WORLD:FindFirstChild(name)
+		if f then
+			table.insert(list, f)
+		end
+	end
+	table.insert(list, MUSEUMS)
+	table.insert(list, ZONES)
+	around.FilterDescendantsInstances = list
+end
+local function free(cf, size)
+	return #Workspace:GetPartBoundsInBox(cf, size, around) == 0
+end
+
+-- direcció de carrer (±X o ±Z) que més s'acosta a `v`
+local function snap(v)
+	if math.abs(v.X) >= math.abs(v.Z) then
+		return V3(v.X >= 0 and 1 or -1, 0, 0)
+	end
+	return V3(0, 0, v.Z >= 0 and 1 or -1)
+end
+
+-- Rètols d'aquesta cruïlla: {text, color, dir}. Sense el destí on ja ets.
+local function boardsFor(c)
+	local out = {}
+	for _, d in ipairs(DESTS) do
+		local target = d.pos or V3(LAYOUT.PROM.x1, 0, c.Z)
+		local v = target - c
+		if V3(v.X, 0, v.Z).Magnitude > 45 then
+			table.insert(out, { text = d.text, color = d.color, dir = snap(v) })
+		end
+	end
+	return out
+end
+
+-- Prova de posar un pal a `p` amb aquests rètols. Torna true si hi cap.
+local function signpost(p, boards)
+	if not free(CF(p + UP * 5), V3(1.2, 8.6, 1.2)) then
+		return false
+	end
+	for k, b in ipairs(boards) do
+		local y = 8.2 - (k - 1) * (BOARD_H + 0.25)
+		local c = p + b.dir * (BOARD_L / 2 + 0.2) + UP * y
+		if not free(CF(c), V3(math.abs(b.dir.X) * BOARD_L + 0.6, BOARD_H, math.abs(b.dir.Z) * BOARD_L + 0.6)) then
+			return false
+		end
+	end
+	local m = Instance.new("Model")
+	m.Name = "Signpost"
+	P(V3(1.1, 0.3, 1.1), CF(p + UP * 0.15), MOD.concD, M.Concrete, m)
+	P(V3(0.36, 9.2, 0.36), CF(p + UP * 4.6), MOD.steel, M.Metal, m)
+	P(V3(0.5, 0.3, 0.5), CF(p + UP * 9.3), MOD.steel, M.Metal, m, true)
+	for k, b in ipairs(boards) do
+		local y = 8.2 - (k - 1) * (BOARD_H + 0.25)
+		local c = p + b.dir * (BOARD_L / 2 + 0.2) + UP * y
+		-- la cara Front mira cap a dir × amunt: així el text de davant corre
+		-- en la direcció del rètol i la fletxa ➡ hi apunta; al darrere, ⬅
+		local cf = CFrame.lookAt(c, c + b.dir:Cross(UP))
+		local board = P(V3(BOARD_L, BOARD_H, 0.22), cf, b.color, M.SmoothPlastic, m, true)
+		board.CastShadow = true
+		Label(board, `{b.text}  ➡`, MOD.white, Enum.Font.FredokaOne, Enum.NormalId.Front, 60)
+		Label(board, `⬅  {b.text}`, MOD.white, Enum.Font.FredokaOne, Enum.NormalId.Back, 60)
+		-- vora fosca de dalt i de baix (0,26 de gruix: no al pla del rètol)
+		for _, s in ipairs({ -1, 1 }) do
+			P(V3(BOARD_L, 0.1, 0.26), cf * CF(0, s * (BOARD_H / 2 + 0.05), 0), MOD.char, M.SmoothPlastic, m, true)
+		end
+	end
+	m.Parent = F
+	return true
+end
+
+-- ── les cruïlles ──
+local horiz, vert = {}, {}
+for _, r in ipairs(LAYOUT.ROADS) do
+	if r[2] == r[4] then
+		table.insert(horiz, r)
+	else
+		table.insert(vert, r)
+	end
+end
+local n = 0
+for _, h in ipairs(horiz) do
+	for _, v in ipairs(vert) do
+		local x, z = v[1], h[2]
+		local inH = x >= math.min(h[1], h[3]) and x <= math.max(h[1], h[3])
+		local inV = z >= math.min(v[2], v[4]) and z <= math.max(v[2], v[4])
+		local inPlaza = x > PZ.x0 - 6 and x < PZ.x1 + 6 and z > PZ.z0 - 6 and z < PZ.z1 + 6
+		if inH and inV and not inPlaza then
+			local c = V3(x, WALK_TOP, z)
+			local boards = boardsFor(c)
+			if #boards > 0 then
+				-- a la vorera, a tocar de la cantonada (s'hi prova a les quatre)
+				local off = math.min(h[5], v[5]) / 2 - 1.6
+				for _, q in ipairs({ { 1, 1 }, { -1, 1 }, { 1, -1 }, { -1, -1 } }) do
+					if signpost(c + V3(q[1] * off, 0, q[2] * off), boards) then
+						n += 1
+						break
+					end
+				end
+			end
+		end
+	end
+end
+print(("Indicadors: %d pals a les cruïlles (plaça, obra i platja)"):format(n))
+
+end }
+STEPS[#STEPS + 1] = { "11_egypt", function()
+-- ═══════════════════════════ 11 · EGIPTE (zona 3) ═══════════════════════════
+-- Un DESERT que arriba fins a l'horitzó, MOLT lluny del continent: el mar de
+-- 01 acaba a x = 1100 i el desert comença a x = 4600; entremig no hi ha res
+-- (el buit) i des d'aquí no es veu la ciutat. No s'hi pot arribar ni
+-- caminant ni nedant: només amb el botó ✈️ Travel (TravelPoint "egypt").
+-- La zona jugable és un quadrat de ±BORDER amb parets invisibles; fora,
+-- dunes i més dunes fins a la boira. Ha d'anar DESPRÉS de 01 (Terrain:Clear()).
+--
+-- Què hi ha: plaça d'arribada amb obeliscs, portalada egípcia (pilons) on es
+-- desbloqueja la zona (ZoneUnlock), els forats (cràters "desert" amb
+-- DigSpot, Zone = "egypt") repartits a l'atzar, tres piràmides GEGANTS al
+-- fons (l'excepció d'escala del CLAUDE.md: es veuen de tot arreu), una
+-- esfinx gran, un temple en ruïnes, un oasi, mercat i el basar de paletes.
+local F = folder("Egypt", WORLD)
+local Terrain = Workspace.Terrain
+local rng = Random.new(3000)
+
+local EX, EZ = 6000, 0 -- centre de la zona
+local DESERT = 1400 -- mig costat del desert (fins a la boira)
+local BORDER = 480 -- mig costat de la zona jugable (parets invisibles)
+local SAND_Y = -0.3 -- alçada de la sorra (com la platja)
+
+-- paleta egípcia (càlida; dins de la família del CLAUDE.md)
+local STONE = C(214, 186, 136) -- gres
+local STONE_D = C(186, 156, 108)
+local STONE_L = C(232, 212, 168)
+local GOLD = C(214, 170, 72)
+local LAPIS = C(46, 84, 150)
+local TERRA = C(178, 96, 58)
+
+-- ── terreny: desert fins a l'horitzó ──
+do
+	for x = EX - DESERT, EX + DESERT - 1, 256 do
+		for z = EZ - DESERT, EZ + DESERT - 1, 256 do
+			local sx = math.min(256, EX + DESERT - x)
+			local sz = math.min(256, EZ + DESERT - z)
+			Terrain:FillBlock(CF(x + sx / 2, -10.3, z + sz / 2), V3(sx, 16, sz), M.Sand)
+		end
+	end
+	-- dunes: suaus a prop de la tanca i cada cop més grosses cap a
+	-- l'horitzó, perquè la vista no s'acabi mai (i la vora quedi amagada)
+	for _ = 1, 140 do
+		local a = rng:NextNumber(0, math.pi * 2)
+		local d = rng:NextNumber(BORDER + 40, DESERT + 60)
+		local r = 30 + (d - BORDER) / (DESERT - BORDER) * rng:NextNumber(60, 140)
+		Terrain:FillBall(V3(EX + math.cos(a) * d, -r * 0.8, EZ + math.sin(a) * d), r, M.Sand)
+	end
+	-- l'oasi: un estany d'aigua enmig de la sorra
+	Terrain:FillBlock(CF(EX - 20, -2.6, EZ + 84), V3(32, 3, 22), M.Air)
+	Terrain:FillBlock(CF(EX - 20, -3.4, EZ + 84), V3(30, 2.6, 20), M.Water)
+end
+
+-- ── parets invisibles de la zona jugable (el desert continua a fora) ──
+do
+	local m = Instance.new("Model")
+	m.Name = "EgyptBorder"
+	for _, w in ipairs({ { BORDER, 0, 2, BORDER * 2 }, { -BORDER, 0, 2, BORDER * 2 }, { 0, BORDER, BORDER * 2, 2 }, { 0, -BORDER, BORDER * 2, 2 } }) do
+		local wall = P(V3(w[3], 200, w[4]), CF(EX + w[1], 100, EZ + w[2]), C(255, 255, 255), M.SmoothPlastic, m)
+		wall.Transparency = 1
+		wall.CanQuery = false
+		wall.CastShadow = false
+	end
+	m.Parent = F
+end
+
+-- ── moll d'arribada (TravelPoint) ──
+local LX = EX - 100 -- on arriba l'avió
+do
+	local m = Instance.new("Model")
+	m.Name = "Landing"
+	P(V3(40, 1, 36), CF(LX, -0.2, EZ), STONE_L, M.Limestone, m)
+	-- vora de pedra fosca (0,05 més baixa: no comparteix pla amb la llosa)
+	for s = -1, 1, 2 do
+		P(V3(40.6, 0.9, 1.2), CF(LX, -0.25, EZ + s * 18.3), STONE_D, M.Limestone, m)
+	end
+	-- catifa de rajoles blaves cap a la portalada
+	P(V3(30, 0.1, 6), CF(LX + 5, 0.35, EZ), LAPIS, M.SmoothPlastic, m, true)
+	-- obeliscs a banda i banda del moll
+	for s = -1, 1, 2 do
+		local p = V3(LX - 12, 0.3, EZ + s * 12)
+		P(V3(3.2, 1.2, 3.2), CF(p + UP * 0.6), STONE_D, M.Limestone, m)
+		for k = 0, 2 do
+			local w = 2.2 - k * 0.3
+			P(V3(w, 5, w), CF(p + UP * (1.2 + 2.5 + k * 5)), STONE, M.Limestone, m)
+		end
+		Pyramid(CF(p + UP * 16.25), 1.6, 1.8, GOLD, M.Metal, m)
+		-- placa amb un anj al tram del mig (1,9 d'ample: 0,05 per fora)
+		local glyph = P(V3(1.4, 4.2, 0.1), CF(p + UP * 8.7) * CF(0, 0, 1.0), STONE_L, M.Limestone, m, true)
+		Label(glyph, "☥", C(120, 84, 40), Enum.Font.GothamBlack, Enum.NormalId.Front, 30)
+	end
+	m.Parent = F
+	-- punt d'arribada del botó "Egypt" (TravelService), mirant cap a l'illa
+	local tp = P(V3(4, 0.2, 4), CF(LX - 6, 0.45, EZ) * CFrame.Angles(0, math.rad(-90), 0), COL.brass, M.SmoothPlastic, F, true)
+	tp.Name = "TravelPoint"
+	tp.Transparency = 1
+	tp.CanQuery = false
+	tp:SetAttribute("Destination", "egypt")
+	tag(tp, "TravelPoint")
+end
+
+-- ── portalada (dos pilons) on es desbloqueja la zona ──
+local GX = EX - 64
+do
+	local m = Instance.new("Model")
+	m.Name = "EgyptGate"
+	for s = -1, 1, 2 do
+		local z = EZ + s * 9
+		-- pilò: base més ampla i cos a sobre (el perfil de talús egipci)
+		P(V3(7, 5, 9.4), CF(GX, 2.5, z), STONE_D, M.Limestone, m)
+		P(V3(6, 9, 8), CF(GX, 9.5, z), STONE, M.Limestone, m)
+		P(V3(6.6, 0.8, 8.6), CF(GX, 14.4, z), STONE_D, M.Limestone, m) -- cornisa
+		-- franges pintades (lapislàtzuli i or)
+		P(V3(6.1, 0.5, 8.1), CF(GX, 12.2, z), LAPIS, M.SmoothPlastic, m, true)
+		P(V3(6.1, 0.3, 8.1), CF(GX, 11.6, z), GOLD, M.Metal, m, true)
+	end
+	-- llinda amb el rètol
+	local lintel = P(V3(4, 2.6, 12), CF(GX, 12.6, EZ), STONE_L, M.Limestone, m)
+	Label(lintel, "EGYPT", C(140, 90, 30), Enum.Font.GothamBlack, Enum.NormalId.Left)
+	Label(lintel, "EGYPT", C(140, 90, 30), Enum.Font.GothamBlack, Enum.NormalId.Right)
+	-- disc solar alat a la cara de la llinda que mira al moll
+	Cyl(0.3, 1.6, CF(GX - 2.2, 12.6, EZ), GOLD, M.Metal, m, true)
+	for q = -1, 1, 2 do
+		P(V3(0.2, 0.6, 2.6), CF(GX - 2.2, 12.6, EZ + q * 2.2), LAPIS, M.SmoothPlastic, m, true)
+	end
+	-- aquí es desbloqueja Egipte (ShopService hi posa el botó)
+	local unlock = P(V3(4, 0.2, 10), CF(GX, 0.8, EZ), COL.brass, M.SmoothPlastic, m, true)
+	unlock.Name = "EgyptUnlock"
+	unlock.Transparency = 1
+	unlock.CanQuery = false
+	unlock:SetAttribute("Zone", "egypt")
+	tag(unlock, "ZoneUnlock")
+	m.Parent = F
+end
+
+-- ── forats: cràters repartits a l'atzar per la sorra ──
+-- Es tria un lloc a l'atzar dins la zona de cavar i es descarta si toca
+-- res (temple, oasi, esfinx, palmeres, roques, un altre forat).
+local digs = 0
+do
+	local field = Instance.new("Model")
+	field.Name = "EgyptDigField"
+	field.Parent = F
+	-- cercles ocupats {x, z, radi} relatius a (EX, EZ)
+	local busy = {
+		{ -8, -82, 26 }, -- temple
+		{ -20, 84, 26 }, -- oasi
+		{ 150, 0, 34 }, -- esfinx
+		{ 30, -60, 8 }, { 40, 60, 8 }, -- palmeres
+		{ 60, 118, 12 }, { 120, 50, 12 }, { 4, 116, 10 }, { -30, -118, 10 }, -- roques
+	}
+	local function free(x, z)
+		for _, b in ipairs(busy) do
+			if (V3(x, 0, z) - V3(b[1], 0, b[2])).Magnitude < b[3] + 10 then
+				return false
+			end
+		end
+		return true
+	end
+	local tries = 0
+	while digs < 12 and tries < 4000 do
+		tries += 1
+		-- a l'est de la portalada, entre el temple i l'oasi fins a l'esfinx;
+		-- centre múltiple de 4 (graella del terreny)
+		local x = math.floor(rng:NextNumber(-30, 175) / 4 + 0.5) * 4
+		local z = math.floor(rng:NextNumber(-150, 150) / 4 + 0.5) * 4
+		if free(x, z) then
+			digs += 1
+			table.insert(busy, { x, z, 13 })
+			digPit(V3(EX + x, SAND_Y, EZ + z), "egypt", "EgyptDig" .. digs, "desert", rng, field)
+		end
+	end
+	-- cartells "DIG HERE" a l'entrada
+	for _, s in ipairs({ -1, 1 }) do
+		local p = V3(GX + 10, SAND_Y, EZ + s * 14)
+		P(V3(0.4, 5, 0.4), CF(p + UP * 2.5), MOD.steel, M.Metal, F, true)
+		local sg = P(V3(0.3, 2.4, 5), CF(p + UP * 5.4), MOD.char, M.SmoothPlastic, F, true)
+		Label(sg, "DIG HERE ⛏", C(255, 206, 110), Enum.Font.GothamBlack, Enum.NormalId.Left)
+	end
+end
+
+-- ── les piràmides (fons) ──
+local function pyramid(p, base, h)
+	local m = Instance.new("Model")
+	m.Name = "Pyramid"
+	-- sòcol de blocs i la piràmide amb les quatre cares en tons diferents
+	P(V3(base + 2, 1, base + 2), CF(p + UP * 0.2), STONE_D, M.Limestone, m)
+	Pyramid(CF(p + UP * 0.75), base, h, STONE, M.Limestone, m, { STONE, STONE_L, STONE, STONE_D })
+	-- punta d'or: una mica més ampla que la piràmide a la mateixa alçada
+	-- (+0,4 de base), perquè les cares no quedin al mateix pla
+	Pyramid(CF(p + UP * (0.75 + h * 0.9)), base * 0.1 + 0.4, h * 0.1, GOLD, M.Metal, m)
+	m.Parent = F
+end
+-- gegants, al fons (es veuen des de tot arreu i fan de punt de referència)
+pyramid(V3(EX + 340, SAND_Y, EZ), 200, 130)
+pyramid(V3(EX + 262, SAND_Y, EZ - 300), 150, 97)
+pyramid(V3(EX + 232, SAND_Y, EZ + 292), 120, 78)
+
+-- ── l'esfinx ──
+do
+	local m = Instance.new("Model")
+	m.Name = "Sphinx"
+	local base = V3(EX + 150, SAND_Y, EZ) -- davant la piràmide gran
+	local cf = CF(base) * CFrame.Angles(0, math.rad(-90), 0) -- mira cap a l'oest (cap al moll)
+	P(V3(9, 1, 22), cf * CF(0, 0.5, 0), STONE_D, M.Limestone, m) -- plataforma
+	P(V3(7, 5, 14), cf * CF(0, 3.5, -2), STONE, M.Limestone, m) -- cos
+	Ellipsoid(V3(7, 5.4, 6), cf * CF(0, 3.6, -9), STONE, M.Limestone, m) -- anques
+	for s = -1, 1, 2 do
+		P(V3(2, 1.6, 7), cf * CF(s * 2.2, 1.8, 7.2), STONE_L, M.Limestone, m) -- potes
+	end
+	P(V3(5, 3.6, 3.2), cf * CF(0, 5.2, 5.8), STONE, M.Limestone, m) -- pit
+	-- cap amb el nemes (tocat de franges blaves i daurades)
+	local head = cf * CF(0, 8.6, 6.6)
+	P(V3(3.6, 3.8, 3.4), head, STONE_L, M.Limestone, m)
+	for s = -1, 1, 2 do
+		for k = 0, 3 do
+			local col = if k % 2 == 0 then LAPIS else GOLD
+			P(V3(0.5, 0.9, 3.6), head * CF(s * 2.05, 1.2 - k * 0.95, -0.2), col, M.SmoothPlastic, m, true)
+		end
+	end
+	P(V3(4.2, 0.9, 4), head * CF(0, 2.35, -0.3), GOLD, M.Metal, m, true)
+	P(V3(1, 1.2, 0.6), head * CF(0, 0.2, 1.95), STONE_D, M.Limestone, m, true) -- nas
+	P(V3(0.8, 1.6, 0.8), head * CF(0, -2.4, 1.4), GOLD, M.Metal, m, true) -- barba
+	-- gran: s'escala des de la base (el pivot), així es queda a terra
+	m.WorldPivot = CF(base)
+	m.Parent = F
+	m:ScaleTo(2.4)
+end
+
+-- ── temple en ruïnes (columnes, algunes trencades) ──
+do
+	local m = Instance.new("Model")
+	m.Name = "TempleRuins"
+	local c = V3(EX - 8, SAND_Y, EZ - 82)
+	P(V3(38, 1.2, 18), CF(c + UP * 0.3), STONE_D, M.Limestone, m)
+	-- trencades: tres columnes concretes (les llindes van sobre les senceres)
+	local BROKEN = { ["2,1"] = true, ["4,-1"] = true, ["5,1"] = true }
+	for i = 0, 5 do
+		for s = -1, 1, 2 do
+			local p = c + V3(-15 + i * 6, 0.9, s * 6)
+			local h = if BROKEN[`{i},{s}`] then rng:NextNumber(4, 7) else 12
+			VCyl(h, 2.4, p + UP * (h / 2), STONE, M.Limestone, m)
+			VCyl(0.6, 3, p + UP * 0.3, STONE_D, M.Limestone, m, true)
+			if h >= 12 then
+				-- capitell de flor de lotus
+				VCyl(1, 3.2, p + UP * (h + 0.5), STONE_L, M.Limestone, m)
+				P(V3(2.5, 0.35, 2.5), CF(p + UP * (h - 1.5)), LAPIS, M.SmoothPlastic, m, true)
+			end
+		end
+	end
+	-- dues llindes que encara aguanten, damunt dels capitells (0,9 + 12 + 1)
+	P(V3(13, 1.6, 3.2), CF(c + V3(-12, 0.9 + 13 + 0.85, -6)), STONE_L, M.Limestone, m)
+	P(V3(13, 1.6, 3.2), CF(c + V3(6, 0.9 + 13 + 0.85, 6)), STONE_L, M.Limestone, m)
+	-- un tros de columna caigut, estirat a la sorra
+	Cyl(8, 2.4, CF(c + V3(4, 1.2, 12)) * CFrame.Angles(0, rad(30), 0), STONE, M.Limestone, m)
+	m.Parent = F
+end
+
+-- ── oasi: palmeres i canyes al voltant de l'estany ──
+local palmN = 0
+local function palm(p, h)
+	palmN += 1
+	Asset(palmN % 3 == 0 and "palmCoco" or "palmChunky", CF(p) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), h, F)
+end
+for k = 0, 9 do
+	local a = k / 10 * math.pi * 2
+	palm(V3(EX - 20 + math.cos(a) * 21, SAND_Y, EZ + 84 + math.sin(a) * 15), rng:NextNumber(15, 21))
+end
+for k = 0, 14 do
+	local a = rng:NextNumber(0, math.pi * 2)
+	local p = V3(EX - 20 + math.cos(a) * 16, SAND_Y, EZ + 84 + math.sin(a) * 11)
+	P(V3(0.25, rng:NextNumber(2.5, 4), 0.25), CF(p + UP * 1.5) * CFrame.Angles(rng:NextNumber(-0.2, 0.2), 0, rng:NextNumber(-0.2, 0.2)), C(96, 128, 64), M.Grass, F, true)
+end
+-- palmeres sueltes al camí i al moll
+for _, pp in ipairs({ { -90, 26 }, { -90, -26 }, { -70, 30 }, { -70, -30 }, { 30, -60 }, { 40, 60 } }) do
+	palm(V3(EX + pp[1], SAND_Y, EZ + pp[2]), rng:NextNumber(16, 22))
+end
+
+-- ── parades de mercat (tendals de ratlles) prop del moll ──
+local CLOTH = { C(200, 70, 60), C(60, 110, 170), C(220, 170, 60) }
+for i, pp in ipairs({ { -84, 40 }, { -72, 44 }, { -66, -42 } }) do
+	local m = Instance.new("Model")
+	m.Name = "MarketStall"
+	local p = V3(EX + pp[1], SAND_Y, EZ + pp[2])
+	for q = -1, 1, 2 do
+		for r = -1, 1, 2 do
+			P(V3(0.3, 5, 0.3), CF(p + V3(q * 2.8, 2.5, r * 2.2)), COL.wood, M.Wood, m)
+		end
+	end
+	P(V3(6, 1, 1.8), CF(p + V3(0, 1.1, 1.4)), COL.wood, M.WoodPlanks, m) -- taulell
+	for k = 0, 5 do
+		local col = if k % 2 == 0 then CLOTH[i] else C(240, 232, 214)
+		P(V3(1.05, 0.2, 5.4), CF(p + V3(-2.6 + k * 1.05, 5.1, 0)) * CFrame.Angles(rad(8), 0, 0), col, M.Fabric, m, true)
+	end
+	-- gerres i cistelles al taulell
+	for k = -1, 1 do
+		Ellipsoid(V3(0.9, 1.1, 0.9), CF(p + V3(k * 1.6, 2.15, 1.4)), if k == 0 then TERRA else C(200, 150, 80), M.SmoothPlastic, m, true)
+	end
+	m.Parent = F
+end
+
+-- ── basar de paletes: les tres millors del joc només es venen aquí ──
+-- (ToolStand amb ToolId, com a Dig & Co.: ShopService hi posa el model i el botó)
+do
+	local m = Instance.new("Model")
+	m.Name = "TrowelBazaar"
+	local c = V3(EX - 96, SAND_Y, EZ - 48) -- al sud del moll, abans de la portalada
+	-- terra de pedra i tendal de ratlles daurades i blaves
+	P(V3(22, 0.6, 12), CF(c + UP * 0.3), STONE_L, M.Limestone, m)
+	for q = -1, 1, 2 do
+		for r = -1, 1, 2 do
+			VCyl(7, 0.6, c + V3(q * 10, 4.1, r * 5.4), STONE, M.Limestone, m)
+		end
+	end
+	for k = 0, 9 do
+		local col = if k % 2 == 0 then GOLD else LAPIS
+		P(V3(2.1, 0.2, 12), CF(c + V3(-9.45 + k * 2.1, 7.75, 0)) * CFrame.Angles(rad(6), 0, 0), col, M.Fabric, m, true)
+	end
+	local sign = P(V3(12, 1.6, 0.3), CF(c + V3(0, 9.2, 6.2)), LAPIS, M.SmoothPlastic, m)
+	Label(sign, "PHARAOH'S TROWELS", GOLD, Enum.Font.GothamBlack, Enum.NormalId.Back)
+	Label(sign, "PHARAOH'S TROWELS", GOLD, Enum.Font.GothamBlack, Enum.NormalId.Front)
+	local ids = { "scarab_trowel", "anubis_trowel", "pharaoh_trowel" }
+	local names = { "SCARAB", "ANUBIS", "PHARAOH" }
+	local cols = { C(30, 170, 160), C(90, 90, 110), C(255, 214, 90) }
+	for i, id in ipairs(ids) do
+		-- la placa (+Z local) mira al nord, cap al moll, d'on arriba la gent
+		local face = CF(c + V3(-6 + (i - 1) * 6, 0.6, 1))
+		P(V3(3.6, 0.4, 3.6), face * CF(0, 0.2, 0), STONE_D, M.Limestone, m)
+		local stand = P(V3(2.6, 2.4, 2.6), face * CF(0, 1.6, 0), STONE, M.Limestone, m)
+		stand.Name = "ToolStand_" .. id
+		stand:SetAttribute("ToolId", id)
+		tag(stand, "ToolStand")
+		P(V3(2.8, 0.18, 2.8), face * CF(0, 2.88, 0), GOLD, M.Metal, m, true)
+		for _, e in ipairs({ { 0, 1.36, 2.8, 0.1 }, { 0, -1.36, 2.8, 0.1 }, { 1.36, 0, 0.1, 2.8 }, { -1.36, 0, 0.1, 2.8 } }) do
+			P(V3(e[3], 0.06, e[4]), face * CF(e[1], 2.99, e[2]), cols[i], M.Neon, m, true)
+		end
+		local plaque = P(V3(2.3, 0.7, 0.1), face * CF(0, 1.6, 1.36), C(40, 34, 30), M.SmoothPlastic, m, true)
+		Label(plaque, names[i], cols[i]:Lerp(C(255, 255, 255), 0.35), Enum.Font.GothamBlack, Enum.NormalId.Back)
+	end
+	m.Parent = F
+end
+
+-- ── roques ──
+for k, rp in ipairs({ { -118, -60, 6 }, { -110, 70, 5 }, { 60, 118, 7 }, { -30, -118, 5 }, { 120, 50, 6 }, { 4, 116, 4 } }) do
+	for q = 0, 2 do
+		local a = q * 2.1 + k
+		Rock(CF(EX + rp[1] + math.cos(a) * rp[3] * 0.5, SAND_Y, EZ + rp[2] + math.sin(a) * rp[3] * 0.5) * CFrame.Angles(0, a, 0), rp[3] * (1 - q * 0.25), F, k + q, C(176, 146, 104))
+	end
+end
+
+print(("Egipte: illa a x=%d (només en avió), portalada, piràmides, esfinx, temple, oasi i %d forats per excavar"):format(EX, digs))
+
+end }
+STEPS[#STEPS + 1] = { "12_glacier", function()
+-- ═══════════════════════ 12 · GLACERA DE L'EDAT DE GEL (zona 4) ═══════════════════════
+-- Com Egipte (11), però cap a l'OEST i de gel: una plana de neu i gel que
+-- arriba fins a l'horitzó, MOLT lluny del continent (x = -6000). No hi ha mar
+-- ni camí: només s'hi arriba amb el botó ✈️ Travel (TravelPoint "glacier").
+-- La zona jugable és un quadrat de ±BORDER amb parets invisibles; fora,
+-- turons de neu i muntanyes de gel fins a la boira. Ha d'anar DESPRÉS de 01
+-- (Terrain:Clear()).
+--
+-- Què hi ha: moll d'arribada de fusta amb banderes d'expedició, portalada de
+-- gel on es desbloqueja la zona (ZoneUnlock), els forats (cràters "ice" amb
+-- DigSpot, Zone = "glacier") repartits a l'atzar, un MAMUT congelat dins un
+-- bloc de gel (el punt de referència, com l'esfinx), muntanyes de gel
+-- gegants al fons (terreny: l'excepció d'escala, com les piràmides), un
+-- llac glaçat, iglús, el campament de l'expedició amb foguera, la cabana de
+-- paletes i una aurora boreal al cel.
+local F = folder("Glacier", WORLD)
+local Terrain = Workspace.Terrain
+local rng = Random.new(4000)
+
+local EX, EZ = -6000, 0 -- centre de la zona
+local FIELD = 1400 -- mig costat de la plana de neu (fins a la boira)
+local BORDER = 480 -- mig costat de la zona jugable (parets invisibles)
+local SNOW_Y = -0.3 -- alçada de la neu (com la sorra d'Egipte)
+
+-- paleta freda (neu, gel, fusta d'expedició i taronja de tenda)
+local SNOW = C(240, 246, 252)
+local SNOW_D = C(214, 226, 240)
+local ICE = C(170, 214, 240)
+local ICE_D = C(120, 176, 214)
+local FUR = C(118, 80, 52)
+local FUR_D = C(88, 58, 38)
+local IVORY = C(246, 238, 216)
+local TENT = C(236, 110, 40)
+local WOOD = COL.wood
+local WOOD_D = COL.woodDark
+
+-- ── terreny: neu fins a l'horitzó, muntanyes de gel i un llac glaçat ──
+do
+	Terrain:SetMaterialColor(M.Snow, SNOW)
+	Terrain:SetMaterialColor(M.Glacier, ICE)
+	for x = EX - FIELD, EX + FIELD - 1, 256 do
+		for z = EZ - FIELD, EZ + FIELD - 1, 256 do
+			local sx = math.min(256, EX + FIELD - x)
+			local sz = math.min(256, EZ + FIELD - z)
+			Terrain:FillBlock(CF(x + sx / 2, -10.3, z + sz / 2), V3(sx, 16, sz), M.Snow)
+		end
+	end
+	-- turons de neu: suaus a prop de la tanca i cada cop més grossos cap a
+	-- l'horitzó (la vora de la plana queda amagada)
+	for _ = 1, 140 do
+		local a = rng:NextNumber(0, math.pi * 2)
+		local d = rng:NextNumber(BORDER + 40, FIELD + 60)
+		local r = 30 + (d - BORDER) / (FIELD - BORDER) * rng:NextNumber(60, 140)
+		Terrain:FillBall(V3(EX + math.cos(a) * d, -r * 0.8, EZ + math.sin(a) * d), r, M.Snow)
+	end
+	-- muntanyes de gel a tot l'horitzó (menys per l'est, d'on arriba l'avió),
+	-- amb el cim nevat
+	for _ = 1, 26 do
+		local a = rng:NextNumber(math.rad(100), math.rad(260)) -- oest, nord i sud
+		local d = rng:NextNumber(720, FIELD - 60)
+		local r = rng:NextNumber(90, 190)
+		local c = V3(EX + math.cos(a) * d, -r * 0.45, EZ + math.sin(a) * d)
+		Terrain:FillBall(c, r, M.Glacier)
+		Terrain:FillBall(c + V3(0, r * 0.62, 0), r * 0.42, M.Snow)
+	end
+	-- el llac glaçat: una làmina de gel una mica per sota de la neu
+	Terrain:FillBlock(CF(EX - 20, -2.6, EZ + 96), V3(40, 3, 28), M.Air)
+	Terrain:FillBlock(CF(EX - 20, -3.4, EZ + 96), V3(38, 2.6, 26), M.Glacier)
+end
+
+-- ── les tres muntanyes de gel GEGANTS del fons (el punt de referència) ──
+-- terreny, com les piràmides d'Egipte: l'excepció d'escala del CLAUDE.md
+do
+	for _, mnt in ipairs({ { -360, 0, 150 }, { -300, -290, 115 }, { -270, 300, 100 } }) do
+		local c = V3(EX + mnt[1], -mnt[3] * 0.25, EZ + mnt[2])
+		Terrain:FillBall(c, mnt[3], M.Glacier)
+		Terrain:FillBall(c + V3(0, mnt[3] * 0.55, 0), mnt[3] * 0.5, M.Snow)
+		-- esquerdes de gel blau fosc a la falda (roca glaçada)
+		for k = 0, 4 do
+			local a = k * 1.3 + mnt[2]
+			Terrain:FillBall(c + V3(math.cos(a) * mnt[3] * 0.8, mnt[3] * 0.2, math.sin(a) * mnt[3] * 0.8), mnt[3] * 0.18, M.Rock)
+		end
+	end
+end
+
+-- ── parets invisibles de la zona jugable (la neu continua a fora) ──
+do
+	local m = Instance.new("Model")
+	m.Name = "GlacierBorder"
+	for _, w in ipairs({ { BORDER, 0, 2, BORDER * 2 }, { -BORDER, 0, 2, BORDER * 2 }, { 0, BORDER, BORDER * 2, 2 }, { 0, -BORDER, BORDER * 2, 2 } }) do
+		local wall = P(V3(w[3], 200, w[4]), CF(EX + w[1], 100, EZ + w[2]), C(255, 255, 255), M.SmoothPlastic, m)
+		wall.Transparency = 1
+		wall.CanQuery = false
+		wall.CastShadow = false
+	end
+	m.Parent = F
+end
+
+-- ── moll d'arribada: una plataforma de fusta sobre la neu (TravelPoint) ──
+local LX = EX + 100 -- on arriba l'avió (a l'est: es mira cap a l'oest)
+do
+	local m = Instance.new("Model")
+	m.Name = "Landing"
+	P(V3(40, 1, 36), CF(LX, -0.2, EZ), WOOD, M.WoodPlanks, m)
+	-- vora de fusta fosca (0,05 més baixa: no comparteix pla amb la llosa)
+	for s = -1, 1, 2 do
+		P(V3(40.6, 0.9, 1.2), CF(LX, -0.25, EZ + s * 18.3), WOOD_D, M.Wood, m)
+	end
+	-- catifa de neu trepitjada cap a la portalada
+	P(V3(30, 0.1, 6), CF(LX - 5, 0.35, EZ), SNOW_D, M.Snow, m, true)
+	-- pals amb banderes de l'expedició (colors vius sobre el blanc)
+	local FLAGS = { C(230, 60, 60), C(60, 140, 230), C(250, 200, 50), C(80, 190, 110) }
+	for i, pz in ipairs({ -15, -8, 8, 15 }) do
+		local p = V3(LX + 14, 0.3, EZ + pz)
+		VCyl(10, 0.4, p + UP * 5, C(70, 74, 82), M.Metal, m)
+		P(V3(0.1, 2, 3.2), CF(p + V3(0, 9, 1.65)), FLAGS[i], M.Fabric, m, true)
+	end
+	-- caixes de subministraments
+	for i, cp in ipairs({ { 8, 14 }, { 10, 12 }, { 8, -14 } }) do
+		P(V3(2.4, 2.4, 2.4), CF(LX + cp[1], 1.5, EZ + cp[2]) * CFrame.Angles(0, rad(i * 17), 0), C(170, 126, 76), M.WoodPlanks, m)
+	end
+	m.Parent = F
+	-- punt d'arribada del botó "Glacier" (TravelService), mirant cap a la zona
+	local tp = P(V3(4, 0.2, 4), CF(LX + 6, 0.45, EZ) * CFrame.Angles(0, math.rad(90), 0), COL.brass, M.SmoothPlastic, F, true)
+	tp.Name = "TravelPoint"
+	tp.Transparency = 1
+	tp.CanQuery = false
+	tp:SetAttribute("Destination", "glacier")
+	tag(tp, "TravelPoint")
+end
+
+-- ── portalada de gel (dos pilars de glaç i una llinda de fusta) ──
+local GX = EX + 64
+do
+	local m = Instance.new("Model")
+	m.Name = "GlacierGate"
+	for s = -1, 1, 2 do
+		local z = EZ + s * 9
+		-- pilar: base de neu i blocs de gel que s'estrenyen
+		P(V3(7, 3, 8), CF(GX, 1.5, z), SNOW_D, M.Snow, m)
+		P(V3(5.6, 8, 6.4), CF(GX, 7, z), ICE, M.Glass, m).Transparency = 0.2
+		P(V3(4.6, 4, 5.4), CF(GX, 13, z), ICE_D, M.Glass, m).Transparency = 0.2
+		-- punxa de gel a dalt de tot
+		Pyramid(CF(V3(GX, 15, z)), 3.6, 4, ICE, M.Glass, m)
+	end
+	-- llinda de fusta amb el rètol
+	local lintel = P(V3(3, 2.6, 12), CF(GX, 12.4, EZ), WOOD, M.WoodPlanks, m)
+	Label(lintel, "ICE AGE GLACIER", C(255, 255, 255), Enum.Font.GothamBlack, Enum.NormalId.Left)
+	Label(lintel, "ICE AGE GLACIER", C(255, 255, 255), Enum.Font.GothamBlack, Enum.NormalId.Right)
+	-- neu sobre la llinda (0,1 més ampla: no comparteix cares)
+	P(V3(3.1, 0.5, 12.1), CF(GX, 13.95, EZ), SNOW, M.Snow, m, true)
+	-- aquí es desbloqueja la glacera (ShopService hi posa el botó)
+	local unlock = P(V3(4, 0.2, 10), CF(GX, 0.8, EZ), COL.brass, M.SmoothPlastic, m, true)
+	unlock.Name = "GlacierUnlock"
+	unlock.Transparency = 1
+	unlock.CanQuery = false
+	unlock:SetAttribute("Zone", "glacier")
+	tag(unlock, "ZoneUnlock")
+	m.Parent = F
+end
+
+-- ── forats: cràters de neu repartits a l'atzar ──
+local digs = 0
+do
+	local field = Instance.new("Model")
+	field.Name = "GlacierDigField"
+	field.Parent = F
+	-- cercles ocupats {x, z, radi} relatius a (EX, EZ)
+	local busy = {
+		{ -150, 0, 36 }, -- mamut congelat
+		{ -20, 96, 28 }, -- llac
+		{ -8, -92, 26 }, -- campament
+		{ -100, -118, 12 }, { -120, 110, 12 }, { 30, 130, 12 }, -- iglús
+		{ 40, -60, 8 }, { 50, 60, 8 }, { -60, 40, 8 }, { -70, -50, 8 }, -- cristalls de gel
+	}
+	local function free(x, z)
+		for _, b in ipairs(busy) do
+			if (V3(x, 0, z) - V3(b[1], 0, b[2])).Magnitude < b[3] + 10 then
+				return false
+			end
+		end
+		return true
+	end
+	local tries = 0
+	while digs < 12 and tries < 4000 do
+		tries += 1
+		-- a l'oest de la portalada fins al mamut; centre múltiple de 4
+		local x = math.floor(rng:NextNumber(-175, 30) / 4 + 0.5) * 4
+		local z = math.floor(rng:NextNumber(-150, 150) / 4 + 0.5) * 4
+		if free(x, z) then
+			digs += 1
+			table.insert(busy, { x, z, 13 })
+			digPit(V3(EX + x, SNOW_Y, EZ + z), "glacier", "GlacierDig" .. digs, "ice", rng, field)
+		end
+	end
+	-- cartells "DIG HERE" a l'entrada
+	for _, s in ipairs({ -1, 1 }) do
+		local p = V3(GX - 10, SNOW_Y, EZ + s * 14)
+		P(V3(0.4, 5, 0.4), CF(p + UP * 2.5), MOD.steel, M.Metal, F, true)
+		local sg = P(V3(0.3, 2.4, 5), CF(p + UP * 5.4), MOD.char, M.SmoothPlastic, F, true)
+		Label(sg, "DIG HERE ⛏", C(170, 225, 255), Enum.Font.GothamBlack, Enum.NormalId.Right)
+	end
+end
+
+-- ── el mamut congelat dins un bloc de gel (com l'esfinx d'Egipte) ──
+-- La figura es veu a través del gel a propòsit: és l'únic lloc on una peça
+-- va dins d'una altra (el gel és transparent).
+do
+	local m = Instance.new("Model")
+	m.Name = "FrozenMammoth"
+	local base = V3(EX - 150, SNOW_Y, EZ)
+	local cf = CF(base) * CFrame.Angles(0, math.rad(-90), 0) -- mira cap a l'est (cap al moll)
+	-- sòcol de neu
+	P(V3(18, 1, 30), cf * CF(0, 0.5, -3), SNOW_D, M.Snow, m)
+	-- cos, gepa i cap (pelatge marró)
+	Ellipsoid(V3(8, 7, 12), cf * CF(0, 8, 0), FUR, M.SmoothPlastic, m)
+	Ellipsoid(V3(5.4, 3.4, 5.4), cf * CF(0, 11.4, -2.6), FUR_D, M.SmoothPlastic, m)
+	Ellipsoid(V3(5, 5.6, 5), cf * CF(0, 10, -7), FUR, M.SmoothPlastic, m)
+	-- orelles petites i ulls
+	for s = -1, 1, 2 do
+		Ellipsoid(V3(0.6, 1.8, 1.4), cf * CF(s * 2.5, 10.6, -6), FUR_D, M.SmoothPlastic, m, true)
+		Ball(0.5, (cf * CF(s * 1.7, 10.8, -9.2)).Position, C(30, 26, 24), M.SmoothPlastic, m, true)
+	end
+	-- quatre potes gruixudes
+	for _, lp in ipairs({ { -2.6, -3.6 }, { 2.6, -3.6 }, { -2.6, 3.6 }, { 2.6, 3.6 } }) do
+		VCyl(5, 2.6, (cf * CF(lp[1], 3.5, lp[2])).Position, FUR_D, M.SmoothPlastic, m)
+	end
+	-- trompa: boles que baixen corbant-se
+	local trunk = { V3(0, 8.6, -9.3), V3(0, 6.6, -10.2), V3(0, 4.6, -10.4), V3(0, 2.8, -9.9), V3(0, 1.8, -9) }
+	for i = 1, #trunk - 1 do
+		beam((cf * CF(trunk[i])).Position, (cf * CF(trunk[i + 1])).Position, 1.4 - i * 0.18, FUR_D, M.SmoothPlastic, m, true)
+	end
+	-- ullals d'ivori corbats (endavant, enfora i amunt)
+	for s = -1, 1, 2 do
+		local pts = { V3(s * 1.2, 7.8, -9), V3(s * 2.4, 5.4, -11.6), V3(s * 3.2, 5.6, -14.2), V3(s * 2.8, 7.8, -16) }
+		for i = 1, #pts - 1 do
+			beam((cf * CF(pts[i])).Position, (cf * CF(pts[i + 1])).Position, 0.9 - i * 0.15, IVORY, M.SmoothPlastic, m, true)
+		end
+	end
+	-- el bloc de gel que l'embolcalla
+	local block = P(V3(14, 17, 28), cf * CF(0, 9.5, -3.5), ICE, M.Glass, m)
+	block.Transparency = 0.55
+	block.Reflectance = 0.1
+	-- placa davant
+	local plaque = P(V3(6, 1.6, 0.3), cf * CF(0, 1.8, -18.4), WOOD_D, M.Wood, m)
+	Label(plaque, "WOOLLY MAMMOTH · FROZEN 40,000 YEARS", C(255, 255, 255), Enum.Font.GothamBlack, Enum.NormalId.Front)
+	-- gran: s'escala des de la base, així es queda a terra
+	m.WorldPivot = CF(base)
+	m.Parent = F
+	m:ScaleTo(1.8)
+end
+
+-- ── iglús (cúpula de neu mig enterrada i túnel d'entrada) ──
+for i, ip in ipairs({ { -100, -118 }, { -120, 110 }, { 30, 130 } }) do
+	local m = Instance.new("Model")
+	m.Name = "Igloo"
+	local c = V3(EX + ip[1], SNOW_Y, EZ + ip[2])
+	Ball(12, c, SNOW, M.Snow, m).CanCollide = true
+	local a = rad(i * 70)
+	local dir = V3(math.cos(a), 0, math.sin(a))
+	Cyl(4, 4.4, CF(c + dir * 6.4 + UP * 0.2, c + dir * 10) * CFrame.Angles(0, rad(90), 0), SNOW_D, M.Snow, m)
+	-- la porta fosca
+	Ball(3.6, c + dir * 8.4 + UP * 0.2, C(40, 50, 70), M.SmoothPlastic, m, true)
+	m.Parent = F
+end
+
+-- ── campament de l'expedició: tendes, foguera i caixes ──
+do
+	local m = Instance.new("Model")
+	m.Name = "ExpeditionCamp"
+	local c = V3(EX - 8, SNOW_Y, EZ - 92)
+	-- tres tendes canadenques (dos panells inclinats i els triangles)
+	for i, tp in ipairs({ { -12, 0, 0 }, { 0, -8, 30 }, { 12, 0, -20 } }) do
+		local tcf = CF(c + V3(tp[1], 0, tp[2])) * CFrame.Angles(0, rad(tp[3]), 0)
+		for s = -1, 1, 2 do
+			P(V3(0.2, 4.4, 6), tcf * CF(s * 1.55, 1.7, 0) * CFrame.Angles(0, 0, rad(s * 35)), if i == 2 then C(60, 140, 230) else TENT, M.Fabric, m)
+		end
+		P(V3(0.3, 0.3, 6.4), tcf * CF(0, 3.55, 0), C(70, 74, 82), M.Metal, m, true)
+	end
+	-- foguera: pedres, troncs i foc (efecte i llum)
+	local fire = c + V3(0, 0, 10)
+	for k = 0, 7 do
+		local a = k / 8 * math.pi * 2
+		Ball(1, fire + V3(math.cos(a) * 2, 0.2, math.sin(a) * 2), C(120, 118, 114), M.Slate, m, true)
+	end
+	for k = 0, 2 do
+		Cyl(3, 0.5, CF(fire + UP * 0.4) * CFrame.Angles(0, k * math.pi / 3, 0), WOOD_D, M.Wood, m, true)
+	end
+	local flame = Ball(1.2, fire + UP * 1, C(255, 150, 40), M.Neon, m, true)
+	local f = Instance.new("Fire")
+	f.Heat = 6
+	f.Size = 4
+	f.Parent = flame
+	local light = Instance.new("PointLight")
+	light.Color = C(255, 170, 90)
+	light.Range = 22
+	light.Brightness = 1.5
+	light.Parent = flame
+	-- troncs per seure
+	for s = -1, 1, 2 do
+		Cyl(4, 1, CF(fire + V3(s * 4.5, 0.2, 0)) * CFrame.Angles(0, rad(90), 0), WOOD, M.Wood, m)
+	end
+	-- caixes i un trineu
+	for k, bp in ipairs({ { 16, 6 }, { 17.5, 8.4 }, { -16, 8 } }) do
+		P(V3(2.2, 2.2, 2.2), CF(c + V3(bp[1], 1.1, bp[2])) * CFrame.Angles(0, rad(k * 23), 0), C(170, 126, 76), M.WoodPlanks, m)
+	end
+	local sled = CF(c + V3(-6, 0.6, 16)) * CFrame.Angles(0, rad(20), 0)
+	P(V3(2.6, 0.3, 6), sled * CF(0, 0.5, 0), C(190, 60, 50), M.WoodPlanks, m)
+	for s = -1, 1, 2 do
+		P(V3(0.2, 0.3, 6.6), sled * CF(s * 1.1, 0, 0.2), C(70, 74, 82), M.Metal, m, true)
+	end
+	m.Parent = F
+end
+
+-- ── cabana de paletes: les tres millors del joc només es venen aquí ──
+-- (ToolStand amb ToolId, com a Dig & Co. i al basar d'Egipte)
+do
+	local m = Instance.new("Model")
+	m.Name = "TrowelHut"
+	local c = V3(EX + 96, SNOW_Y, EZ - 48) -- al sud del moll, abans de la portalada
+	-- terra de fusta, pals i sostre de fusta amb neu a sobre
+	P(V3(22, 0.6, 12), CF(c + UP * 0.3), WOOD, M.WoodPlanks, m)
+	for q = -1, 1, 2 do
+		for r = -1, 1, 2 do
+			VCyl(7, 0.6, c + V3(q * 10, 4.1, r * 5.4), WOOD_D, M.Wood, m)
+		end
+	end
+	P(V3(23, 0.5, 13), CF(c + V3(0, 7.85, 0)) * CFrame.Angles(rad(6), 0, 0), WOOD_D, M.WoodPlanks, m)
+	P(V3(23.2, 0.4, 13.2), CF(c + V3(0, 8.3, 0)) * CFrame.Angles(rad(6), 0, 0), SNOW, M.Snow, m, true)
+	local sign = P(V3(12, 1.6, 0.3), CF(c + V3(0, 9.6, 6.9)), C(40, 70, 110), M.SmoothPlastic, m)
+	Label(sign, "FROST TROWELS", C(190, 235, 255), Enum.Font.GothamBlack, Enum.NormalId.Back)
+	Label(sign, "FROST TROWELS", C(190, 235, 255), Enum.Font.GothamBlack, Enum.NormalId.Front)
+	local ids = { "frost_trowel", "aurora_trowel", "mammoth_trowel" }
+	local names = { "FROST", "AURORA", "MAMMOTH" }
+	local cols = { C(170, 225, 255), C(120, 255, 190), C(246, 238, 216) }
+	for i, id in ipairs(ids) do
+		local face = CF(c + V3(-6 + (i - 1) * 6, 0.6, 1))
+		P(V3(3.6, 0.4, 3.6), face * CF(0, 0.2, 0), SNOW_D, M.Snow, m)
+		local stand = P(V3(2.6, 2.4, 2.6), face * CF(0, 1.6, 0), ICE, M.Glass, m)
+		stand.Transparency = 0.15
+		stand.Name = "ToolStand_" .. id
+		stand:SetAttribute("ToolId", id)
+		tag(stand, "ToolStand")
+		P(V3(2.8, 0.18, 2.8), face * CF(0, 2.88, 0), C(70, 74, 82), M.Metal, m, true)
+		for _, e in ipairs({ { 0, 1.36, 2.8, 0.1 }, { 0, -1.36, 2.8, 0.1 }, { 1.36, 0, 0.1, 2.8 }, { -1.36, 0, 0.1, 2.8 } }) do
+			P(V3(e[3], 0.06, e[4]), face * CF(e[1], 2.99, e[2]), cols[i], M.Neon, m, true)
+		end
+		local plaque = P(V3(2.3, 0.7, 0.1), face * CF(0, 1.6, 1.36), C(30, 40, 56), M.SmoothPlastic, m, true)
+		Label(plaque, names[i], cols[i], Enum.Font.GothamBlack, Enum.NormalId.Back)
+	end
+	m.Parent = F
+end
+
+-- ── cristalls de gel (grups de punxes transparents) ──
+for k, cp in ipairs({ { 40, -60 }, { 50, 60 }, { -60, 40 }, { -70, -50 }, { 110, 70 }, { -30, -140 }, { 120, -130 } }) do
+	local c = V3(EX + cp[1], SNOW_Y, EZ + cp[2])
+	for q = 0, 4 do
+		local a = q * 1.26 + k
+		local h = rng:NextNumber(3, 7)
+		local p = c + V3(math.cos(a) * 1.4, 0, math.sin(a) * 1.4)
+		local spike = P(V3(1.1, h, 1.1), CF(p + UP * (h / 2 - 0.3)) * CFrame.Angles(rng:NextNumber(-0.35, 0.35), a, rng:NextNumber(-0.35, 0.35)), if q % 2 == 0 then ICE else C(200, 235, 255), M.Glass, F)
+		spike.Transparency = 0.25
+	end
+end
+
+-- ── pins nevats i roques amb neu ──
+for _, pp in ipairs({ { 120, 30 }, { 126, -26 }, { 90, 60 }, { 80, -70 }, { 140, 90 }, { -40, 150 }, { -130, -150 }, { 60, 150 } }) do
+	Asset("pine", CF(EX + pp[1], SNOW_Y, EZ + pp[2]) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0), rng:NextNumber(12, 18), F)
+end
+for k, rp in ipairs({ { -118, -60, 6 }, { -40, 120, 5 }, { 60, 118, 7 }, { 90, -110, 5 }, { 140, 40, 6 } }) do
+	for q = 0, 2 do
+		local a = q * 2.1 + k
+		Rock(CF(EX + rp[1] + math.cos(a) * rp[3] * 0.5, SNOW_Y, EZ + rp[2] + math.sin(a) * rp[3] * 0.5) * CFrame.Angles(0, a, 0), rp[3] * (1 - q * 0.25), F, k + q, C(150, 164, 180))
+	end
+end
+
+-- ── aurora boreal: cintes de llum molt amunt, cap al nord ──
+-- (Neon només per a efectes i llums: això és un efecte del cel)
+do
+	local m = Instance.new("Model")
+	m.Name = "Aurora"
+	local COLORS = { C(90, 255, 170), C(80, 220, 255), C(170, 110, 255) }
+	for i = 0, 17 do
+		local x = EX - 700 + i * 80
+		local band = P(V3(90, rng:NextNumber(40, 70), 1), CF(x, 300 + math.sin(i * 0.7) * 30, EZ - 900 + math.cos(i * 0.5) * 60) * CFrame.Angles(rad(-20), rad(math.sin(i) * 25), 0), COLORS[i % 3 + 1], M.Neon, m, true)
+		band.Transparency = 0.6
+		band.CastShadow = false
+	end
+	m.Parent = F
+end
+
+print(("Glacera: a x=%d (només en avió), portalada, mamut congelat, muntanyes de gel, iglús, campament i %d forats per excavar"):format(EX, digs))
 
 end }
 

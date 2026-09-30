@@ -65,6 +65,17 @@ Theme.SOUNDS = {
 	reward = "rbxassetid://15675043410", -- Roblox_UI_Tonal_Stinger
 	notify = "rbxassetid://15675085146", -- Roblox_UI_Indicator
 	error = "rbxassetid://15675075163", -- Roblox_UI_Delete
+	purchase = "rbxassetid://10066947742", -- RBLX UI Purchase (compte Roblox)
+	-- Efectes de ProSoundEffects (biblioteca amb llicència de Roblox, com els
+	-- ocells de l'ambient). Triats pel nom: si algun no agrada, es canvia aquí.
+	dig1 = "rbxassetid://9114083260", -- Dirt Dig Dirt Throws From Shovel 1
+	dig2 = "rbxassetid://9114083746", -- Dirt Dig Dirt Throws From Shovel 12
+	dirt = "rbxassetid://9114109300", -- Dirt Impacts 1
+	coins = "rbxassetid://9113849492", -- Coins Or Keys Jingle 6
+	coinBounce = "rbxassetid://9113848469", -- Coin Bounce 3
+	cash = "rbxassetid://9113728625", -- Cash Register 1
+	sparkle = "rbxassetid://9116394545", -- Magic Glows Soft Clusters Of Chiming Hits 1
+	sparkleBig = "rbxassetid://9119447936", -- Sparkle Bell Tree Wind Chimes 1
 }
 
 local soundCache: { [string]: Sound } = {}
@@ -110,6 +121,109 @@ function Theme.Play(name: string, volume: number?, pitch: number?)
 	template.Volume = (volume or 0.5) * Theme.SfxVolume
 	template.PlaybackSpeed = pitch or 1
 	SoundService:PlayLocalSound(template)
+end
+
+-- ───────────────────────── SONS QUE ENGANXEN ─────────────────────────
+-- Melodies fetes amb els mateixos sons oficials (a diferents tons). Cada
+-- nota és un Sound nou que s'esborra en acabar: així es poden encavalcar
+-- (Play() reutilitza un sol Sound per nom i una nota tallaria l'anterior).
+
+-- Una nota: el so `name` a `pitch` (1 = normal) i `volume` (0..1)
+function Theme.Note(name: string, volume: number?, pitch: number?)
+	local id = Theme.SOUNDS[name]
+	if not id or Theme.SfxVolume <= 0 then
+		return
+	end
+	local s = Instance.new("Sound")
+	s.SoundId = id
+	s.Volume = (volume or 0.5) * Theme.SfxVolume
+	s.PlaybackSpeed = pitch or 1
+	s.Parent = SoundService
+	s.Ended:Connect(function()
+		s:Destroy()
+	end)
+	s:Play()
+	task.delay(4, function()
+		if s.Parent then
+			s:Destroy()
+		end
+	end)
+end
+
+-- Notes seguides: `pitches` d'una en una, cada `gap` segons
+function Theme.Arpeggio(name: string, pitches: { number }, gap: number?, volume: number?)
+	for i, p in pitches do
+		task.delay((i - 1) * (gap or 0.08), Theme.Note, name, volume, p)
+	end
+end
+
+-- Fanfàrria: 1 = petita (compra, missió), 2 = gran (zona, passi), 3 = ÈPICA (Legendary+)
+function Theme.Fanfare(level: number?)
+	local l = level or 1
+	if l >= 3 then
+		Theme.Note("reward", 0.8, 0.8)
+		Theme.Note("reward", 0.5, 1.0)
+		Theme.Note("sparkleBig", 0.7, 1)
+		Theme.Arpeggio("pop", { 1, 1.12, 1.26, 1.5, 1.68, 2 }, 0.07, 0.45)
+		task.delay(0.5, Theme.Note, "reward", 0.7, 1.26)
+		task.delay(0.95, Theme.Note, "notify", 0.6, 1.5)
+	elseif l == 2 then
+		Theme.Note("purchase", 0.6, 1)
+		Theme.Note("sparkle", 0.6, 1.1)
+		Theme.Arpeggio("reward", { 0.9, 1.12, 1.35 }, 0.12, 0.55)
+		Theme.Arpeggio("pop", { 1.3, 1.5, 1.7, 2 }, 0.06, 0.35)
+	else
+		Theme.Note("purchase", 0.55, 1.05)
+		Theme.Arpeggio("pop", { 1, 1.26, 1.5 }, 0.07, 0.45)
+		task.delay(0.2, Theme.Note, "reward", 0.45, 1.2)
+	end
+end
+
+-- Caixa registradora + cascada de monedes (vendre): més notes com més n'hi ha
+function Theme.Cash(amount: number?)
+	local n = math.clamp(math.floor(math.log10(math.max(amount or 10, 10))), 2, 7)
+	local pitches = {}
+	for i = 1, n do
+		pitches[i] = 1.1 + i * 0.12
+	end
+	Theme.Note("cash", 0.7, 1)
+	task.delay(0.12, Theme.Note, "coins", 0.6, 1)
+	Theme.Arpeggio("pop", pitches, 0.045, 0.3)
+end
+
+-- Cop de pala a la terra (cada clic del minijoc): dos sons que s'alternen,
+-- amb el to una mica a l'atzar perquè no cansi, i més agut com més bé
+local digFlip = false
+function Theme.Dig(quality: number?)
+	digFlip = not digFlip
+	local q = quality or 0 -- 0 fallat · 1 bé · 2 perfecte
+	Theme.Note(if digFlip then "dig1" else "dig2", 0.55, 0.95 + math.random() * 0.15 + q * 0.06)
+	Theme.Note("dirt", 0.3, 1 + q * 0.1)
+end
+
+-- Propina d'un visitant: dring de monedes; si és al teu museu, caixa
+-- registradora; si és WOW, espurnes a sobre
+function Theme.Tip(mine: boolean, wow: boolean)
+	Theme.Note("coins", if mine then 0.7 else 0.35, 1 + math.random() * 0.1)
+	if mine then
+		task.delay(0.08, Theme.Note, "cash", 0.55, 1.05)
+		task.delay(0.2, Theme.Note, "coinBounce", 0.45, 1.2)
+	end
+	if wow then
+		Theme.Note("sparkle", 0.6, 1)
+		task.delay(0.3, Theme.Arpeggio, "pop", { 1.2, 1.4, 1.6, 1.9 }, 0.05, 0.35)
+	end
+end
+
+-- Tic suau de les monedes que entren cada segon (molt fluix: sona sovint)
+local lastTick = 0
+function Theme.CoinTick()
+	local now = os.clock()
+	if now - lastTick < 0.5 then
+		return
+	end
+	lastTick = now
+	Theme.Note("hover", 0.12, 1.5 + math.random() * 0.2)
 end
 
 -- ─────────────────────────── NUMEROS ───────────────────────────
@@ -193,7 +307,49 @@ function Theme.Text(parent: Instance, text: string, props: { [string]: any }?): 
 end
 
 -- Emoji com a icona (sense contorn: el contorn negre els embruta).
+-- El "$" dels diners no és un emoji: es fa verd i amb contorn, com les lletres.
 function Theme.Icon(parent: Instance, emoji: string, props: { [string]: any }?): TextLabel
+	-- "PYRAMIDS": no hi ha emoji de piràmide, es dibuixen amb triangles (Egipte)
+	if emoji == "PYRAMIDS" then
+		local holder = Instance.new("TextLabel")
+		holder.BackgroundTransparency = 1
+		holder.Size = UDim2.fromScale(1, 1)
+		holder.Text = ""
+		for key, value in props or {} do
+			(holder :: any)[key] = value
+		end
+		holder.Parent = parent
+		local z = holder.ZIndex
+		local function tri(size: number, x: number, color: Color3, zi: number)
+			Theme.Text(holder, "▲", {
+				Size = UDim2.fromScale(size, size),
+				AnchorPoint = Vector2.new(0.5, 1),
+				Position = UDim2.fromScale(x, 1),
+				TextColor3 = color,
+				StrokeThickness = 2,
+				ZIndex = zi,
+			})
+		end
+		-- el sol darrere, dues piràmides petites i la gran al davant
+		Theme.Text(holder, "●", {
+			Size = UDim2.fromScale(0.34, 0.34),
+			Position = UDim2.fromScale(0.64, 0),
+			TextColor3 = Theme.C.orange,
+			StrokeThickness = 2,
+			ZIndex = z,
+		})
+		tri(0.62, 0.24, Color3.fromRGB(214, 170, 72), z)
+		tri(0.62, 0.78, Color3.fromRGB(226, 190, 128), z)
+		tri(0.96, 0.5, Theme.C.yellow, z + 1)
+		return holder
+	end
+	if emoji == "$" then
+		local p: { [string]: any } = { TextColor3 = Theme.C.green, StrokeThickness = 3 }
+		for key, value in props or {} do
+			p[key] = value
+		end
+		return Theme.Text(parent, "$", p)
+	end
 	local label = Instance.new("TextLabel")
 	label.BackgroundTransparency = 1
 	label.Size = UDim2.fromScale(1, 1)
@@ -330,6 +486,14 @@ function Theme.AutoScale(guiObject: GuiObject, kind: string?)
 	local design = if menu then Vector2.new(guiObject.Size.X.Offset, guiObject.Size.Y.Offset) else nil
 	s.Scale = computeScale(menu, design)
 	s.Parent = guiObject
+	-- Fora les que ja no hi són: hi ha finestres que es fan i es destrueixen
+	-- (la targeta de cada troballa, les invitacions...) i la llista creixeria
+	-- sense parar tota la partida.
+	for i = #scaled, 1, -1 do
+		if scaled[i].s.Parent == nil then
+			table.remove(scaled, i)
+		end
+	end
 	table.insert(scaled, { s = s, menu = menu, design = design })
 end
 

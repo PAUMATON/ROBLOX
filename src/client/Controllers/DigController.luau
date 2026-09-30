@@ -16,6 +16,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
 local Bones = require(Config:WaitForChild("Bones"))
 local Dig = require(Config:WaitForChild("Dig"))
+local Potions = require(Config:WaitForChild("Potions"))
 local Tools = require(Config:WaitForChild("Tools"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
@@ -303,6 +304,49 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 		cg.Parent = card
 		Effects.Spin(cg, 60)
 	end
+	-- l'estat del fòssil (Bones > ESTAT): un segell que cau sobre la peça
+	if string.find(key, "#", 1, true) then
+		local grade = Bones.GradeOf(key)
+		local g = Bones.GradeDef(grade)
+		local stamp = Instance.new("Frame")
+		stamp.AnchorPoint = Vector2.new(0.5, 0.5)
+		stamp.Position = UDim2.new(0.5, 62, 0, 228)
+		stamp.Size = UDim2.fromOffset(178, 42)
+		stamp.Rotation = -8
+		stamp.BackgroundColor3 = g.color
+		stamp.ZIndex = 9
+		stamp.Visible = false
+		stamp.Parent = card
+		Theme.Corner(stamp, 12)
+		Theme.Stroke(stamp, 3)
+		Theme.Text(stamp, `{string.upper(g.name)} x{g.mult}`, {
+			Size = UDim2.new(1, -14, 1, -10),
+			Position = UDim2.fromOffset(7, 5),
+			ZIndex = 10,
+			StrokeThickness = 2.5,
+		})
+		task.delay(0.45, function()
+			if not stamp.Parent then
+				return
+			end
+			stamp.Visible = true
+			Effects.PopIn(stamp, 0.25)
+			if grade >= #Bones.GRADES then
+				Theme.Arpeggio("sparkle", { 1, 1.25, 1.5, 2 }, 0.07, 0.5)
+				Effects.Confetti(card, 30)
+				Effects.Pulse(stamp, 0.1, 0.7)
+			elseif grade == #Bones.GRADES - 1 then
+				Theme.Arpeggio("sparkle", { 1, 1.4 }, 0.08, 0.45)
+				Effects.Confetti(card, 14)
+			elseif grade >= 5 then
+				Theme.Note("sparkle", 0.45, 1.3)
+			elseif grade <= 2 then
+				Theme.Note("dirt", 0.5, 0.7)
+			else
+				Theme.Note("pop", 0.4, 1.1)
+			end
+		end)
+	end
 	-- primer cop que la trobes: entra a l'índex
 	if isNew then
 		local tag = Instance.new("Frame")
@@ -329,18 +373,27 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 	end
 
 	Effects.PopIn(card, 0.45)
+	-- les monedes de l'excavació (totes les troballes en donen)
+	Theme.Note("coinBounce", 0.45, 1.1)
+	-- com més rara, més festa: so, confeti, flaix del color i sacsejada
 	if BIG[rarity] then
 		Effects.Confetti(root, if rarity == "Secret" then 160 elseif rarity == "Mythic" then 120 else 90)
-		Theme.Play("reward", 0.9, if rarity == "Secret" then 0.8 else 1)
+		Theme.Fanfare(3)
+		Effects.Flash(if rarity == "Secret" then C.white else color, if rarity == "Secret" then 0.8 else 0.55)
+		Effects.ShakeCamera(if rarity == "Secret" then 0.9 elseif rarity == "Mythic" then 0.65 else 0.45, 0.6)
 		task.delay(0.5, function()
 			Effects.Confetti(root, 60)
-			Theme.Play("reward", 0.6, 1.3)
 		end)
-	elseif rarity == "Epic" or rarity == "Rare" then
-		Effects.Confetti(root, if rarity == "Epic" then 60 else 30)
-		Theme.Play("reward", 0.6, if rarity == "Epic" then 1.15 else 1)
+	elseif rarity == "Epic" then
+		Effects.Confetti(root, 60)
+		Theme.Fanfare(2)
+		Effects.Flash(color, 0.3)
+	elseif rarity == "Rare" then
+		Effects.Confetti(root, 30)
+		Theme.Fanfare(1)
+		Theme.Note("sparkle", 0.5, 1.15)
 	else
-		Theme.Play("pop", 0.6)
+		Theme.Arpeggio("pop", { 1, 1.26 }, 0.07, 0.5)
 	end
 
 	local closed = false
@@ -357,17 +410,7 @@ local function showReward(key: string, text: string, rarity: string, stored: boo
 	end
 	card.Activated:Connect(close)
 	-- ✕ a la cantonada: la targeta es tanca tocant-la, però així es veu
-	Widgets.Button({
-		Parent = card,
-		Size = UDim2.fromOffset(46, 46),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.new(1, -10, 0, 10),
-		Color = C.red,
-		Text = "✕",
-		Radius = 23,
-		ZIndex = 9,
-		OnClick = close,
-	})
+	Widgets.CloseButton({ Parent = card, Size = 50, ZIndex = 9, OnClick = close })
 	local stay = if BIG[rarity] then 5 elseif rarity == "Common" or rarity == "Uncommon" then 1.8 else 3
 	task.delay(if Theme.QuickRewards then math.min(stay, 1.2) else stay, close)
 end
@@ -428,7 +471,7 @@ local function swing()
 	attachment.Parent = workspace.Terrain
 	local zone = spot:GetAttribute("Zone")
 	local dirt = Instance.new("ParticleEmitter")
-	dirt.Color = ColorSequence.new(if zone == "beach" then DIRT.beach else DIRT.construction)
+	dirt.Color = ColorSequence.new(if zone == "construction" then DIRT.construction else DIRT.beach)
 	dirt.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.7), NumberSequenceKeypoint.new(1, 0.1) })
 	dirt.Lifetime = NumberRange.new(0.5, 0.9)
 	dirt.Speed = NumberRange.new(10, 18)
@@ -463,14 +506,35 @@ showHit = function(attempt: number, gained: number)
 	if hit then
 		feedback.Text = hit[1]
 		feedback.TextColor3 = hit[2]
-		Theme.Play("pop", 0.5, hit[3])
+		-- cop de pala + un "pop" que puja de to a cada intent (enganxa)
+		Theme.Dig(if gained == Dig.PERFECT_BONUS then 2 else 1)
+		Theme.Note("pop", 0.5, hit[3] + (attempt - 1) * 0.14)
+		if gained == Dig.PERFECT_BONUS then
+			Theme.Note("hover", 0.35, 1.6 + attempt * 0.12)
+		end
 		if pip then
 			pip.BackgroundColor3 = hit[2]
 			Effects.Pop(pip, 0.4)
 		end
+		-- tots els cops PERFECT: combo!
+		if attempt == Dig.ATTEMPTS then
+			local all = true
+			for i = 1, Dig.ATTEMPTS do
+				if shown[i] ~= Dig.PERFECT_BONUS then
+					all = false
+				end
+			end
+			if all then
+				feedback.Text = "PERFECT x3!"
+				feedback.TextColor3 = C.yellow
+				Theme.Fanfare(1)
+				Effects.Pop(feedback, 0.6)
+			end
+		end
 	else
 		feedback.Text = "MISS!"
 		feedback.TextColor3 = C.red
+		Theme.Dig(0)
 		Theme.Play("error", 0.35)
 		shake(panel)
 		if pip then
@@ -539,6 +603,18 @@ local function onUpdate(data: any)
 			end
 		else
 			Effects.Toast("Nothing this time... dig again!", C.grey)
+		end
+		-- poció de regal (de tant en tant, o sempre al munt daurat)
+		local potion = if type(data.potion) == "string" then Potions.ById[data.potion] else nil
+		if potion then
+			task.delay(0.8, function()
+				Effects.Toast(`🧪 BONUS! You found a {potion.name} {potion.icon}`, potion.color, "")
+				Theme.Arpeggio("pop", { 1.3, 1.6, 2 }, 0.06, 0.45)
+				Theme.Note("sparkle", 0.55, 1.2)
+				if lastSpot and lastSpot.Parent then
+					worldPop(lastSpot, `+1 🧪`, potion.color)
+				end
+			end)
 		end
 	elseif phase == "denied" then
 		Effects.Toast("🔒 " .. tostring(data.reason or "You can't dig here"), C.red, "error")

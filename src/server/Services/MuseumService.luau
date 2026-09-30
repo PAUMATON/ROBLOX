@@ -61,7 +61,7 @@ local function exhibitModel(item: string): Model?
 	local model: Model
 	local info = Bones.PieceInfo[item]
 	if info then
-		model = BoneBuilder.Piece(info.skeleton, info.piece)
+		model = BoneBuilder.Piece(info.skeleton, info.piece, Bones.GradeOf(item))
 		maxSpan, maxHeight = Museum.FOSSIL_MAX_SPAN, Museum.FOSSIL_MAX_SPAN
 	elseif Bones.ById[item] then
 		model = BoneBuilder.Assembled(item)
@@ -84,6 +84,52 @@ local function exhibitName(item: string): string
 	return if def then string.upper(def.name) .. " SKELETON" else "?"
 end
 
+-- Rètol flotant sobre la vitrina: nom (del color de la raresa), quant fa
+-- per segon i una frase curta. Petit i només de prop: no ha de tapar res.
+local function infoSign(base: BasePart, item: string, rarity: Bones.Rarity): BillboardGui
+	local bb = Instance.new("BillboardGui")
+	bb.Name = "ExhibitInfo"
+	bb.Adornee = base
+	bb.Size = UDim2.fromScale(7.5, 2.4) -- en studs: s'encongeix amb la distància
+	bb.StudsOffsetWorldSpace = Vector3.new(0, Museum.INFO_HEIGHT, 0)
+	bb.MaxDistance = Museum.INFO_DISTANCE
+	bb.LightInfluence = 0
+
+	local panel = Instance.new("Frame")
+	panel.Size = UDim2.fromScale(1, 1)
+	panel.BackgroundColor3 = Color3.fromRGB(28, 24, 40)
+	panel.BackgroundTransparency = 0.25
+	panel.Parent = bb
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0.18, 0)
+	corner.Parent = panel
+	local edge = Instance.new("UIStroke")
+	edge.Color = Bones.RARITY_COLORS[rarity]
+	edge.Thickness = 2
+	edge.Parent = panel
+
+	local function line(text: string, y: number, h: number, color: Color3, bold: boolean)
+		local label = Instance.new("TextLabel")
+		label.BackgroundTransparency = 1
+		label.Position = UDim2.fromScale(0.05, y)
+		label.Size = UDim2.fromScale(0.9, h)
+		label.Font = if bold then Enum.Font.FredokaOne else Enum.Font.GothamMedium
+		label.TextScaled = true
+		label.TextColor3 = color
+		label.Text = text
+		label.Parent = panel
+		local stroke = Instance.new("UIStroke")
+		stroke.Thickness = if bold then 1.5 else 1
+		stroke.Parent = label
+	end
+	line(`{exhibitName(item)} · {string.upper(rarity)}`, 0.06, 0.3, Bones.RARITY_COLORS[rarity], true)
+	local grade = if Bones.PieceInfo[item] then Bones.GradeDef(Bones.GradeOf(item)) else nil
+	local gradeText = if grade then ` · {string.upper(grade.name)}` else ` · SET +{math.floor((Bones.SetBonus(item) - 1) * 100 + 0.5)}%`
+	line(`+{Museum.PerSecondText(Bones.IncomeOf(item))} $/s{gradeText}`, 0.37, 0.28, Color3.fromRGB(90, 230, 110), true)
+	line(Bones.FactOf(item), 0.68, 0.24, Color3.fromRGB(245, 236, 215), false)
+	return bb
+end
+
 local function refreshDisplays(plot: Model, museumLayout: { [string]: any }?)
 	for slot = 1, Museum.SLOTS do
 		local base = plot:FindFirstChild("Slot" .. slot)
@@ -104,7 +150,10 @@ local function refreshDisplays(plot: Model, museumLayout: { [string]: any }?)
 				model:PivotTo(model:GetPivot() + Vector3.new(0, lift, 0))
 				model.Parent = base
 			end
-			local rarity = if model then Bones.RarityOf(item :: string) else nil
+			local rarity: Bones.Rarity? = if model then Bones.RarityOf(item :: string) else nil
+			if model and rarity then
+				infoSign(base, item :: string, rarity).Parent = model
+			end
 			local color = if rarity then Bones.RARITY_COLORS[rarity] else EMPTY_GLOW
 			local glow = plot:FindFirstChild("Glow" .. slot)
 			if glow and glow:IsA("BasePart") then
@@ -112,7 +161,7 @@ local function refreshDisplays(plot: Model, museumLayout: { [string]: any }?)
 			end
 			setText(
 				plot:FindFirstChild("Plaque" .. slot),
-				if model then `{exhibitName(item :: string)} · {string.upper(rarity :: string)}` else Museum.EMPTY_PLAQUE
+				if model and rarity then `{exhibitName(item :: string)} · {string.upper(rarity)}` else Museum.EMPTY_PLAQUE
 			)
 		end
 	end
@@ -178,12 +227,12 @@ function actions.assemble(player, _profile, skeletonId)
 	if not Bones.IsSkeletonId(skeletonId) then
 		return false
 	end
-	return InventoryService.Assemble(player, skeletonId)
+	return InventoryService.Assemble(player, skeletonId) ~= nil
 end
 
--- Exposa una peça ("Rat_Skull") o un esquelet muntat ("Rat") a la primera vitrina lliure
+-- Exposa una peça ("Rat_Skull#4") o un esquelet muntat ("Rat#34425") a la primera vitrina lliure
 function actions.display(player, profile, item)
-	if not Bones.IsPieceKey(item) and not Bones.IsSkeletonId(item) then
+	if not Bones.IsPieceKey(item) and not Bones.IsSkeletonItem(item) then
 		return false
 	end
 	local free: string? = nil
@@ -235,7 +284,7 @@ function actions.withdraw(_player, profile, slot)
 	if Bones.IsPieceKey(item) then
 		-- torna igual de bloquejada: exposar-la no la fa comerciable
 		InventoryService.GiveBone(profile, item, wasLocked)
-	elseif Bones.IsSkeletonId(item) then
+	elseif Bones.IsSkeletonItem(item) then
 		InventoryService.GiveSkeleton(profile, item)
 	end
 	return true
@@ -318,15 +367,25 @@ function MuseumService.Start()
 	Remotes.MuseumAction.OnServerEvent:Connect(onAction)
 	Players.PlayerRemoving:Connect(releasePlot)
 
-	-- Renda en línia
+	-- Renda en línia: es cobra cada TICK (1 s) i el client veu pujar les
+	-- monedes cada segon (CoinsUpdate, només el número). El perfil sencer
+	-- (ProfileUpdate) només cada PUSH_EVERY ticks: enviar-lo cada segon faria
+	-- redibuixar la motxilla, el comerç... a tothom sense parar.
 	task.spawn(function()
+		local ticks = 0
 		while true do
 			task.wait(Museum.TICK)
+			ticks += 1
+			local full = ticks % Museum.PUSH_EVERY == 0
 			for _, player in Players:GetPlayers() do
 				local profile = DataService.Get(player)
 				if profile then
 					collect(profile)
-					InventoryService.Push(player)
+					if full then
+						InventoryService.Push(player)
+					else
+						Remotes.CoinsUpdate:FireClient(player, math.floor(profile.coins))
+					end
 				end
 			end
 		end

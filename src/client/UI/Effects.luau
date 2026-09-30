@@ -149,7 +149,7 @@ function Effects.Toast(text: string, color: Color3?, sound: string?)
 		holder.Name = "Holder"
 		holder.BackgroundTransparency = 1
 		holder.AnchorPoint = Vector2.new(0.5, 0)
-		holder.Position = UDim2.new(0.5, 0, 0, 92) -- a sota de l'objectiu del tutorial
+		holder.Position = UDim2.new(0.5, 0, 0, 172) -- a sota de la targeta del tutorial (o de la missió)
 		holder.Size = UDim2.fromOffset(620, 300)
 		holder.Parent = toastGui
 		Theme.AutoScale(holder)
@@ -251,6 +251,53 @@ function Effects.Confetti(parent: GuiObject, count: number?)
 			bit:Destroy()
 		end)
 	end
+end
+
+-- ─────────────────────── FLAIX I SACSEJADA ───────────────────────
+-- Per a les troballes grosses: la pantalla s'encén del color de la raresa
+-- i la càmera tremola una mica. Només al client i només visual.
+
+local flashGui: ScreenGui? = nil
+function Effects.Flash(color: Color3?, strength: number?)
+	if not flashGui then
+		local g = Theme.Screen("FlashGui", 30)
+		g.IgnoreGuiInset = true
+		flashGui = g
+	end
+	local f = Instance.new("Frame")
+	f.BorderSizePixel = 0
+	f.Size = UDim2.fromScale(1, 1)
+	f.BackgroundColor3 = color or Theme.C.white
+	f.BackgroundTransparency = 1 - (strength or 0.55)
+	f.Parent = flashGui
+	tween(f, 0.6, { BackgroundTransparency = 1 })
+	task.delay(0.65, function()
+		f:Destroy()
+	end)
+end
+
+function Effects.ShakeCamera(intensity: number?, duration: number?)
+	local camera = workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	local power = intensity or 0.35
+	local total = duration or 0.45
+	local t0 = os.clock()
+	local name = "FossilShake" .. tostring(t0)
+	RunService:BindToRenderStep(name, Enum.RenderPriority.Camera.Value + 1, function()
+		local k = 1 - (os.clock() - t0) / total
+		if k <= 0 then
+			RunService:UnbindFromRenderStep(name)
+			return
+		end
+		local p = power * k
+		camera.CFrame = camera.CFrame * CFrame.new(
+			(math.random() - 0.5) * p,
+			(math.random() - 0.5) * p,
+			0
+		) * CFrame.Angles(0, 0, (math.random() - 0.5) * p * 0.03)
+	end)
 end
 
 return Effects

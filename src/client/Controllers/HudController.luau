@@ -10,6 +10,7 @@ local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = Shared:WaitForChild("Config")
 local Bones = require(Config:WaitForChild("Bones"))
 local Tools = require(Config:WaitForChild("Tools"))
+local Museum = require(Config:WaitForChild("Museum"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 
@@ -38,6 +39,7 @@ local barButton: TextButton
 local leftColumn: Frame
 local tileButtons: { TextButton } = {}
 local travelMenu: Frame
+local travelButtons: { TextButton } = {}
 local setTravelMenu: (boolean) -> ()
 local rightFrame: Frame
 local incomeCard: Frame
@@ -57,7 +59,7 @@ local lastTravel = 0
 -- Els destins de viatge viuen dins del menú ✈️ Travel: la seva insígnia es
 -- veu al botó del menú i, resumida, a la rajola de Travel (👆 mana sobre "!";
 -- el 🔒 de la platja no cal que surti a fora).
-local TRAVEL_ITEMS = { GoMuseum = true, GoCity = true, GoConstruction = true, GoBeach = true, Shop = true }
+local TRAVEL_ITEMS = { GoMuseum = true, GoCity = true, GoConstruction = true, GoBeach = true, GoEgypt = true, GoGlacier = true, Shop = true }
 local travelBadges: { [string]: { text: string?, color: Color3? } } = {}
 
 local function refreshTravelBadge()
@@ -76,7 +78,11 @@ local function refreshTravelBadge()
 	end
 end
 
-function HudController.SetBadge(name: string, text: string?, color: Color3?)
+-- Rajoles on la guia (tutorial o missió) hi ha posat 👆: les insígnies
+-- automàtiques (comptadors, "!") no les trepitgen fins que la guia les treu.
+local pointed: { [string]: boolean } = {}
+
+local function applyBadge(name: string, text: string?, color: Color3?)
 	local badge = badges[name]
 	if badge then
 		badge.set(text, color)
@@ -84,6 +90,19 @@ function HudController.SetBadge(name: string, text: string?, color: Color3?)
 	if TRAVEL_ITEMS[name] then
 		travelBadges[name] = { text = text, color = color }
 		refreshTravelBadge()
+	end
+end
+
+-- La guia (tutorial i missions): 👆 mana sobre les automàtiques
+function HudController.SetBadge(name: string, text: string?, color: Color3?)
+	pointed[name] = text == "👆"
+	applyBadge(name, text, color)
+end
+
+-- Insígnies automàtiques (comptadors, avisos): no treuen el 👆 de la guia
+function HudController.AutoBadge(name: string, text: string?, color: Color3?)
+	if not pointed[name] then
+		applyBadge(name, text, color)
 	end
 end
 
@@ -133,7 +152,7 @@ local function buildLeft(gui: ScreenGui)
 		Size = UDim2.fromOffset(232, 70),
 		Position = UDim2.fromOffset(0, 0),
 	}, C.panel, 35)
-	coinIcon = Theme.Icon(coinPill, "💰", {
+	coinIcon = Theme.Icon(coinPill, "$", {
 		Size = UDim2.fromOffset(62, 62),
 		Position = UDim2.fromOffset(6, 4),
 		ZIndex = 3,
@@ -146,7 +165,7 @@ local function buildLeft(gui: ScreenGui)
 		StrokeThickness = 3.5,
 		ZIndex = 3,
 	})
-	rateLabel = Theme.Text(leftColumn, "+0/min", {
+	rateLabel = Theme.Text(leftColumn, "+0 $/s", {
 		Size = UDim2.fromOffset(200, 26),
 		Position = UDim2.fromOffset(22, 74),
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -191,7 +210,8 @@ local function buildLeft(gui: ScreenGui)
 	travelMenu = Instance.new("Frame")
 	travelMenu.Name = "TravelMenu"
 	travelMenu.BackgroundTransparency = 1
-	travelMenu.Size = UDim2.fromOffset(5 * TILE + 4 * GAP, TILE)
+	-- la mida i on va cada rajola ho posa layout() (una fila o dues)
+	travelMenu.Size = UDim2.fromOffset(7 * TILE + 6 * GAP, TILE)
 	travelMenu.Visible = false
 	travelMenu.ZIndex = 5
 	travelMenu.Parent = leftColumn
@@ -200,6 +220,10 @@ local function buildLeft(gui: ScreenGui)
 		{ id = "GoCity", text = "Plaza", icon = "⛲", color = C.green, dest = "city", msg = "✈️ Off to the plaza!" },
 		{ id = "GoConstruction", text = "Dig Site", icon = "🏗️", color = C.yellow, dest = "construction", msg = "✈️ Off to the dig site!" },
 		{ id = "GoBeach", text = "Beach", icon = "🏖️", color = C.cyan, dest = "beach", msg = "✈️ Off to the beach!" },
+		-- Egipte és una illa: només s'hi arriba volant (no hi ha camí)
+		{ id = "GoEgypt", text = "Egypt", icon = "PYRAMIDS", color = C.orange, dest = "egypt", msg = "✈️ Flying to Egypt!" },
+		-- la glacera, igual: molt lluny, a l'oest, només volant
+		{ id = "GoGlacier", text = "Glacier", icon = "🏔️", color = C.cyan, dest = "glacier", msg = "✈️ Flying to the Ice Age Glacier! Brrr!" },
 		{ id = "Shop", text = "Tool Shop", icon = "🛠️", color = C.red, dest = "shop", msg = "✈️ Off to Dig & Co.!" },
 	}
 	for i, t in items do
@@ -218,6 +242,7 @@ local function buildLeft(gui: ScreenGui)
 				travel(t.dest, t.msg)
 			end,
 		})
+		travelButtons[i] = b.button
 		badges[t.id] = Widgets.Badge(b.button, 34)
 	end
 end
@@ -279,7 +304,7 @@ local function buildRight(gui: ScreenGui)
 		Size = UDim2.new(1, -28, 0, 70),
 		Position = UDim2.fromOffset(14, 46),
 	}, C.white, 14)
-	incomeBig = Theme.Text(inner, "+0/min", {
+	incomeBig = Theme.Text(inner, "+0 $/s", {
 		Size = UDim2.new(1, -20, 1, -14),
 		Position = UDim2.fromOffset(10, 7),
 		TextColor3 = C.green,
@@ -368,6 +393,13 @@ local function layout(s: number)
 	-- el menú de viatges: a la dreta de les rajoles, a l'altura de la de
 	-- Travel (ordinador), o just a sota de la fila (mòbil)
 	local travelTile = tileButtons[#tileButtons]
+	-- al mòbil, els destins en dues files de 3 (sis en fila no hi caben)
+	local perRow = if compact then 3 else #travelButtons
+	for i, b in travelButtons do
+		b.Position = UDim2.fromOffset(((i - 1) % perRow) * (TILE + GAP), math.floor((i - 1) / perRow) * (TILE + GAP))
+	end
+	local travelRows = math.ceil(#travelButtons / perRow)
+	travelMenu.Size = UDim2.fromOffset(perRow * TILE + (perRow - 1) * GAP, travelRows * TILE + (travelRows - 1) * GAP)
 	if compact then
 		travelMenu.Position = UDim2.fromOffset(0, 108 + rows * (TILE + GAP))
 	else
@@ -398,21 +430,64 @@ end
 
 -- ─────────────────────────── REFRESC ───────────────────────────
 
-local function refresh(snapshot: ProfileController.Snapshot)
-	-- Monedes: compten cap amunt i salta un "+N"
-	if lastCoins and snapshot.coins > lastCoins then
-		local gain = snapshot.coins - lastCoins
-		Effects.Float(leftColumn, "+" .. Theme.Short(gain) .. " 💰", C.yellow, UDim2.fromOffset(170, 20), 130)
-		Effects.Pop(coinIcon, 0.3)
-		Theme.Play("pop", 0.3, 1.3)
+-- Fites de diners: en passar-ne una, festa. Només les noves d'aquesta
+-- partida (la primera instantània fixa on ets i no es celebra).
+local MILESTONES: { { at: number, text: string } } = {
+	{ at = 1e3, text = "Your first 1K $!" },
+	{ at = 1e4, text = "10K $! Nice!" },
+	{ at = 1e5, text = "100K $! You're rich!" },
+	{ at = 1e6, text = "💎 MILLIONAIRE! 1M $" },
+	{ at = 1e7, text = "💎 10M $! Big shot!" },
+	{ at = 1e8, text = "👑 100M $! Tycoon!" },
+	{ at = 1e9, text = "👑 BILLIONAIRE! 1B $" },
+	{ at = 1e10, text = "🌟 10B $! LEGEND!" },
+	{ at = 1e11, text = "🌟 100B $! UNSTOPPABLE!" },
+	{ at = 1e12, text = "🚀 TRILLIONAIRE!" },
+}
+local milestoneReached = 0 -- índex de l'última fita passada
+
+local function checkMilestones(coins: number, first: boolean)
+	local reached = milestoneReached
+	for i, m in MILESTONES do
+		if coins >= m.at then
+			reached = i
+		end
 	end
-	lastCoins = snapshot.coins
-	Effects.Tween(coinValue, 0.6, { Value = snapshot.coins })
+	if not first and reached > milestoneReached then
+		local m = MILESTONES[reached]
+		task.delay(0.3, function()
+			Effects.Toast(`🎉 {m.text}`, C.gold, "")
+			Theme.Fanfare(2)
+			Effects.Confetti(leftColumn, 90)
+			Effects.Pop(coinIcon, 0.8)
+		end)
+	end
+	milestoneReached = math.max(milestoneReached, reached)
+end
+
+-- Monedes: compten cap amunt i salta un "+N $". `passive` = la renda del
+-- museu de cada segon: sense so (si no, sonaria un "pop" cada segon).
+local function showCoins(coins: number, passive: boolean?)
+	checkMilestones(coins, lastCoins == nil)
+	if lastCoins and coins > lastCoins then
+		local gain = coins - lastCoins
+		Effects.Float(leftColumn, "+" .. Theme.Short(gain) .. " $", C.green, UDim2.fromOffset(170, 20), 130)
+		Effects.Pop(coinIcon, if passive then 0.12 else 0.3)
+		if not passive then
+			Theme.Play("pop", 0.3, 1.3)
+		end
+	end
+	lastCoins = coins
+	Effects.Tween(coinValue, if passive then 0.9 else 0.6, { Value = coins })
+end
+
+local function refresh(snapshot: ProfileController.Snapshot)
+	showCoins(snapshot.coins)
 
 	local money = (snapshot :: any).money or 1
 	local rate = snapshot.rate * money
-	rateLabel.Text = `+{Theme.Short(rate)}/min`
-	incomeBig.Text = `+{Theme.Short(rate)}/min`
+	rateLabel.Text = `+{Museum.PerSecondText(rate)} $/s`
+	incomeBig.Text = `+{Museum.PerSecondText(rate)} $/s`
 	local used = 0
 	for slot = 1, snapshot.slots do
 		if snapshot.museum[tostring(slot)] then
@@ -420,8 +495,8 @@ local function refresh(snapshot: ProfileController.Snapshot)
 		end
 	end
 	incomeSmall.Text = if money > 1
-		then `{used}/{snapshot.slots} cases · 💰 x{string.format("%g", math.floor(money * 10 + 0.5) / 10)} money`
-		else `{used}/{snapshot.slots} cases · max {Theme.Short(snapshot.cap)}/min`
+		then `{used}/{snapshot.slots} cases · $ x{string.format("%g", math.floor(money * 10 + 0.5) / 10)} money`
+		else `{used}/{snapshot.slots} cases on display`
 
 	-- Fòssils nous des de l'últim cop que es va obrir la motxilla
 	local total = 0
@@ -454,18 +529,22 @@ local function refresh(snapshot: ProfileController.Snapshot)
 		end
 	end
 	local haveItems = total > 0 or next(snapshot.skeletons) ~= nil
-	HudController.SetBadge("Backpack", if canAssemble then "🔨" elseif newBones > 0 then tostring(math.min(newBones, 99)) else nil, if canAssemble then C.gold else nil)
-	HudController.SetBadge("Index", if newDiscoveries > 0 then "NEW" else nil, C.purple)
-	HudController.SetBadge("Museum", if haveItems and used < snapshot.slots then "!" else nil)
-	HudController.SetBadge("GoBeach", if Zones.IsUnlocked(snapshot.zones, "beach") then nil else "🔒", C.grey)
+	HudController.AutoBadge("Backpack", if canAssemble then "🔨" elseif newBones > 0 then tostring(math.min(newBones, 99)) else nil, if canAssemble then C.gold else nil)
+	HudController.AutoBadge("Index", if newDiscoveries > 0 then "NEW" else nil, C.purple)
+	HudController.AutoBadge("Museum", if haveItems and used < snapshot.slots then "!" else nil)
+	HudController.AutoBadge("GoBeach", if Zones.IsUnlocked(snapshot.zones, "beach") then nil else "🔒", C.grey)
+	HudController.AutoBadge("GoEgypt", if Zones.IsUnlocked(snapshot.zones, "egypt") then nil else "🔒", C.grey)
+	HudController.AutoBadge("GoGlacier", if Zones.IsUnlocked(snapshot.zones, "glacier") then nil else "🔒", C.grey)
 	-- botiga: "!" si pots pagar una eina que encara no tens
 	local canBuy = false
 	for _, def in Tools.LIST do
-		if def.price > 0 and snapshot.coins >= def.price and not table.find(snapshot.tools or {}, def.id) then
+		-- (les d'Egipte, només si Egipte és obert: es compren a l'illa)
+		local reachable = not def.zone or Zones.IsUnlocked(snapshot.zones, def.zone)
+		if reachable and def.price > 0 and snapshot.coins >= def.price and not table.find(snapshot.tools or {}, def.id) then
 			canBuy = true
 		end
 	end
-	HudController.SetBadge("Shop", if canBuy then "!" else nil, C.green)
+	HudController.AutoBadge("Shop", if canBuy then "!" else nil, C.green)
 
 	-- Barra de baix: progrés de l'índex i les rareses que ja has vist
 	Widgets.Clear(pipRow)
@@ -544,7 +623,7 @@ local function showWelcomeBack(data: any)
 		TextColor3 = C.cream,
 		ZIndex = 3,
 	})
-	local amount = Theme.Text(card, `+{Theme.Short(tonumber(data.coins) or 0)} 💰`, {
+	local amount = Theme.Text(card, `+{Theme.Short(tonumber(data.coins) or 0)} $`, {
 		Size = UDim2.new(1, -60, 0, 78),
 		Position = UDim2.fromOffset(30, 114),
 		TextColor3 = C.yellow,
@@ -563,29 +642,32 @@ local function showWelcomeBack(data: any)
 	})
 
 	local closed = false
+	local function collectNow()
+		if closed then
+			return
+		end
+		closed = true
+		Effects.Confetti(holder, 50)
+		Effects.Pop(coinIcon, 0.5)
+		Effects.Tween(Effects.ScaleOf(card), 0.25, { Scale = 0 }, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+		task.delay(0.9, function()
+			gui:Destroy()
+		end)
+	end
 	local collect = Widgets.Button({
 		Parent = card,
 		Size = UDim2.fromOffset(260, 70),
 		AnchorPoint = Vector2.new(0.5, 1),
 		Position = UDim2.new(0.5, 0, 1, -22),
 		Color = C.green,
-		Icon = "💰",
+		Icon = "$",
 		Text = "COLLECT!",
 		Sound = "reward",
 		ZIndex = 3,
-		OnClick = function()
-			if closed then
-				return
-			end
-			closed = true
-			Effects.Confetti(holder, 50)
-			Effects.Pop(coinIcon, 0.5)
-			Effects.Tween(Effects.ScaleOf(card), 0.25, { Scale = 0 }, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-			task.delay(0.9, function()
-				gui:Destroy()
-			end)
-		end,
+		OnClick = collectNow,
 	})
+	-- les monedes ja són teves: tancar-la també les cobra
+	Widgets.CloseButton({ Parent = card, OnClick = collectNow })
 	Effects.Shine(collect.button, 14, 1.2)
 	Effects.PopIn(card, 0.5)
 	Effects.Pop(amount, 0.3)
@@ -629,6 +711,12 @@ function HudController.Start()
 	end)
 
 	ProfileController.Changed:Connect(refresh)
+	ProfileController.CoinsChanged:Connect(function(coins: number)
+		if lastCoins and coins > lastCoins then
+			Theme.CoinTick()
+		end
+		showCoins(coins, true)
+	end)
 	-- Capa per al confeti de les compres
 	local fx = Instance.new("Frame")
 	fx.Name = "Fx"
@@ -643,12 +731,43 @@ function HudController.Start()
 		if data.kind == "offline" then
 			-- Espera que la pantalla hagi carregat abans de celebrar-ho
 			task.delay(1.5, showWelcomeBack, data)
+		elseif data.kind == "event" then
+			-- munt daurat: tothom ho sap i hi corre
+			Effects.Toast(tostring(data.message), C.gold, "")
+			Theme.Fanfare(1)
+			Theme.Note("sparkle", 0.6, 1)
+			Effects.Confetti(fx, 40)
+		elseif data.kind == "announce" and data.userId ~= game:GetService("Players").LocalPlayer.UserId then
+			-- algú del servidor ha trobat una cosa grossa
+			local color = Bones.RARITY_COLORS[data.rarity] or C.purple
+			Effects.Toast(`📣 {tostring(data.message)}`, color, "")
+			if data.rarity == "Secret" then
+				Theme.Fanfare(2)
+				Effects.Flash(C.white, 0.35)
+			else
+				Theme.Note("notify", 0.5, 1.2)
+			end
 		elseif data.kind == "shop" then
 			if data.ok then
-				Effects.Toast((data.icon or "🎉") .. " " .. tostring(data.message), C.green, "reward")
-				Effects.Confetti(fx, 60)
+				-- la festa que toca (ho diu el servidor): diners, fanfàrria o gran
+				local kind = data.fx
+				Effects.Toast((data.icon or "🎉") .. " " .. tostring(data.message), C.green, if kind then "" else "reward") -- ("": sense so, ja sona la festa)
+				if kind == "cash" then
+					Theme.Cash(tonumber(data.amount))
+					Effects.Confetti(fx, 40)
+					Effects.Pop(coinIcon, 0.5)
+				elseif kind == "big" then
+					Theme.Fanfare(2)
+					Effects.Confetti(fx, 140)
+					Effects.Flash(C.yellow, 0.35)
+				elseif kind == "fanfare" then
+					Theme.Fanfare(1)
+					Effects.Confetti(fx, 80)
+				else
+					Effects.Confetti(fx, 60)
+				end
 			else
-				Effects.Toast((data.icon or "💰") .. " " .. tostring(data.message), C.red, "error")
+				Effects.Toast((data.icon or "$") .. " " .. tostring(data.message), C.red, "error")
 			end
 		end
 	end)

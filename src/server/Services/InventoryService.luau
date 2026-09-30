@@ -65,7 +65,7 @@ function InventoryService.AddBone(player: Player, key: string, n: number?, locke
 	if locked then
 		profile.lockedBones[key] = (profile.lockedBones[key] or 0) + amount
 	end
-	profile.discovered[key] = true
+	profile.discovered[Bones.BaseOf(key)] = true
 	profile.stats.totalBones += amount
 	return true
 end
@@ -78,7 +78,7 @@ function InventoryService.MoveBones(from: Profile, to: Profile, offer: { [string
 	for key, n in offer do
 		take(from.ownedBones, key, n)
 		to.ownedBones[key] = (to.ownedBones[key] or 0) + n
-		to.discovered[key] = true -- el que et donen també compta per a l'índex
+		to.discovered[Bones.BaseOf(key)] = true -- el que et donen també compta per a l'índex
 	end
 end
 
@@ -115,18 +115,23 @@ end
 
 -- ────────────────────────── ESQUELETS ──────────────────────────
 
--- Gasta una peca de cada i suma un esquelet muntat. O tot o res.
-function InventoryService.Assemble(player: Player, skeletonId: string): boolean
+-- Gasta una peça de cada (la de MILLOR estat que tingui) i suma un esquelet
+-- muntat amb aquests estats. O tot o res. Torna l'esquelet ("Rat#34425").
+function InventoryService.Assemble(player: Player, skeletonId: string): string?
 	local profile = DataService.Get(player)
-	if not profile or not Bones.CanAssemble(profile.ownedBones, skeletonId) then
-		return false
+	local chosen = profile and Bones.BestPieces(profile.ownedBones, skeletonId)
+	if not profile or not chosen then
+		return nil
 	end
-	for _, piece in Bones.PIECES do
-		InventoryService.TakeBone(profile, Bones.PieceKey(skeletonId, piece.id))
+	local grades = {}
+	for i, item in chosen do
+		InventoryService.TakeBone(profile, item)
+		grades[i] = Bones.GradeOf(item)
 	end
-	profile.ownedSkeletons[skeletonId] = (profile.ownedSkeletons[skeletonId] or 0) + 1
+	local skeleton = Bones.SkeletonItem(skeletonId, grades)
+	profile.ownedSkeletons[skeleton] = (profile.ownedSkeletons[skeleton] or 0) + 1
 	profile.stats.totalAssembled += 1
-	return true
+	return skeleton
 end
 
 function InventoryService.TakeSkeleton(profile: Profile, skeletonId: string): boolean
@@ -158,7 +163,6 @@ function InventoryService.Push(player: Player)
 		skeletons = profile.ownedSkeletons,
 		museum = profile.museumLayout,
 		rate = Museum.IncomeRate(profile.museumLayout),
-		cap = Museum.INCOME_CAP,
 		slots = Museum.SLOTS,
 		zones = profile.unlockedZones,
 		discovered = profile.discovered,
@@ -170,6 +174,8 @@ function InventoryService.Push(player: Player)
 		money = Monetization.MoneyMultiplier(profile.gamepasses, profile.boostUntil),
 		boostLeft = math.max(0, profile.boostUntil - os.time()),
 		luckBoostLeft = math.max(0, profile.luckBoostUntil - os.time()),
+		hasteLeft = math.max(0, profile.digBoostUntil - os.time()),
+		potions = profile.potions,
 		persisted = DataService.IsPersisted(player),
 	})
 	InventoryService.Pushed:Fire(player, profile)
@@ -179,7 +185,7 @@ function InventoryService.Init()
 	DataService.ProfileLoaded:Connect(function(player: Player, profile: Profile)
 		-- perfils d'abans de l'índex: el que tens ja està descobert
 		for key in profile.ownedBones do
-			profile.discovered[key] = true
+			profile.discovered[Bones.BaseOf(key)] = true
 		end
 		-- Mai més bloquejades que les que hi ha (si alguna cosa s'ha
 		-- desquadrat, guanya el jugador: sobren bloquejos, no peces).
@@ -193,7 +199,7 @@ function InventoryService.Init()
 		end
 		for slot, item in profile.museumLayout do
 			if Bones.IsPieceKey(item) then
-				profile.discovered[item] = true
+				profile.discovered[Bones.BaseOf(item)] = true
 			end
 		end
 		InventoryService.Push(player)

@@ -25,6 +25,7 @@ local Bones = require(Config:WaitForChild("Bones"))
 local Constants = require(Config:WaitForChild("Constants"))
 local Dig = require(Config:WaitForChild("Dig"))
 local Tools = require(Config:WaitForChild("Tools"))
+local Museum = require(Config:WaitForChild("Museum"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local Logger = require(Shared:WaitForChild("Util"):WaitForChild("Logger"))
@@ -33,6 +34,8 @@ local RateLimiter = require(Shared:WaitForChild("Util"):WaitForChild("RateLimite
 local DataService = require(script.Parent.DataService)
 local InventoryService = require(script.Parent.InventoryService)
 local ToolService = require(script.Parent.ToolService)
+local PotionService = require(script.Parent.PotionService)
+local Potions = require(Config:WaitForChild("Potions"))
 local Monetization = require(Config:WaitForChild("Monetization"))
 
 local log = Logger.new("DigService")
@@ -44,12 +47,14 @@ type Session = {
 	spot: BasePart,
 	zone: string,
 	toolLuck: number, -- de l'eina equipada en començar (no canvia a mitges)
+	trowelLuck: number, -- només la de la paleta: decideix l'estat del fòssil (Bones > ESTAT)
 	startTime: number, -- quan surt la línia de l'intent actual (temps del servidor)
 	center: number, -- on és la franja verda de l'intent actual
 	speed: number,
 	attempts: number,
 	total: number,
 	lastClick: number,
+	golden: boolean, -- era un munt daurat quan va començar
 }
 
 local sessions: { [Player]: Session } = {}
@@ -71,7 +76,8 @@ local function rollPiece(zoneId: string, bonus: number, toolLuck: number): strin
 	if not byRarity then
 		return nil
 	end
-	local weights = Dig.RarityChances(Dig.LuckMultiplier(bonus, toolLuck), byRarity)
+	local zone = Zones.ById[zoneId]
+	local weights = Dig.RarityChances(Dig.LuckMultiplier(bonus, toolLuck), byRarity, zone and zone.rareHardness)
 	local total = 0
 	for _, w in weights do
 		total += w
@@ -107,6 +113,12 @@ end
 -- Un munt excavat s'encongeix i queda buit Dig.RESPAWN_TIME segons. L'estat
 -- es un atribut del munt (EmptyUntil, en temps del servidor): el veuen tots
 -- els clients, pero nomes el servidor el canvia.
+
+-- Munt daurat (esdeveniment): atribut Golden = fins quan (temps del servidor)
+local function isGolden(spot: BasePart): boolean
+	local untilTime = spot:GetAttribute("Golden")
+	return type(untilTime) == "number" and workspace:GetServerTimeNow() < untilTime
+end
 
 local function isDepleted(spot: BasePart): boolean
 	local untilTime = spot:GetAttribute("EmptyUntil")
@@ -180,25 +192,42 @@ local function finish(player: Player)
 	if not profile then
 		return
 	end
-	local key = rollPiece(session.zone, session.total, session.toolLuck)
+	local base = rollPiece(session.zone, session.total, session.toolLuck)
+	-- l'estat: com més rara la peça, més malmesa; com millor la paleta, més neta
+	local grade = if base then Bones.RollGrade(Bones.PieceInfo[base].rarity, session.trowelLuck, rng) else nil
+	local key = if base and grade then Bones.PieceItem(base, grade) else nil
 	profile.stats.totalDigs += 1
 	-- Renda activa: monedes per cada excavació, més com millor ho fas
 	local zone = Zones.ById[session.zone]
 	local coins = if zone then Dig.CoinsFor(zone.coinsPerDig, session.total) else 0
-	coins = math.floor(coins * Monetization.MoneyMultiplier(profile.gamepasses, profile.boostUntil))
+	coins = math.floor(coins * Monetization.MoneyMultiplier(profile.gamepasses, profile.boostUntil) * (if session.golden then Dig.GOLDEN_COINS else 1))
 	profile.coins += coins
-	local isNew = key ~= nil and not profile.discovered[key]
+	local isNew = base ~= nil and not profile.discovered[base]
 	local stored = key ~= nil and InventoryService.AddBone(player, key)
 	if stored and key then
 		-- per a les missions "troba un fòssil X" (només compta el que s'excava)
 		local r = Bones.PieceInfo[key].rarity
 		profile.stats.rarityFinds[r] = (profile.stats.rarityFinds[r] or 0) + 1
 	end
+	-- de tant en tant, una poció de regal (i sempre, al munt daurat)
+	local potion = PotionService.RollDrop(player)
+	if session.golden and PotionService.Give(player, Dig.GOLDEN_POTION, 1) then
+		potion = Dig.GOLDEN_POTION
+	end
 	InventoryService.Push(player)
 
 	local text, rarity = nil, nil
 	if key then
 		text, rarity = Bones.Describe(key)
+	end
+	-- una troballa grossa s'anuncia a tot el servidor
+	if rarity == "Legendary" or rarity == "Mythic" or rarity == "Secret" then
+		Remotes.Notify:FireAllClients({
+			kind = "announce",
+			rarity = rarity,
+			userId = player.UserId, -- (qui l'ha trobat ja té la seva carta: no li cal l'avís)
+			message = `{player.DisplayName} found a {if grade then Bones.GradeDef(grade).name .. " " else ""}{string.upper(rarity :: string)} fossil: {text}!`,
+		})
 	end
 	Remotes.DigUpdate:FireClient(player, {
 		phase = "result",
@@ -209,7 +238,9 @@ local function finish(player: Player)
 		coins = coins,
 		luck = Dig.LuckMultiplier(session.total, session.toolLuck),
 		new = isNew,
+		grade = grade,
 		stored = stored and DataService.IsPersisted(player),
+		potion = potion,
 	})
 end
 
@@ -237,7 +268,9 @@ local function onStart(player: Player, spot: any)
 	end
 	local now = os.clock()
 	local tool = Tools.Get(profile.equippedTool)
-	local cooldown = Constants.DIG_COOLDOWN * (if profile.gamepasses.fastDig then Monetization.FAST_DIG_MULT else 1)
+	local cooldown = Constants.DIG_COOLDOWN
+		* (if profile.gamepasses.fastDig then Monetization.FAST_DIG_MULT else 1)
+		* (if profile.digBoostUntil > os.time() then Potions.HASTE_MULT else 1)
 	if lastDig[player] and now - lastDig[player] < cooldown then
 		return
 	end
@@ -251,7 +284,7 @@ local function onStart(player: Player, spot: any)
 	end
 	if not Zones.IsUnlocked(profile.unlockedZones, zoneId :: string) then
 		local zone = Zones.ById[zoneId :: string]
-		deny(player, `{zone.name} is locked · unlock it at the beach gate ({zone.unlockCost} coins)`)
+		deny(player, `{zone.name} is locked · unlock it {zone.unlockAt or "at its gate"} ({Museum.MoneyText(zone.unlockCost)} $)`)
 		return
 	end
 	if isDepleted(spot) then
@@ -266,17 +299,27 @@ local function onStart(player: Player, spot: any)
 
 	lastDig[player] = now
 	nextSessionId += 1
+	-- el munt daurat és d'un sol ús: el primer que el cava se l'emporta
+	local golden = isGolden(spot)
+	if golden then
+		spot:SetAttribute("Golden", nil)
+	end
 	local session: Session = {
 		id = nextSessionId,
 		spot = spot,
 		zone = zoneId :: string,
-		toolLuck = tool.luck * Monetization.LuckMultiplier(profile.gamepasses) * (if profile.luckBoostUntil > os.time() then 2 else 1),
+		trowelLuck = tool.luck,
+		toolLuck = tool.luck
+			* Monetization.LuckMultiplier(profile.gamepasses)
+			* (if profile.luckBoostUntil > os.time() then 2 else 1)
+			* (if golden then Dig.GOLDEN_LUCK else 1),
 		startTime = workspace:GetServerTimeNow(),
 		center = rng:NextNumber(-Dig.BAND_CENTER_MAX, Dig.BAND_CENTER_MAX),
 		speed = Dig.SpeedFor(1),
 		attempts = 0,
 		total = 0,
 		lastClick = 0,
+		golden = golden,
 	}
 	sessions[player] = session
 	Remotes.DigUpdate:FireClient(player, {
@@ -387,7 +430,7 @@ function DigService.Start()
 			local created = Instance.new("ProximityPrompt")
 			created.Name = "DigPrompt"
 			created.ActionText = "Dig"
-			created.ObjectText = if spot:GetAttribute("Zone") == "beach" then "Sand mound" else "Dirt mound"
+			created.ObjectText = if spot:GetAttribute("Zone") == "construction" then "Dirt mound" else "Sand mound"
 			created.KeyboardKeyCode = Enum.KeyCode.E
 			created.GamepadKeyCode = Enum.KeyCode.ButtonX
 			created.HoldDuration = 0
@@ -404,6 +447,38 @@ function DigService.Start()
 	if missing > 0 then
 		log:Warn(`{missing} munts DigSpot sense atribut Zone: torna a construir el mon`)
 	end
+
+	-- Esdeveniment del munt daurat: cada estona, un munt ple a l'atzar
+	task.spawn(function()
+		while true do
+			task.wait(rng:NextNumber(Dig.GOLDEN_EVERY[1], Dig.GOLDEN_EVERY[2]))
+			if #Players:GetPlayers() == 0 then
+				continue
+			end
+			local candidates = {}
+			for _, spot in CollectionService:GetTagged("DigSpot") do
+				if spot:IsA("BasePart") and Zones.IsZoneId(spot:GetAttribute("Zone")) and not isDepleted(spot) and not isGolden(spot) then
+					table.insert(candidates, spot)
+				end
+			end
+			if #candidates > 0 then
+				local spot = candidates[rng:NextInteger(1, #candidates)]
+				local untilTime = workspace:GetServerTimeNow() + Dig.GOLDEN_TIME
+				spot:SetAttribute("Golden", untilTime)
+				local zone = Zones.ById[spot:GetAttribute("Zone") :: string]
+				Remotes.Notify:FireAllClients({
+					kind = "event",
+					message = `⭐ A GOLDEN MOUND appeared at {zone.name}! x{Dig.GOLDEN_LUCK} luck for whoever digs it first!`,
+					zone = zone.id,
+				})
+				task.delay(Dig.GOLDEN_TIME, function()
+					if spot:GetAttribute("Golden") == untilTime then
+						spot:SetAttribute("Golden", nil)
+					end
+				end)
+			end
+		end
+	end)
 end
 
 return DigService

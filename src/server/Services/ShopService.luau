@@ -25,6 +25,7 @@ local Config = Shared:WaitForChild("Config")
 local Bones = require(Config:WaitForChild("Bones"))
 local Tools = require(Config:WaitForChild("Tools"))
 local Monetization = require(Config:WaitForChild("Monetization"))
+local Museum = require(Config:WaitForChild("Museum"))
 local Zones = require(Config:WaitForChild("Zones"))
 local Remotes = require(Shared:WaitForChild("Remotes"))
 local Util = Shared:WaitForChild("Util")
@@ -46,8 +47,9 @@ local standOf: { [string]: BasePart } = {} -- toolId -> el seu sòcol
 local sellerSpots: { BasePart } = {} -- on és la parada del Fossil Buyer
 local SELL_DISTANCE = 24
 
-local function reply(player: Player, ok: boolean, message: string, icon: string?)
-	Remotes.Notify:FireClient(player, { kind = "shop", ok = ok, message = message, icon = icon })
+-- `fx`: la festa que fa el client ("cash" amb `amount`, "fanfare", "big")
+local function reply(player: Player, ok: boolean, message: string, icon: string?, fx: string?, amount: number?)
+	Remotes.Notify:FireClient(player, { kind = "shop", ok = ok, message = message, icon = icon, fx = fx, amount = amount })
 end
 
 local function near(player: Player, part: BasePart): boolean
@@ -73,8 +75,14 @@ local function buyOrEquip(player: Player, toolId: string)
 		end
 		return
 	end
+	-- les paletes d'Egipte demanen tenir Egipte obert
+	if def.zone and not Zones.IsUnlocked(profile.unlockedZones, def.zone) then
+		local zone = Zones.ById[def.zone]
+		reply(player, false, `Unlock {if zone then zone.name else def.zone} first!`, "🔒")
+		return
+	end
 	if profile.coins < def.price then
-		reply(player, false, `You need {math.ceil(def.price - profile.coins)} more coins`)
+		reply(player, false, `You need {Museum.MoneyText(math.ceil(def.price - profile.coins))} more $`)
 		return
 	end
 	-- a partir d'aquí, cap yield: o es fa tot o no es fa res
@@ -83,7 +91,7 @@ local function buyOrEquip(player: Player, toolId: string)
 	profile.equippedTool = def.id
 	ToolService.RefreshShovel(player)
 	InventoryService.Push(player)
-	reply(player, true, `{def.name} unlocked!`)
+	reply(player, true, `{def.name} unlocked! {Tools.LuckText(def.luck)} luck`, "⛏️", "fanfare")
 	log:Info(`{player.Name} ha comprat {def.id}`)
 	task.spawn(DataService.Save, player)
 end
@@ -98,14 +106,20 @@ local function unlockZone(player: Player, zoneId: string)
 		reply(player, true, `{zone.name} is already open`)
 		return
 	end
+	-- les zones van per ordre: Egipte demana la platja
+	if zone.requires and not Zones.IsUnlocked(profile.unlockedZones, zone.requires) then
+		local before = Zones.ById[zone.requires]
+		reply(player, false, `Unlock {before.name} first!`, "🔒")
+		return
+	end
 	if profile.coins < zone.unlockCost then
-		reply(player, false, `You need {math.ceil(zone.unlockCost - profile.coins)} more coins`)
+		reply(player, false, `You need {Museum.MoneyText(math.ceil(zone.unlockCost - profile.coins))} more $`)
 		return
 	end
 	profile.coins -= zone.unlockCost
 	table.insert(profile.unlockedZones, zone.id)
 	InventoryService.Push(player)
-	reply(player, true, `{zone.name} is open! Go dig there`)
+	reply(player, true, `{zone.name} is open! Go dig there`, "🎉", "big")
 	log:Info(`{player.Name} ha obert {zone.id}`)
 	task.spawn(DataService.Save, player)
 end
@@ -142,9 +156,22 @@ local function sell(player: Player, action: any, payload: any)
 		end
 		plan[payload] = 1
 	elseif action == "dupes" or action == "all" then
+		-- repetits: de cada peça es queda UNA, la de millor estat (Bones > ESTAT)
+		local keep: { [string]: string } = {}
+		if action == "dupes" then
+			for key, n in profile.ownedBones do
+				if Bones.IsPieceKey(key) and type(n) == "number" and n > 0 then
+					local base = Bones.BaseOf(key)
+					local best = keep[base]
+					if not best or Bones.GradeOf(key) > Bones.GradeOf(best) then
+						keep[base] = key
+					end
+				end
+			end
+		end
 		for key, n in profile.ownedBones do
 			if Bones.IsPieceKey(key) and type(n) == "number" and n > 0 then
-				local amount = if action == "dupes" then n - 1 else n
+				local amount = if keep[Bones.BaseOf(key)] == key then n - 1 else n
 				if amount > 0 then
 					plan[key] = math.floor(amount)
 				end
@@ -171,7 +198,7 @@ local function sell(player: Player, action: any, payload: any)
 	profile.coins += coins
 	profile.stats.totalSold += sold
 	InventoryService.Push(player)
-	reply(player, true, if sold == 1 then `Sold for {coins} coins!` else `Sold {sold} fossils for {coins} coins!`, "💰")
+	reply(player, true, if sold == 1 then `Sold for {coins} coins!` else `Sold {sold} fossils for {coins} coins!`, "$", "cash", coins)
 	log:Info(`{player.Name} ha venut {sold} fòssils per {coins}`)
 	task.spawn(DataService.Save, player)
 end
@@ -298,7 +325,7 @@ local function setupZoneUnlock(part: BasePart)
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "UnlockZone"
 	prompt.ObjectText = zone.name
-	prompt.ActionText = `Unlock · {zone.unlockCost} 💰`
+	prompt.ActionText = `Unlock · {Museum.MoneyText(zone.unlockCost)} $`
 	prompt.KeyboardKeyCode = Enum.KeyCode.E
 	prompt.HoldDuration = 0.5
 	prompt.MaxActivationDistance = 12

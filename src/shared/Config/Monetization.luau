@@ -48,7 +48,7 @@ local PASSES: { Pass } = {
 	{ key = "luck8", id = 0, name = "x8 Luck", icon = "☘️", price = 29, group = "luck", luck = 8, requires = "luck4", desc = "x8 luck!" },
 	{ key = "luck16", id = 0, name = "x16 Luck", icon = "🌈", price = 59, group = "luck", luck = 16, requires = "luck8", desc = "x16 luck!" },
 	{ key = "luck32", id = 0, name = "x32 Luck", icon = "🌟", price = 99, group = "luck", luck = 32, requires = "luck16", desc = "x32 luck! The MAX." },
-	{ key = "money2", id = 0, name = "x2 Money", icon = "💰", price = 99, group = "money", money = 2, desc = "Double ALL coins: museum, digging and selling." },
+	{ key = "money2", id = 0, name = "x2 Money", icon = "$", price = 99, group = "money", money = 2, desc = "Double ALL coins: museum, digging and selling." },
 	{ key = "money4", id = 0, name = "x4 Money", icon = "💸", price = 129, group = "money", money = 4, requires = "money2", desc = "x4 ALL coins!" },
 	{ key = "money8", id = 0, name = "x8 Money", icon = "🤑", price = 179, group = "money", money = 8, requires = "money4", desc = "x8 ALL coins! The MAX." },
 	-- Boosts i comoditat
@@ -65,8 +65,8 @@ Monetization.PASSES = PASSES
 local PRODUCTS: { Product } = {
 	{ key = "boost15", id = 0, name = "x2 Money · 15 min", icon = "⏱️", price = 29, boostMinutes = 15, desc = "Double coins for 15 minutes. Stacks time!" },
 	{ key = "boost60", id = 0, name = "x2 Money · 1 hour", icon = "⏱️", price = 79, boostMinutes = 60, desc = "Double coins for a whole hour!" },
-	{ key = "coinsS", id = 0, name = "Pile of Coins", icon = "💰", price = 25, coinsMinutes = 30, desc = "30 minutes of your museum income, right now." },
-	{ key = "coinsM", id = 0, name = "Bag of Coins", icon = "💰", price = 99, coinsMinutes = 150, desc = "150 minutes of your museum income, right now." },
+	{ key = "coinsS", id = 0, name = "Pile of Coins", icon = "$", price = 25, coinsMinutes = 30, desc = "30 minutes of your museum income, right now." },
+	{ key = "coinsM", id = 0, name = "Bag of Coins", icon = "$", price = 99, coinsMinutes = 150, desc = "150 minutes of your museum income, right now." },
 	{ key = "coinsL", id = 0, name = "Vault of Coins", icon = "🏦", price = 399, coinsMinutes = 720, desc = "12 HOURS of your museum income, right now!" },
 }
 Monetization.PRODUCTS = PRODUCTS
@@ -77,7 +77,7 @@ Monetization.FAST_DIG_MULT = 0.5 -- el temps entre excavacions es multiplica per
 Monetization.OFFLINE_MULT = 2
 Monetization.OFFLINE_LONG_HOURS = 24
 Monetization.SELL_MULT = 2
-Monetization.COINS_MIN_RATE = 20 -- un paquet de monedes compta almenys aquesta renda/min
+Monetization.COINS_MIN_RATE = 1200 -- un paquet de monedes compta almenys aquesta renda/min
 
 -- ─────────────────────────── DERIVATS ───────────────────────────
 Monetization.PassByKey = {} :: { [string]: Pass }

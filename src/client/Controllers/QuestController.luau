@@ -13,6 +13,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared:WaitForChild("Remotes"))
+local Zones = require(Shared:WaitForChild("Config"):WaitForChild("Zones"))
 
 local UI = script.Parent.Parent:WaitForChild("UI")
 local Theme = require(UI:WaitForChild("Theme"))
@@ -20,6 +21,7 @@ local Effects = require(UI:WaitForChild("Effects"))
 local Guide = require(UI:WaitForChild("Guide"))
 local Widgets = require(UI:WaitForChild("Widgets"))
 local HudController = require(script.Parent.HudController)
+local ProfileController = require(script.Parent.ProfileController)
 local TutorialController = require(script.Parent.TutorialController)
 
 local C = Theme.C
@@ -29,6 +31,8 @@ local QuestController = {}
 
 -- rajoles del HUD que es marquen quan la missió es fa des d'una finestra
 local HUD_TILE: { [string]: string } = { backpack = "Backpack", trade = "Trade", store = "Store" }
+-- el botó del menú Travel de cada zona on només s'arriba volant
+local FLY_TILE: { [string]: string } = { egypt = "GoEgypt", glacier = "GoGlacier" }
 
 local state: any = nil
 local holder: Frame
@@ -40,12 +44,16 @@ local rewardLabel: TextLabel
 local claimButton: Widgets.Button
 local markedTile: string? = nil
 local lastClaim = 0
+-- el raig i la fletxa de la missió: es poden apagar (es desa a la configuració)
+local guideOn = true
+local guideSynced = false -- ja s'ha llegit del perfil
+local guideButton: Widgets.Button
 
+-- Es torna a posar a cada volta de guide() (cada mig segon): el HUD reescriu
+-- les insígnies de Backpack i Trade cada cop que canvia el perfil, i si només
+-- es posés quan canvia la rajola, el 👆 desapareixeria al primer refresc.
 local function setTile(name: string?)
-	if markedTile == name then
-		return
-	end
-	if markedTile then
+	if markedTile and markedTile ~= name then
 		HudController.SetBadge(markedTile, nil)
 	end
 	markedTile = name
@@ -56,15 +64,24 @@ end
 
 -- Cap on s'ha d'anar per fer la missió en curs
 local function guide()
-	if not state or state.done or not holder.Visible then
+	if not state or state.done or not holder.Visible or not guideOn then
 		Guide.Clear("quest")
 		setTile(nil)
 		return
 	end
 	local go = state.go
-	if go == "construction" or go == "beach" then
-		Guide.PointAt("quest", Guide.ZoneTarget(go))
-		setTile(nil)
+	if Zones.IsZoneId(go) then
+		local target = Guide.ZoneTarget(go)
+		local def = Zones.ById[go]
+		if def and def.flyOnly and target and not Guide.Near(target, 400) then
+			-- Egipte i la glacera són lluny de tot: el raig no hi arriba
+			-- caminant, s'hi va volant (es marca el botó del viatge)
+			Guide.Clear("quest")
+			setTile(FLY_TILE[go] or "Travel")
+		else
+			Guide.PointAt("quest", target)
+			setTile(nil)
+		end
 	elseif go == "shop" then
 		Guide.PointAt("quest", Guide.Keeper("TalkShopkeeper") or Guide.TravelPoint("shop"))
 		setTile(nil)
@@ -88,7 +105,7 @@ local function redraw(previous: any?)
 	label.Text = `📜 {state.text}`
 	local target = math.max(1, tonumber(state.target) or 1)
 	local progress = math.clamp(tonumber(state.progress) or 0, 0, target)
-	bar.set(progress / target, if state.done then "✅ DONE!" else "", `{progress}/{target}`, if state.done then C.green else C.gold)
+	bar.set(progress / target, if state.done then "✅ DONE!" else "", if type(state.progressText) == "string" then state.progressText else `{progress}/{target}`, if state.done then C.green else C.gold)
 	rewardLabel.Text = tostring(state.reward or "")
 	claimButton.button.Visible = state.done == true
 	rewardLabel.Visible = not state.done
@@ -163,6 +180,48 @@ function QuestController.Start()
 	claimButton.button.Visible = false
 	Effects.Shine(claimButton.button, 14, 1.2)
 	Effects.Pulse(claimButton.button, 0.06, 0.9)
+
+	-- Interruptor de la guia: penja de sota la targeta, ben visible, amb el
+	-- mateix estil de botó que la resta (verd = ON, gris = OFF)
+	local function paintGuide()
+		local b = guideButton
+		b.button.BackgroundColor3 = if guideOn then C.green else C.grey
+		if b.label then
+			b.label.Text = if guideOn then "GUIDE: ON" else "GUIDE: OFF"
+		end
+	end
+	guideButton = Widgets.Button({
+		Parent = holder,
+		Size = UDim2.fromOffset(168, 40),
+		AnchorPoint = Vector2.new(0, 0),
+		Position = UDim2.new(0, 16, 1, 6),
+		Color = C.green,
+		Icon = "🧭",
+		Text = "GUIDE: ON",
+		Radius = 20,
+		OnClick = function()
+			guideOn = not guideOn
+			guideSynced = true
+			paintGuide()
+			Effects.Toast(if guideOn then "🧭 Quest guide ON: follow the golden beam!" else "🧭 Quest guide OFF", C.cyan, "")
+			Remotes.SettingsRequest:FireServer({ questGuide = guideOn })
+			guide()
+		end,
+	})
+	paintGuide()
+	-- el valor desat al perfil (un cop, quan arriba)
+	local function syncGuide()
+		local snapshot = ProfileController.Get()
+		local settings = snapshot and snapshot.settings
+		if not guideSynced and settings and settings.questGuide ~= nil then
+			guideSynced = true
+			guideOn = settings.questGuide ~= false
+			paintGuide()
+			guide()
+		end
+	end
+	ProfileController.Changed:Connect(syncGuide)
+	syncGuide()
 
 	Remotes.QuestUpdate.OnClientEvent:Connect(function(data: any)
 		if type(data) ~= "table" then

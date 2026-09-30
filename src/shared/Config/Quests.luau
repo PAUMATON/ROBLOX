@@ -27,18 +27,18 @@ export type Quest = {
 	delta: boolean, -- true: compta des que comença · false: valor actual
 	reward: { kind: string, minutes: number, label: string, icon: string },
 	-- on s'ha d'anar (el client hi apunta amb el raig de llum o la rajola):
-	-- "construction" | "beach" | "shop" | "seller" | "backpack" | "trade" | "store"
+	-- "construction" | "beach" | "egypt" | "glacier" | "shop" | "seller" | "backpack" | "trade" | "store"
 	go: string?,
 }
 
 local function coins(minutes: number)
-	return { kind = "coins", minutes = minutes, label = "Coins", icon = "💰" }
+	return { kind = "coins", minutes = minutes, label = "Coins", icon = "$" }
 end
 local function luck(minutes: number)
 	return { kind = "luck", minutes = minutes, label = `x2 Luck {minutes}m`, icon = "🍀" }
 end
 local function money(minutes: number)
-	return { kind = "money", minutes = minutes, label = `x2 Money {minutes}m`, icon = "💰" }
+	return { kind = "money", minutes = minutes, label = `x2 Money {minutes}m`, icon = "$" }
 end
 
 -- La cadena: ensenya el joc pas a pas (el tutorial fa els 3 primers passos
@@ -47,25 +47,28 @@ local CHAIN: { Quest } = {
 	{ text = "Dig 5 fossils", stat = "digs", target = 5, delta = true, reward = coins(5), go = "construction" },
 	{ text = "Show 2 fossils in your museum", stat = "displayed", target = 2, delta = false, reward = coins(5), go = "backpack" },
 	{ text = "Find an Uncommon fossil", stat = "finds", arg = "Uncommon", target = 1, delta = true, reward = coins(8), go = "construction" },
-	{ text = "Sell 3 fossils to Bonnie", stat = "sold", target = 3, delta = true, reward = coins(8), go = "seller" },
 	{ text = "Buy a better trowel at Dig & Co.", stat = "tools", target = 2, delta = false, reward = luck(10), go = "shop" },
 	{ text = "Dig 25 fossils", stat = "digs", target = 25, delta = true, reward = coins(12), go = "construction" },
 	{ text = "Fill 5 museum cases", stat = "displayed", target = 5, delta = false, reward = coins(12), go = "backpack" },
 	{ text = "Find a Rare fossil", stat = "finds", arg = "Rare", target = 1, delta = true, reward = coins(15), go = "construction" },
 	{ text = "Discover 12 different fossils", stat = "discovered", target = 12, delta = false, reward = money(15), go = "construction" },
 	{ text = "Build your first full skeleton", stat = "built", target = 1, delta = false, reward = coins(20), go = "backpack" },
-	{ text = "Make your museum earn 40/min", stat = "income", target = 40, delta = false, reward = coins(20), go = "backpack" },
-	{ text = "Trade with another player", stat = "trades", target = 1, delta = true, reward = luck(15), go = "trade" },
+	{ text = `Make your museum earn {Museum.PerSecondText(2400)} $/s`, stat = "income", target = 2400, delta = false, reward = coins(20), go = "backpack" },
 	{ text = "Dig 75 fossils", stat = "digs", target = 75, delta = true, reward = coins(25), go = "construction" },
+	-- (abans anava 12a: arribava abans de la mitja hora que cal per comerciar
+	-- i la cadena s'hi quedava aturada)
+	{ text = "Trade with another player", stat = "trades", target = 1, delta = true, reward = luck(15), go = "trade" },
 	{ text = "Fill all 10 museum cases", stat = "displayed", target = 10, delta = false, reward = coins(25), go = "backpack" },
 	{ text = "Find an Epic fossil", stat = "finds", arg = "Epic", target = 1, delta = true, reward = coins(30), go = "construction" },
 	{ text = "Buy the Pro Trowel", stat = "tools", target = 3, delta = false, reward = luck(20), go = "shop" },
 	{ text = "Discover 25 different fossils", stat = "discovered", target = 25, delta = false, reward = money(20), go = "construction" },
 	{ text = "Build 3 full skeletons", stat = "built", target = 3, delta = false, reward = coins(40), go = "backpack" },
 	{ text = "Unlock Fossil Beach", stat = "zones", target = 2, delta = false, reward = coins(40), go = "beach" },
-	{ text = "Make your museum earn 200/min", stat = "income", target = 200, delta = false, reward = coins(45), go = "backpack" },
+	{ text = `Make your museum earn {Museum.PerSecondText(12000)} $/s`, stat = "income", target = 12000, delta = false, reward = coins(45), go = "backpack" },
 	{ text = "Find a Legendary fossil", stat = "finds", arg = "Legendary", target = 1, delta = true, reward = luck(30), go = "construction" },
-	{ text = "Sell 50 fossils to Bonnie", stat = "sold", target = 50, delta = true, reward = coins(50), go = "seller" },
+	{ text = "Fly to Egypt and unlock it", stat = "zones", target = 3, delta = false, reward = luck(30), go = "egypt" },
+	{ text = "Find a Mythic fossil", stat = "finds", arg = "Mythic", target = 1, delta = true, reward = money(40), go = "construction" },
+	{ text = "Fly to the Ice Age Glacier and unlock it", stat = "zones", target = 4, delta = false, reward = luck(45), go = "glacier" },
 	{ text = "Discover every fossil in the Index", stat = "discovered", target = #Bones.ALL_KEYS, delta = false, reward = money(60), go = "construction" },
 }
 Quests.CHAIN = CHAIN
@@ -74,7 +77,7 @@ Quests.CHAIN = CHAIN
 local ENDLESS: { Quest } = {
 	{ text = "Dig 100 fossils", stat = "digs", target = 100, delta = true, reward = coins(30), go = "construction" },
 	{ text = "Find an Epic fossil", stat = "finds", arg = "Epic", target = 1, delta = true, reward = luck(15), go = "construction" },
-	{ text = "Sell 30 fossils to Bonnie", stat = "sold", target = 30, delta = true, reward = coins(25), go = "seller" },
+	{ text = "Build a full skeleton", stat = "built", target = 1, delta = true, reward = coins(40), go = "backpack" },
 	{ text = "Find a Legendary fossil", stat = "finds", arg = "Legendary", target = 1, delta = true, reward = money(30), go = "construction" },
 }
 
@@ -129,7 +132,7 @@ function Quests.Value(profile: any, quest: Quest): number
 	elseif stat == "discovered" then
 		local n = 0
 		for key in profile.discovered or {} do
-			if Bones.IsPieceKey(key) then
+			if Bones.IsBaseKey(key) then
 				n += 1
 			end
 		end

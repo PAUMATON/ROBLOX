@@ -16,7 +16,8 @@
 -- Al mapa, cada munt excavable porta l'etiqueta "DigSpot" i l'atribut
 -- `Zone` amb l'id d'aqui sota. El servidor nomes es fia d'aquest atribut.
 --
--- FORA D'ABAST: tercera zona. N'hi ha dues i prou.
+-- Tres zones (29/09/2026: el propietari va afegir Egipte). Egipte és una
+-- illa lluny de tot: només s'hi arriba amb el botó ✈️ Travel.
 
 local Bones = require(script.Parent.Bones)
 
@@ -32,6 +33,17 @@ export type ZoneDef = {
 	-- ACTIVA; la del museu és la PASSIVA.
 	coinsPerDig: number,
 	skeletons: { string },
+	-- Cal tenir aquesta zona oberta abans de poder obrir aquesta
+	requires: string?,
+	-- On es desbloqueja (per al missatge "is locked · unlock it ...")
+	unlockAt: string?,
+	icon: string, -- per a la UI (menú Travel, índex)
+	-- Només s'hi arriba volant (✈️ Travel): la guia de missions no hi pot
+	-- apuntar caminant i marca el botó del viatge
+	flyOnly: boolean?,
+	-- Mythic i Secret són aquestes vegades més difícils aquí que a la zona 1
+	-- (Bones.ZONE_HARD_FROM). Com més lluny la zona, més alt. nil = 1.
+	rareHardness: number?,
 }
 
 Zones.DEFAULT = "construction" -- ha de coincidir amb ProfileSchema.unlockedZones
@@ -42,7 +54,8 @@ local LIST: { ZoneDef } = {
 		name = "Construction Site",
 		number = 1,
 		unlockCost = 0,
-		coinsPerDig = 3,
+		coinsPerDig = 270,
+		icon = "🏗️",
 		-- una raresa per esquelet: Common → Secret
 		skeletons = { "Rat", "Pigeon", "Cat", "Dog", "Dodo", "Sabertooth", "TRex" },
 	},
@@ -50,14 +63,46 @@ local LIST: { ZoneDef } = {
 		id = "beach",
 		name = "Fossil Beach",
 		number = 2,
-		unlockCost = 25000,
-		coinsPerDig = 8,
+		unlockCost = 320000,
+		coinsPerDig = 720,
+		icon = "🏖️",
+		unlockAt = "at the beach gate",
+		rareHardness = 1.5,
 		skeletons = { "Seagull", "Otter", "Cormorant" },
+	},
+	{
+		id = "egypt",
+		name = "Egypt",
+		number = 3,
+		unlockCost = 3200000,
+		coinsPerDig = 3600,
+		icon = "🐫",
+		requires = "beach",
+		unlockAt = "at the Egypt gate (fly there with ✈️ Travel)",
+		rareHardness = 2, -- el Crocodile (Mythic): 1 de cada 4.000
+		flyOnly = true,
+		-- zona alta: no hi ha Common ni Uncommon; la més "comuna" és Rare
+		skeletons = { "Ibis", "Jackal", "Camel", "Crocodile" },
+	},
+	{
+		-- 30/09/2026: glacera de l'Edat de Gel, com Egipte: lluny de tot, només
+		-- en avió, gel i neu fins a l'horitzó (tools/world/12_glacier.luau)
+		id = "glacier",
+		name = "Ice Age Glacier",
+		number = 4,
+		unlockCost = 25000000,
+		coinsPerDig = 12000,
+		icon = "🏔️",
+		requires = "egypt",
+		unlockAt = "at the Glacier gate (fly there with ✈️ Travel)",
+		rareHardness = 2.5, -- el Mammoth (Mythic): 1 de cada 5.000
+		flyOnly = true,
+		skeletons = { "ArcticHare", "DireWolf", "GiantDeer", "WoollyRhino", "Mammoth" },
 	},
 }
 Zones.LIST = LIST
 
-Zones.MAX_ZONES = 2
+Zones.MAX_ZONES = 4 -- 30/09/2026: la glacera (decisió del propietari)
 
 -- ────────────────────────── DERIVATS ──────────────────────────
 
@@ -83,12 +128,17 @@ do
 			end
 			local rarity = Bones.ById[skeletonId].rarity
 			byRarity[rarity] = byRarity[rarity] or {}
-			for _, piece in Bones.PIECES do
+			for _, piece in Bones.PiecesOf(skeletonId) do
 				table.insert(byRarity[rarity], Bones.PieceKey(skeletonId, piece.id))
 			end
 			local list = Zones.OfSkeleton[skeletonId] or {}
 			table.insert(list, zone.id)
 			Zones.OfSkeleton[skeletonId] = list
+		end
+	end
+	for _, zone in Zones.LIST do
+		if zone.requires and not Zones.ById[zone.requires] then
+			error(`[Zones] {zone.id} demana {zone.requires}, que no existeix`, 0)
 		end
 	end
 	if not Zones.ById[Zones.DEFAULT] then

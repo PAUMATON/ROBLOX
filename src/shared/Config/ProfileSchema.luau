@@ -15,10 +15,12 @@
 -- ha guardat la versio nova. Per aixo la migracio treballa SOBRE la taula que
 -- arriba en comptes de fer-ne una de nova.
 
+local Bones = require(script.Parent.Bones)
+
 local ProfileSchema = {}
 
 -- Puja aquest numero i afegeix el pas corresponent a STEPS.
-ProfileSchema.VERSION = 2
+ProfileSchema.VERSION = 4
 
 -- ─────────────────────────── TIPUS ───────────────────────────
 
@@ -30,6 +32,7 @@ export type Settings = {
 	lowGraphics: boolean, -- sense efectes de llum ni partícules (mòbils fluixos)
 	allowTrades: boolean, -- si altres jugadors et poden demanar trades
 	quickRewards: boolean, -- la targeta del premi dura menys
+	questGuide: boolean, -- el raig i la fletxa de la missió (es poden apagar)
 }
 
 export type Stats = {
@@ -59,23 +62,25 @@ export type TradeLogEntry = {
 export type Profile = {
 	schemaVersion: number,
 	coins: number,
-	ownedBones: { [string]: number }, -- id de peça -> quantitat (la motxilla)
+	ownedBones: { [string]: number }, -- peça amb estat ("Rat_Skull#4") -> quantitat (la motxilla)
 	-- Quantes de les de la motxilla són de recompensa i no es poden
 	-- comerciar. Sempre <= ownedBones[clau] (InventoryService ho manté).
 	lockedBones: { [string]: number },
 	discovered: { [string]: boolean }, -- peces trobades algun cop (l'índex)
-	ownedSkeletons: { [string]: number }, -- id d'esquelet -> muntats sense exposar
+	ownedSkeletons: { [string]: number }, -- esquelet amb estats ("Rat#34425") -> muntats sense exposar
 	ownedTools: { string },
 	equippedTool: string,
 	unlockedZones: { string },
-	museumLayout: { [string]: any }, -- vitrina ("1".."6") -> id d'esquelet
+	museumLayout: { [string]: any }, -- vitrina ("1".."10") -> peça o esquelet (amb estat)
 	-- Vitrines on hi ha una peça de recompensa: en treure-la, torna a la
 	-- motxilla igual de bloquejada (si no, exposar-la la "rentaria").
 	museumLocked: { [string]: boolean },
 	tradeLog: { TradeLogEntry }, -- els últims canvis, el més nou primer
 	-- Missió en curs (Config/Quests): número i, per a les que compten des
 	-- que comencen, el valor del perfil en començar-la (nil = encara no fixat)
-	quests: { index: number, base: number? },
+	-- `baseFor` = el text de la missió de la qual és la base (si la cadena
+	-- canvia d'ordre, una base d'una altra missió no val)
+	quests: { index: number, base: number?, baseFor: string? },
 	lastOnline: number,
 	-- Fins quan s'ha cobrat la renda del museu. NO es lastOnline: aquest el
 	-- reescriu DataService en carregar, i la renda offline necessita saber
@@ -83,7 +88,9 @@ export type Profile = {
 	lastIncomeAt: number,
 	gamepasses: { [string]: boolean }, -- clau (Config/Monetization) -> true
 	boostUntil: number, -- x2 de diners fins aquest os.time() (producte o recompensa)
-	luckBoostUntil: number, -- x2 de sort fins aquest os.time() (recompensa)
+	luckBoostUntil: number, -- x2 de sort fins aquest os.time() (recompensa o poció)
+	digBoostUntil: number, -- excavar el doble de sovint fins aquest os.time() (poció haste)
+	potions: { [string]: number }, -- poció (Config/Potions) -> quantes en té
 	daily: { lastDay: number, streak: number }, -- recompensa diària (Config/Rewards)
 	invites: { count: number, rewarded: { [string]: boolean } }, -- amics convidats
 	settings: Settings,
@@ -140,6 +147,9 @@ local SETTINGS_FIELDS: Spec = {
 	quickRewards = { kind = "boolean", default = function()
 		return false
 	end },
+	questGuide = { kind = "boolean", default = function()
+		return true
+	end },
 }
 
 local STATS_FIELDS: Spec = {
@@ -178,7 +188,7 @@ local PROFILE_FIELDS: Spec = {
 		return ProfileSchema.VERSION
 	end },
 	coins = { kind = "number", default = function()
-		return 100
+		return 6000
 	end },
 	ownedBones = { kind = "table", default = emptyTable },
 	lockedBones = { kind = "table", default = emptyTable },
@@ -215,6 +225,10 @@ local PROFILE_FIELDS: Spec = {
 	luckBoostUntil = { kind = "number", default = function()
 		return 0
 	end },
+	digBoostUntil = { kind = "number", default = function()
+		return 0
+	end },
+	potions = { kind = "table", default = emptyTable },
 	daily = {
 		kind = "table",
 		default = function()
@@ -273,6 +287,54 @@ local STEPS: { [number]: (any) -> () } = {
 		if type(stats) == "table" and type(stats.playSeconds) ~= "number" then
 			local digs = if type(stats.totalDigs) == "number" then stats.totalDigs else 0
 			stats.playSeconds = digs * 6
+		end
+	end,
+	-- v2 -> v3: tots els diners del joc x60 (renda per segon en lloc de per
+	-- minut). Les monedes que ja tenies també, perquè valguin el mateix.
+	[2] = function(profile: any)
+		if type(profile.coins) == "number" then
+			profile.coins *= 60
+		end
+	end,
+	-- v3 -> v4: els fòssils tenen estat (Bones > ESTAT). Tot el que ja tenies
+	-- passa a Dusty (x1): rendeix el mateix que abans (els esquelets, una mica
+	-- més pel bonus de conjunt). "discovered" es queda amb les claus de base.
+	[3] = function(profile: any)
+		local function rekey(counts: any, isPiece: boolean)
+			if type(counts) ~= "table" then
+				return
+			end
+			local moved = {}
+			for key in counts do
+				if type(key) == "string" and not string.find(key, "#", 1, true) then
+					local target = if isPiece and Bones.IsBaseKey(key)
+						then Bones.PieceItem(key, Bones.DEFAULT_GRADE)
+						elseif not isPiece and Bones.IsSkeletonId(key)
+						then Bones.SkeletonItem(key, Bones.GradesOf(key))
+						else nil
+					if target then
+						moved[key] = target
+					end
+				end
+			end
+			for old, new in moved do
+				counts[new] = (counts[new] or 0) + counts[old]
+				counts[old] = nil
+			end
+		end
+		rekey(profile.ownedBones, true)
+		rekey(profile.lockedBones, true)
+		rekey(profile.ownedSkeletons, false)
+		if type(profile.museumLayout) == "table" then
+			for slot, item in profile.museumLayout do
+				if type(item) == "string" and not string.find(item, "#", 1, true) then
+					if Bones.IsBaseKey(item) then
+						profile.museumLayout[slot] = Bones.PieceItem(item, Bones.DEFAULT_GRADE)
+					elseif Bones.IsSkeletonId(item) then
+						profile.museumLayout[slot] = Bones.SkeletonItem(item, Bones.GradesOf(item))
+					end
+				end
+			end
 		end
 	end,
 }

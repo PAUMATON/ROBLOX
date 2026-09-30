@@ -23,7 +23,6 @@ export type Snapshot = {
 	skeletons: { [string]: number },
 	museum: { [string]: string },
 	rate: number,
-	cap: number,
 	slots: number,
 	zones: { string },
 	discovered: { [string]: boolean },
@@ -31,6 +30,8 @@ export type Snapshot = {
 	equippedTool: string,
 	digs: number,
 	persisted: boolean,
+	potions: { [string]: number }?, -- poció -> quantes (Config/Potions)
+	hasteLeft: number?, -- segons de poció haste que queden (quan es va enviar)
 	settings: {
 		musicVolume: number,
 		sfxVolume: number,
@@ -39,12 +40,15 @@ export type Snapshot = {
 		lowGraphics: boolean?,
 		allowTrades: boolean?,
 		quickRewards: boolean?,
+		questGuide: boolean?,
 	}?,
 }
 
 local ProfileController = {}
 
 ProfileController.Changed = Signal.new() -- (snapshot)
+-- Només les monedes (renda del museu, cada segon): no redibuixa res més
+ProfileController.CoinsChanged = Signal.new() -- (coins)
 
 local current: Snapshot? = nil
 
@@ -60,6 +64,14 @@ function ProfileController.Init()
 		end
 		current = data :: Snapshot
 		ProfileController.Changed:Fire(current)
+	end)
+	Remotes.CoinsUpdate.OnClientEvent:Connect(function(coins: any)
+		local snapshot = current
+		if not snapshot or type(coins) ~= "number" then
+			return
+		end
+		snapshot.coins = coins
+		ProfileController.CoinsChanged:Fire(coins)
 	end)
 end
 
