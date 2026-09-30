@@ -54,21 +54,27 @@ def skeleton_value(rarity, grades):
 PIECES = ["Skull", "Spine", "ForeLimbs", "HindLimbs", "Tail", "Ribs", "Pelvis", "Extra"]
 # quantes peces té cada esquelet (Bones.luau: `pieces`)
 PIECES_OF = {"Rat": 5, "Pigeon": 5, "Cat": 6, "Dog": 6, "Dodo": 7, "Sabertooth": 8, "TRex": 8,
-             "Seagull": 5, "Otter": 6, "Cormorant": 7, "Ibis": 6, "Jackal": 7, "Camel": 7, "Crocodile": 8}
-MAX_LUCK = 20  # la millor paleta (sense passis de Robux)
+             "Seagull": 5, "Otter": 6, "Cormorant": 7, "Ibis": 6, "Jackal": 7, "Camel": 7, "Crocodile": 8,
+             "ArcticHare": 6, "DireWolf": 7, "GiantDeer": 7, "WoollyRhino": 7, "Mammoth": 8}
+MAX_LUCK = 32  # la millor paleta (sense passis de Robux): la Mammoth Tusk de la glacera
 ZONES = {
     "construction": {"cost": 0, "coins": 270, "sk": {"Rat": "Common", "Pigeon": "Uncommon", "Cat": "Rare", "Dog": "Epic",
                                                    "Dodo": "Legendary", "Sabertooth": "Mythic", "TRex": "Secret"}},
     "beach": {"cost": 320000, "coins": 720, "sk": {"Seagull": "Uncommon", "Otter": "Rare", "Cormorant": "Epic"}},
     # illa (només en avió), demana la platja
     "egypt": {"cost": 3200000, "coins": 3600, "sk": {"Ibis": "Rare", "Jackal": "Epic", "Camel": "Legendary", "Crocodile": "Mythic"}},
+    # glacera (només en avió), demana Egipte
+    "glacier": {"cost": 25000000, "coins": 12000, "sk": {"ArcticHare": "Rare", "DireWolf": "Epic", "GiantDeer": "Legendary",
+                                                       "WoollyRhino": "Legendary", "Mammoth": "Mythic"}},
 }
 # (id, preu, sort, zona que cal tenir oberta)
 TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 9000, 1.5, None), ("bronze_trowel", 33000, 2, None),
          ("field_pickaxe", 80000, 3, None), ("pro_brush", 240000, 4, None), ("emerald_trowel", 650000, 5.5, None),
          ("golden_shovel", 1700000, 7, None), ("sonic_drill", 4200000, 9, None),
          ("scarab_trowel", 10000000, 12, "egypt"), ("anubis_trowel", 22000000, 15, "egypt"),
-         ("pharaoh_trowel", 45000000, 20, "egypt")]
+         ("pharaoh_trowel", 45000000, 20, "egypt"),
+         ("frost_trowel", 110000000, 24, "glacier"), ("aurora_trowel", 240000000, 28, "glacier"),
+         ("mammoth_trowel", 500000000, 32, "glacier")]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
 SLOTS, INCOME_CAP = 10, float("inf")  # 30/09/2026: sense sostre (decisió del propietari)
@@ -91,7 +97,7 @@ def luck_of(bonus, tool_luck):
 
 ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 25, "Legendary": 300, "Mythic": 2000, "Secret": 20000}
 ZONE_HARD_FROM = "Mythic"  # Zones.rareHardness multiplica la N d'aquí cap amunt
-HARDNESS = {"construction": 1, "beach": 1.5, "egypt": 2}
+HARDNESS = {"construction": 1, "beach": 1.5, "egypt": 2, "glacier": 2.5}
 
 
 def roll(zone, luck):
@@ -194,10 +200,16 @@ def play(max_minutes=2400):
             coins -= ZONES["egypt"]["cost"]
             zones.append("egypt")
             events.setdefault("obre Egipte", t)
+        elif "egypt" in zones and "glacier" not in zones and coins >= ZONES["glacier"]["cost"]:
+            coins -= ZONES["glacier"]["cost"]
+            zones.append("glacier")
+            events.setdefault("obre la Glacera", t)
         # alterna zona: la platja no té Common però tampoc Legendary+;
         # a Egipte (Rare → Mythic) hi va sobretot, però el T-Rex és a l'obra
         r = random.random()
-        if "egypt" in zones:
+        if "glacier" in zones:
+            zone = "glacier" if r < 0.6 else ("egypt" if r < 0.8 else "construction")
+        elif "egypt" in zones:
             zone = "egypt" if r < 0.6 else ("construction" if r < 0.85 else "beach")
         else:
             zone = "beach" if ("beach" in zones and r < 0.35) else "construction"

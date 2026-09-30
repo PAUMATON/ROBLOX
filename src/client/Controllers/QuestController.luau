@@ -31,6 +31,8 @@ local QuestController = {}
 
 -- rajoles del HUD que es marquen quan la missió es fa des d'una finestra
 local HUD_TILE: { [string]: string } = { backpack = "Backpack", trade = "Trade", store = "Store" }
+-- el botó del menú Travel de cada zona on només s'arriba volant
+local FLY_TILE: { [string]: string } = { egypt = "GoEgypt", glacier = "GoGlacier" }
 
 local state: any = nil
 local holder: Frame
@@ -70,10 +72,12 @@ local function guide()
 	local go = state.go
 	if Zones.IsZoneId(go) then
 		local target = Guide.ZoneTarget(go)
-		if go == "egypt" and target and not Guide.Near(target, 400) then
-			-- Egipte és una illa: el raig no hi arriba caminant, s'hi va volant
+		local def = Zones.ById[go]
+		if def and def.flyOnly and target and not Guide.Near(target, 400) then
+			-- Egipte i la glacera són lluny de tot: el raig no hi arriba
+			-- caminant, s'hi va volant (es marca el botó del viatge)
 			Guide.Clear("quest")
-			setTile("GoEgypt")
+			setTile(FLY_TILE[go] or "Travel")
 		else
 			Guide.PointAt("quest", target)
 			setTile(nil)

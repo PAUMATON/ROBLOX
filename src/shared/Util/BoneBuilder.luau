@@ -206,6 +206,45 @@ function mammal.Skull(m, sk)
 			ellip(m, "Fang", V(0.13 * s, 0.1 * s, (mid - root).Magnitude * 1.15), along(root, mid), TOOTH)
 			ellip(m, "FangTip", V(0.09 * s, 0.07 * s, (tip - mid).Magnitude * 1.3), along(mid, tip), TOOTH)
 		end
+		-- ullals de mamut: surten de la mandíbula de dalt, baixen, s'obren
+		-- enfora i es corben cap amunt (la forma de "lira")
+		if sk.tusks then
+			local t = sk.tusks
+			local root = V(sgn * 0.16 * s, -0.16 * s, z0 + L * 0.45)
+			curve(m, {
+				root,
+				root + V(sgn * 0.12 * t * s, -0.45 * t * s, 0.4 * t * s),
+				root + V(sgn * 0.34 * t * s, -0.62 * t * s, 0.95 * t * s),
+				root + V(sgn * 0.42 * t * s, -0.38 * t * s, 1.45 * t * s),
+				root + V(sgn * 0.3 * t * s, 0.05 * t * s, 1.75 * t * s),
+			}, 0.16 * s, 0.55)
+		end
+		-- banyes de cérvol gegant (Megaloceros): tija que puja enfora i una
+		-- pala ampla amb puntes
+		if sk.antlers then
+			local a = sk.antlers
+			local base = V(sgn * 0.2 * s, 0.3 * s, -0.12 * s)
+			local elbow = base + V(sgn * 0.45 * a * s, 0.3 * a * s, -0.1 * a * s)
+			local tipOut = elbow + V(sgn * 0.7 * a * s, 0.2 * a * s, -0.25 * a * s)
+			curve(m, { base, elbow, tipOut }, 0.1 * s, 0.3)
+			ellip(m, "AntlerPalm", V(0.9 * a * s, 0.07 * s, 0.55 * a * s), CFrame.new((elbow + tipOut) / 2 + V(0, 0.08 * s, 0)) * CFrame.Angles(0, 0, math.rad(sgn * 12)))
+			for k = 0, 3 do
+				local p = elbow:Lerp(tipOut, 0.2 + k * 0.26)
+				curve(m, { p, p + V(sgn * 0.05 * s, 0.32 * a * s, (k - 1.5) * 0.1 * a * s) }, 0.06 * s, 0.6)
+			end
+			-- una punta cap endavant, sobre els ulls
+			curve(m, { base + V(0, 0.05 * s, 0.05 * s), base + V(sgn * 0.1 * s, 0.25 * a * s, 0.3 * a * s) }, 0.06 * s, 0.6)
+		end
+	end
+	-- banyes de rinoceront llanut: una de grossa sobre el morro, corbada
+	-- endavant, i una de petita darrere (a la vida eren de queratina; aquí,
+	-- perquè es vegi que és un rinoceront)
+	if sk.horn then
+		local h = sk.horn
+		local nose = V(0, 0.1 * s, z0 + L * 0.8)
+		curve(m, { nose, nose + V(0, 0.45 * h * s, 0.12 * h * s), nose + V(0, 0.8 * h * s, 0.35 * h * s) }, 0.24 * s, 0.85)
+		local back = V(0, 0.16 * s, z0 + L * 0.25)
+		curve(m, { back, back + V(0, 0.3 * h * s, 0.06 * h * s) }, 0.16 * s, 0.8)
 	end
 	if not Bones.HasPiece(sk, "Jaw") then
 		mammal.Jaw(m, sk)

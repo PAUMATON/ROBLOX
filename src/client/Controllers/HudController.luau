@@ -59,7 +59,7 @@ local lastTravel = 0
 -- Els destins de viatge viuen dins del menú ✈️ Travel: la seva insígnia es
 -- veu al botó del menú i, resumida, a la rajola de Travel (👆 mana sobre "!";
 -- el 🔒 de la platja no cal que surti a fora).
-local TRAVEL_ITEMS = { GoMuseum = true, GoCity = true, GoConstruction = true, GoBeach = true, GoEgypt = true, Shop = true }
+local TRAVEL_ITEMS = { GoMuseum = true, GoCity = true, GoConstruction = true, GoBeach = true, GoEgypt = true, GoGlacier = true, Shop = true }
 local travelBadges: { [string]: { text: string?, color: Color3? } } = {}
 
 local function refreshTravelBadge()
@@ -211,7 +211,7 @@ local function buildLeft(gui: ScreenGui)
 	travelMenu.Name = "TravelMenu"
 	travelMenu.BackgroundTransparency = 1
 	-- la mida i on va cada rajola ho posa layout() (una fila o dues)
-	travelMenu.Size = UDim2.fromOffset(6 * TILE + 5 * GAP, TILE)
+	travelMenu.Size = UDim2.fromOffset(7 * TILE + 6 * GAP, TILE)
 	travelMenu.Visible = false
 	travelMenu.ZIndex = 5
 	travelMenu.Parent = leftColumn
@@ -222,6 +222,8 @@ local function buildLeft(gui: ScreenGui)
 		{ id = "GoBeach", text = "Beach", icon = "🏖️", color = C.cyan, dest = "beach", msg = "✈️ Off to the beach!" },
 		-- Egipte és una illa: només s'hi arriba volant (no hi ha camí)
 		{ id = "GoEgypt", text = "Egypt", icon = "PYRAMIDS", color = C.orange, dest = "egypt", msg = "✈️ Flying to Egypt!" },
+		-- la glacera, igual: molt lluny, a l'oest, només volant
+		{ id = "GoGlacier", text = "Glacier", icon = "🏔️", color = C.cyan, dest = "glacier", msg = "✈️ Flying to the Ice Age Glacier! Brrr!" },
 		{ id = "Shop", text = "Tool Shop", icon = "🛠️", color = C.red, dest = "shop", msg = "✈️ Off to Dig & Co.!" },
 	}
 	for i, t in items do
@@ -532,6 +534,7 @@ local function refresh(snapshot: ProfileController.Snapshot)
 	HudController.AutoBadge("Museum", if haveItems and used < snapshot.slots then "!" else nil)
 	HudController.AutoBadge("GoBeach", if Zones.IsUnlocked(snapshot.zones, "beach") then nil else "🔒", C.grey)
 	HudController.AutoBadge("GoEgypt", if Zones.IsUnlocked(snapshot.zones, "egypt") then nil else "🔒", C.grey)
+	HudController.AutoBadge("GoGlacier", if Zones.IsUnlocked(snapshot.zones, "glacier") then nil else "🔒", C.grey)
 	-- botiga: "!" si pots pagar una eina que encara no tens
 	local canBuy = false
 	for _, def in Tools.LIST do

@@ -616,6 +616,14 @@ local PIT_STYLES = {
 		mat = M.Sand,
 		pebble = C(196, 168, 120),
 	},
+	-- Glacera: neu trepitjada, fons de gel blau i pedretes de glaç
+	ice = {
+		slab = C(236, 242, 250),
+		floor = C(150, 186, 214),
+		mound = C(214, 226, 240),
+		mat = M.Snow,
+		pebble = C(186, 222, 246),
+	},
 }
 local TOY = { C(240, 80, 80), C(70, 160, 230), C(250, 200, 60), C(90, 200, 120) }
 local PIT_TILE, PIT_R, PIT_LEDGE, PIT_DEPTH = 8, 2.7, 3.4, 2.4
@@ -765,6 +773,22 @@ local function digPit(g, zone, name, style, r, parent)
 		local brcf = CF(g:Lerp(corner[2], 0.8) + cornerUp + UP * 0.12) * CFrame.Angles(0, ta, rad(90))
 		P(V3(0.14, 1, 0.14), brcf, COL.woodDark, M.Wood, m, true)
 		P(V3(0.4, 0.4, 0.3), brcf * CF(0, -0.6, 0), C(236, 220, 170), M.Fabric, m, true)
+	elseif style == "ice" then
+		-- piolet clavat a la neu, a un cantó
+		local ip = g:Lerp(corner[1], 0.8) + cornerUp
+		local icf = CF(ip + UP * 0.8) * CFrame.Angles(rad(15), ta, rad(10))
+		P(V3(0.14, 1.6, 0.14), icf, COL.woodDark, M.Wood, m, true)
+		P(V3(0.12, 0.16, 1.1), icf * CF(0, 0.8, 0), C(70, 74, 82), M.Metal, m, true)
+		-- fanal de campanya (llum càlida) a l'altre
+		local lp = g:Lerp(corner[2], 0.8) + cornerUp
+		P(V3(0.6, 0.12, 0.6), CF(lp + UP * 0.06), C(40, 40, 44), M.Metal, m, true)
+		local glass = P(V3(0.45, 0.6, 0.45), CF(lp + UP * 0.42), C(255, 214, 140), M.Neon, m, true)
+		P(V3(0.6, 0.1, 0.6), CF(lp + UP * 0.77), C(40, 40, 44), M.Metal, m, true)
+		local light = Instance.new("PointLight")
+		light.Color = C(255, 190, 120)
+		light.Range = 8
+		light.Brightness = 0.8
+		light.Parent = glass
 	else
 		-- galleda i pala de joguina, de colors
 		local col = TOY[r:NextInteger(1, #TOY)]

@@ -50,7 +50,9 @@ El món NO és al codi del joc: el construeixen els scripts de `tools/world/`
 11 Egipte: el desert infinit amb la plaça d'arribada, la portalada, els
 cràters a l'atzar, tres piràmides gegants, l'esfinx, temple, oasi, mercat i
 el basar de paletes; construït per primer cop el 29/09/2026 i refet a
-petició del propietari: desert en lloc d'illa, piràmides x3, forats a l'atzar), amb
+petició del propietari: desert en lloc d'illa, piràmides x3, forats a l'atzar ·
+12 Glacera de l'Edat de Gel, a l'oest: neu i gel fins a l'horitzó, mamut
+congelat, iglús, campament, cabana de paletes i aurora; 30/09/2026), amb
 `tools/world/lib.luau` com a biblioteca comuna (peces, Toolbox, forats CSG).
 Els models de la Toolbox es carreguen per id i sense scripts (`ASSETS` a
 `lib.luau`).
@@ -275,6 +277,26 @@ dificultat per zona per a Mythic i Secret (`Zones.rareHardness`: platja
 x1,5, Egipte x2; `Dig.RarityChances` la rep, també a l'Índex). Simulació
 (60 partides, sol): 1a Mythic 47 min · 1a Secret 7,6 h · esquelet Mythic
 sol 11,8 h (el 100% en 40 h) · esquelet T-Rex sol: cap en 40 h.
+
+**30/09/2026 (nit, 3)**: ZONA 4, la **Glacera de l'Edat de Gel**
+(`tools/world/12_glacier.luau`), amb els criteris d'Egipte: a l'oest del tot
+(x = -6000), només en avió (✈️ Travel → Glacier, `Zones.flyOnly`), plana de
+neu i gel fins a l'horitzó sense mar, parets invisibles a ±480, 12 forats
+a l'atzar (estil "ice": neu, piolet i fanal), moll de fusta amb banderes,
+portalada de gel (ZoneUnlock), mamut congelat dins un bloc de gel (x1,8),
+tres muntanyes de gel gegants, llac glaçat, iglús, campament amb foguera,
+cabana "FROST TROWELS", cristalls de gel, pins, roques i una aurora boreal.
+Neva (partícules al client) i sona vent + música d'hivern de DistroKid
+(`AmbienceController`, x < -1500). 5 esquelets (Arctic Hare Rare 6 · Dire
+Wolf Epic 7 · Giant Deer Legendary 7 · Woolly Rhino Legendary 7 · Mammoth
+Mythic 8; ullals, banyes i banya nous a `BoneBuilder`), obrir-la costa 25 M
+i cal Egipte, 12.000 per excavació, Mythic x2,5 més difícil. 3 paletes
+noves (Frost x24 110 M · Aurora x28 240 M · Mammoth Tusk x32 500 M) i sostre
+de sort x1024. Missions noves: "Find a Mythic fossil" i "Fly to the Ice Age
+Glacier and unlock it". Simulació (60 partides, sol): Egipte 45 min ·
+Glacera 2,3 h · Pharaoh's 3 h · Frost 4,4 h · Aurora 6,8 h · Mammoth Tusk
+10,7 h. **Cal construir-la a Studio** (`python tools/world/run.py 12`) i fer
+captures.
 
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa

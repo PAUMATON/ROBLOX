@@ -38,6 +38,9 @@ export type ZoneDef = {
 	-- On es desbloqueja (per al missatge "is locked · unlock it ...")
 	unlockAt: string?,
 	icon: string, -- per a la UI (menú Travel, índex)
+	-- Només s'hi arriba volant (✈️ Travel): la guia de missions no hi pot
+	-- apuntar caminant i marca el botó del viatge
+	flyOnly: boolean?,
 	-- Mythic i Secret són aquestes vegades més difícils aquí que a la zona 1
 	-- (Bones.ZONE_HARD_FROM). Com més lluny la zona, més alt. nil = 1.
 	rareHardness: number?,
@@ -77,13 +80,29 @@ local LIST: { ZoneDef } = {
 		requires = "beach",
 		unlockAt = "at the Egypt gate (fly there with ✈️ Travel)",
 		rareHardness = 2, -- el Crocodile (Mythic): 1 de cada 4.000
+		flyOnly = true,
 		-- zona alta: no hi ha Common ni Uncommon; la més "comuna" és Rare
 		skeletons = { "Ibis", "Jackal", "Camel", "Crocodile" },
+	},
+	{
+		-- 30/09/2026: glacera de l'Edat de Gel, com Egipte: lluny de tot, només
+		-- en avió, gel i neu fins a l'horitzó (tools/world/12_glacier.luau)
+		id = "glacier",
+		name = "Ice Age Glacier",
+		number = 4,
+		unlockCost = 25000000,
+		coinsPerDig = 12000,
+		icon = "🏔️",
+		requires = "egypt",
+		unlockAt = "at the Glacier gate (fly there with ✈️ Travel)",
+		rareHardness = 2.5, -- el Mammoth (Mythic): 1 de cada 5.000
+		flyOnly = true,
+		skeletons = { "ArcticHare", "DireWolf", "GiantDeer", "WoollyRhino", "Mammoth" },
 	},
 }
 Zones.LIST = LIST
 
-Zones.MAX_ZONES = 3
+Zones.MAX_ZONES = 4 -- 30/09/2026: la glacera (decisió del propietari)
 
 -- ────────────────────────── DERIVATS ──────────────────────────
 

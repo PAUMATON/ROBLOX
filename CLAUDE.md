@@ -48,28 +48,35 @@ Cada esquelet és completable DINS de la seva zona. No reparteixis peces d'un
 mateix conjunt entre zones — un jugador de zona 1 no pot comerciar amb un
 d'Egipte (poder de compra asimètric, no hi ha intercanvi possible). Només els
 esquelets de raresa molt alta poden tenir peces en més d'una zona.
-Tres zones (29/09/2026): Obra (Rat → T-Rex), Platja (Seagull, Otter,
-Cormorant) i **Egipte** (Ibis, Jackal, Camel, Crocodile: de Rare a Mythic).
-Egipte és un desert lluny de tot: només s'hi arriba amb ✈️ Travel (mai
-caminant) i es desbloqueja a la seva portalada, amb la platja ja oberta.
+Quatre zones: Obra (Rat → T-Rex), Platja (Seagull, Otter, Cormorant),
+**Egipte** (Ibis, Jackal, Camel, Crocodile: de Rare a Mythic) i, des del
+30/09/2026, la **Glacera de l'Edat de Gel** (Arctic Hare, Dire Wolf, Giant
+Deer, Woolly Rhino, Mammoth: de Rare a Mythic). Egipte (a l'est, x = 6000) i
+la glacera (a l'oest, x = -6000) són lluny de tot: només s'hi arriba amb
+✈️ Travel (mai caminant; `Zones.flyOnly`) i es desbloquegen a la seva
+portalada (Egipte demana la platja; la glacera, Egipte).
 
-## Sort: paleta (x1 → x20) × passi de sort per Robux (x2 → x32). Sostre x640.
+## Sort: paleta (x1 → x32) × passi de sort per Robux (x2 → x32). Sostre x1024.
 (29/09/2026: el propietari va pujar les paletes de x3 a x20; per compensar,
 Legendary, Mythic i Secret tenen la N més alta.)
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
 amunt. 30/09/2026 (decisió del propietari, més fàcil que abans): Uncommon
 1/4 · Rare 1/15 · Epic 1/25 · Legendary 1/300 · Mythic 1/2.000 · Secret
 1/20.000 a la zona 1. Com més lluny la zona, més difícils Mythic i Secret
-(Zones.rareHardness: platja x1,5, Egipte x2 → el Crocodile 1/4.000). Sense
+(Zones.rareHardness: platja x1,5, Egipte x2 → el Crocodile 1/4.000,
+glacera x2,5 → el Mammoth 1/5.000). Sense
 sort el Common és el més probable (~67%). Secret a la zona 1: 1/1.000 amb
 la millor paleta (x20), ~1/31 al sostre (x640). Mythic: 1/100 i ~1/3.
 (Abans: Mythic 1/20.000 i Secret 1/100.000; el propietari sap que així
 l'esquelet Mythic es pot fer sol en unes hores; el Secret de 8 peces
 continua necessitant el comerç).
 La sort surt de la paleta × els passis de sort (i els boosts x2 temporals);
-el minijoc només dona monedes. 11 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
-x4, x5.5, x7, x9) i 3 al basar d'Egipte, que demanen Egipte obert (x12, x15,
-x20). Es talla el PRODUCTE a x640 (Constants.MAX_LUCK). Totes les eines són
+el minijoc només dona monedes. 14 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
+x4, x5.5, x7, x9), 3 al basar d'Egipte, que demanen Egipte obert (x12, x15,
+x20), i 3 a la cabana de la glacera, que demanen la glacera oberta (x24,
+x28, x32; 30/09/2026). Es talla el PRODUCTE a x1024 (Constants.MAX_LUCK).
+L'estat dels fòssils només mira la paleta fins a x20 (Bones.GRADE_TOOL_TOP):
+les de la glacera fan fòssils tan nets com la Pharaoh's. Totes les eines són
 paletes d'arqueòleg i NOMÉS donen sort (de raresa i, des del 30/09/2026, també
 d'estat del fòssil): no toquen el minijoc ni la velocitat.
 
@@ -114,8 +121,9 @@ rosa, arc de Sant Martí), contorns negres gruixuts, lletra FredokaOne amb
 contorn, botons grossos amb volum, rebots, números que salten, cartes de
 raresa amb raigs i confeti. Tot l'estil de la UI viu a src/client/UI/Theme.luau.
 Materials: Sand, Slate, WoodPlanks, Marble, Brick, Glass, Concrete, Metal,
-SmoothPlastic, Ground, Grass, Limestone (els ossos). Neon només per a
-efectes i llums.
+SmoothPlastic, Ground, Grass, Limestone (els ossos); a la glacera també
+Snow i Glacier (terreny). Neon només per a efectes i llums (l'aurora boreal
+de la glacera és un efecte).
 Lighting Technology = "Future".
 
 ## ESCALES
@@ -127,7 +135,11 @@ Museus: 70x52 · Botiga Dig & Co.: 24x14, a la plaça (racó nord-est)
 Forat d'excavació: llosa de 8x8 (obra) o cràter de ~12 (platja i Egipte)
 Egipte: desert fins a l'horitzó a x = 6000 (zona jugable de ±480 amb parets
 invisibles; el mar del continent acaba a 1100 i entremig no hi ha res).
-Excepció d'escala: les tres piràmides d'Egipte són GEGANTS (fins a 130 d'alt)
+Glacera: plana de neu i gel fins a l'horitzó a x = -6000, igual (±480 amb
+parets invisibles), sense mar: neu, turons i muntanyes de gel.
+Excepció d'escala: les tres piràmides d'Egipte són GEGANTS (fins a 130 d'alt),
+i les muntanyes de gel de la glacera (terreny) també; el mamut congelat va
+dins un bloc de gel transparent a propòsit.
 Cap element de decoració es fa fora d'aquest rang.
 Dues cares paral·leles mai al mateix pla (fan pampallugues): deixar 0,05.
 Res dins d'una altra peça que es vegi (arbres dins de cases, etc.).
@@ -173,7 +185,8 @@ museus i de tant en tant deixen propina (💰 +X sobre el cap). El servidor
 decideix les visites i les propines; el client només els dibuixa.
 
 ## FORA D'ABAST
-PvP, robatori, treballadors NPC, quarta zona, guàrdies.
+PvP, robatori, treballadors NPC, guàrdies. (La quarta zona hi era; el
+30/09/2026 el propietari va demanar la glacera.)
 
 ## IDIOMA
 Tot el que veu el jugador (UI, missatges, rètols del mapa) en ANGLÈS.

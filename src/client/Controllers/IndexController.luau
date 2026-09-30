@@ -29,7 +29,7 @@ local window: Widgets.Window
 local scroll: ScrollingFrame
 local progress: Widgets.Bar
 
-local ZONE_ICONS = { construction = "🏗️", beach = "🏖️", egypt = "🏜️" }
+local ZONE_ICONS = { construction = "🏗️", beach = "🏖️", egypt = "🏜️", glacier = "🏔️" }
 
 function IndexController.Count(snapshot: ProfileController.Snapshot): (number, number)
 	local found = 0

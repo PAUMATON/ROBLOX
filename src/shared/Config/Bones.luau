@@ -42,6 +42,9 @@ export type SkeletonDef = {
 	tailLen: number?, -- llargada de la cua (mamífers)
 	tailSegs: number?, -- vèrtebres de la cua (mamífers)
 	fangs: number?, -- ullals de sabre (mamífers)
+	tusks: number?, -- ullals de mamut (mamífers)
+	antlers: number?, -- banyes en pala de cérvol gegant (mamífers)
+	horn: number?, -- banya sobre el morro (rinoceront llanut)
 	beak: number?, -- bec gros (ocells)
 	stocky: boolean?, -- ocell rodanxó que no vola (dodo)
 	-- Només els esquelets de raresa molt alta poden sortir a més d'una zona
@@ -254,6 +257,7 @@ Bones.PIECE_ICONS = PIECE_ICONS
 -- Zona 1 · Construction Site: un esquelet per raresa, dels animals de ciutat
 -- fins als extingits. Zona 2 · Fossil Beach: animals de costa.
 -- Zona 3 · Egypt (illa, només en avió): animals del Nil, de Rare a Mythic.
+-- Zona 4 · Ice Age Glacier (només en avió): animals de l'Edat de Gel.
 local SKELETONS: { SkeletonDef } = {
 	{ id = "Rat", icon = "🐀", name = "Rat", rarity = "Common", kind = "mammal", s = 0.5, snout = 0.9, ribs = 5, tailLen = 2.2, tailSegs = 16, pieces = 5 },
 	{ id = "Pigeon", icon = "🐦", name = "Pigeon", rarity = "Uncommon", kind = "bird", s = 0.7, pieces = 5 },
@@ -271,6 +275,14 @@ local SKELETONS: { SkeletonDef } = {
 	{ id = "Jackal", icon = "🐺", name = "Jackal", rarity = "Epic", kind = "mammal", s = 1.2, snout = 0.85, ribs = 6, tailLen = 1.4, pieces = 7 },
 	{ id = "Camel", icon = "🐪", name = "Camel", rarity = "Legendary", kind = "mammal", s = 1.9, snout = 0.7, ribs = 8, tailLen = 0.7, pieces = 7 },
 	{ id = "Crocodile", icon = "🐊", name = "Nile Crocodile", rarity = "Mythic", kind = "mammal", s = 1.5, snout = 1.7, ribs = 9, tailLen = 3, tailSegs = 20, pieces = 8 },
+
+	-- Zona 4 · Ice Age Glacier (només en avió, com Egipte): animals de l'Edat
+	-- de Gel, de Rare a Mythic. Dos Legendary: cadascun surt la meitat de sovint.
+	{ id = "ArcticHare", icon = "🐇", name = "Arctic Hare", rarity = "Rare", kind = "mammal", s = 0.6, snout = 0.4, ribs = 5, tailLen = 0.3, tailSegs = 5, pieces = 6 },
+	{ id = "DireWolf", icon = "🐺", name = "Dire Wolf", rarity = "Epic", kind = "mammal", s = 1.5, snout = 1, ribs = 7, tailLen = 1.3, fangs = 0.35, pieces = 7 },
+	{ id = "GiantDeer", icon = "🦌", name = "Giant Deer", rarity = "Legendary", kind = "mammal", s = 1.8, snout = 0.9, ribs = 7, tailLen = 0.4, tailSegs = 6, antlers = 1.3, pieces = 7 },
+	{ id = "WoollyRhino", icon = "🦏", name = "Woolly Rhino", rarity = "Legendary", kind = "mammal", s = 2, snout = 0.8, ribs = 9, tailLen = 0.5, tailSegs = 7, horn = 1.2, pieces = 7 },
+	{ id = "Mammoth", icon = "🦣", name = "Woolly Mammoth", rarity = "Mythic", kind = "mammal", s = 2.4, snout = 0.5, ribs = 10, tailLen = 0.6, tailSegs = 8, tusks = 1.3, pieces = 8 },
 }
 Bones.SKELETONS = SKELETONS
 
@@ -508,6 +520,11 @@ Bones.FACTS = {
 	Jackal = "Anubis, guardian of the tombs, had its head.",
 	Camel = "Walks the desert for a week without water.",
 	Crocodile = "River god Sobek. Older than the pyramids!",
+	ArcticHare = "Turns white in winter to hide in the snow.",
+	DireWolf = "Bigger than any wolf alive today. AWOOO!",
+	GiantDeer = "Its antlers were 3.6 m wide. Huge!",
+	WoollyRhino = "A rhino in a fur coat. Ice Age style.",
+	Mammoth = "Tusks up to 4 m long. King of the Ice Age!",
 } :: { [string]: string }
 
 function Bones.FactOf(item: string): string
