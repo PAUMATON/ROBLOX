@@ -75,8 +75,8 @@ Bones.RARITIES = RARITIES
 local RARITY_ODDS: { [string]: number } = {
 	Uncommon = 4,
 	Rare = 15,
-	Epic = 80,
-	Legendary = 1500,
+	Epic = 16, -- 30/09/2026: x5 més fàcil (era 80), decisió del propietari
+	Legendary = 300, -- 30/09/2026: x5 més fàcil (era 1.500)
 	Mythic = 20000,
 	Secret = 100000,
 }

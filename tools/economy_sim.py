@@ -89,7 +89,7 @@ def luck_of(bonus, tool_luck):
     return min(max(minigame * tool_luck, 1), MAX_LUCK)
 
 
-ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 80, "Legendary": 1500, "Mythic": 20000, "Secret": 100000}
+ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 16, "Legendary": 300, "Mythic": 20000, "Secret": 100000}
 
 
 def roll(zone, luck):
