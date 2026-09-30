@@ -116,16 +116,21 @@ end
 
 -- Probabilitat de cada raresa amb aquesta sort (només les que hi ha a la
 -- zona, `present`). Es tira de la més rara cap avall: 1 de cada N/sort.
-function Dig.RarityChances(luck: number, present: { [string]: any }?): { [string]: number }
+-- `hardness` (Zones.rareHardness) multiplica la N de Mythic i Secret.
+function Dig.RarityChances(luck: number, present: { [string]: any }?, hardness: number?): { [string]: number }
 	local out = {}
 	local left = 1
 	local from = Bones.RARITY_ORDER[Bones.LUCKY_FROM]
+	local hardFrom = Bones.RARITY_ORDER[Bones.ZONE_HARD_FROM]
 	local lowest: string? = nil
 	for i = #Bones.RARITIES, 1, -1 do
 		local rarity = Bones.RARITIES[i]
 		if not present or present[rarity] then
 			lowest = rarity
 			local n = Bones.RARITY_ODDS[rarity]
+			if n and Bones.RARITY_ORDER[rarity] >= hardFrom then
+				n *= math.max(1, hardness or 1)
+			end
 			if n then
 				local l = if Bones.RARITY_ORDER[rarity] >= from then luck else 1
 				local p = math.min(l / n, Bones.MAX_CHANCE)

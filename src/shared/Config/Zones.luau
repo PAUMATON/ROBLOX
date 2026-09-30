@@ -38,6 +38,9 @@ export type ZoneDef = {
 	-- On es desbloqueja (per al missatge "is locked · unlock it ...")
 	unlockAt: string?,
 	icon: string, -- per a la UI (menú Travel, índex)
+	-- Mythic i Secret són aquestes vegades més difícils aquí que a la zona 1
+	-- (Bones.ZONE_HARD_FROM). Com més lluny la zona, més alt. nil = 1.
+	rareHardness: number?,
 }
 
 Zones.DEFAULT = "construction" -- ha de coincidir amb ProfileSchema.unlockedZones
@@ -61,6 +64,7 @@ local LIST: { ZoneDef } = {
 		coinsPerDig = 720,
 		icon = "🏖️",
 		unlockAt = "at the beach gate",
+		rareHardness = 1.5,
 		skeletons = { "Seagull", "Otter", "Cormorant" },
 	},
 	{
@@ -72,6 +76,7 @@ local LIST: { ZoneDef } = {
 		icon = "🐫",
 		requires = "beach",
 		unlockAt = "at the Egypt gate (fly there with ✈️ Travel)",
+		rareHardness = 2, -- el Crocodile (Mythic): 1 de cada 4.000
 		-- zona alta: no hi ha Common ni Uncommon; la més "comuna" és Rare
 		skeletons = { "Ibis", "Jackal", "Camel", "Crocodile" },
 	},

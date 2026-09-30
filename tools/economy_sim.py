@@ -89,7 +89,9 @@ def luck_of(bonus, tool_luck):
     return min(max(minigame * tool_luck, 1), MAX_LUCK)
 
 
-ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 25, "Legendary": 300, "Mythic": 20000, "Secret": 100000}
+ODDS = {"Uncommon": 4, "Rare": 15, "Epic": 25, "Legendary": 300, "Mythic": 2000, "Secret": 20000}
+ZONE_HARD_FROM = "Mythic"  # Zones.rareHardness multiplica la N d'aquí cap amunt
+HARDNESS = {"construction": 1, "beach": 1.5, "egypt": 2}
 
 
 def roll(zone, luck):
@@ -99,7 +101,8 @@ def roll(zone, luck):
     for r in reversed(RARITIES[1:]):
         if r in present:
             l = luck if RARITIES.index(r) >= RARITIES.index(LUCKY_FROM) else 1
-            if random.random() < min(l / ODDS[r], 0.9):
+            n = ODDS[r] * (HARDNESS[zone] if RARITIES.index(r) >= RARITIES.index(ZONE_HARD_FROM) else 1)
+            if random.random() < min(l / n, 0.9):
                 rarity = r
                 break
     if rarity is None:

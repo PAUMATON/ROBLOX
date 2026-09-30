@@ -76,7 +76,8 @@ local function rollPiece(zoneId: string, bonus: number, toolLuck: number): strin
 	if not byRarity then
 		return nil
 	end
-	local weights = Dig.RarityChances(Dig.LuckMultiplier(bonus, toolLuck), byRarity)
+	local zone = Zones.ById[zoneId]
+	local weights = Dig.RarityChances(Dig.LuckMultiplier(bonus, toolLuck), byRarity, zone and zone.rareHardness)
 	local total = 0
 	for _, w in weights do
 		total += w

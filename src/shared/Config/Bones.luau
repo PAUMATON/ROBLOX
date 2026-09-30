@@ -66,21 +66,25 @@ Bones.RARITIES = RARITIES
 
 -- "1 de cada N" de cada raresa, sense sort. Es tira de la més rara cap
 -- avall: la primera que surt guanya; si no en surt cap, Common.
--- La sort DIVIDEIX la N (de Rare cap amunt). 29/09/2026: les paletes van
--- fins a x20 i el sostre és x640, i per això Legendary, Mythic i Secret
--- tenen la N més alta (Rare i Epic no: el principi del joc no canvia).
--- Secret: 1 de cada 100.000 sense sort, ~5.000 amb la millor paleta
--- (x20) i ~156 amb el sostre (x640). Mythic: 1 de cada 20.000, 1.000 i 31.
+-- La sort DIVIDEIX la N (de Rare cap amunt). 30/09/2026 (decisió del
+-- propietari): Epic 1/25, Legendary 1/300, Mythic 1/2.000 i Secret 1/20.000
+-- a la zona 1; a les zones de més enllà Mythic i Secret són més difícils
+-- (Zones.rareHardness: platja x1,5, Egipte x2).
+-- Secret a la zona 1: 1 de cada 20.000 sense sort, 1.000 amb la millor
+-- paleta (x20) i ~31 amb el sostre (x640). Mythic: 2.000, 100 i ~3.
 -- Balancejat amb tools/economy_sim.py.
 local RARITY_ODDS: { [string]: number } = {
 	Uncommon = 4,
 	Rare = 15,
 	Epic = 25, -- 30/09/2026: més fàcil (era 80) però més difícil que Rare, decisió del propietari
 	Legendary = 300, -- 30/09/2026: x5 més fàcil (era 1.500)
-	Mythic = 20000,
-	Secret = 100000,
+	Mythic = 2000, -- 30/09/2026: era 20.000 (decisió del propietari)
+	Secret = 20000, -- 30/09/2026: era 100.000
 }
 Bones.RARITY_ODDS = RARITY_ODDS
+-- Zones: a partir d'aquesta raresa, la N es multiplica per la duresa de la
+-- zona (Zones.rareHardness): com més lluny la zona, més difícil el Mythic.
+Bones.ZONE_HARD_FROM = "Mythic"
 Bones.MAX_CHANCE = 0.9 -- cap raresa passa del 90% encara que la sort sigui enorme
 
 -- A partir d'aquesta raresa la sort divideix la N

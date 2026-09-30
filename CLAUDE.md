@@ -57,12 +57,15 @@ caminant) i es desbloqueja a la seva portalada, amb la platja ja oberta.
 (29/09/2026: el propietari va pujar les paletes de x3 a x20; per compensar,
 Legendary, Mythic i Secret tenen la N més alta.)
 Rareses "1 de cada N" (Bones.RARITY_ODDS), la sort divideix la N de Rare cap
-amunt: Secret 1/100.000 sense sort, ~1/5.000 amb la millor paleta (x20) i
-~1/156 al sostre (x640). Mythic 1/20.000 → 1/1.000 → 1/31. Han de ser MOLT
-rares encara amb la sort màxima. Epic 1/25 i Legendary 1/300 (30/09/2026:
-més fàcils, decisió del propietari; l'ordre es manté: Uncommon 1/4, Rare
-1/15, Epic 1/25, i sense sort el Common és el més probable, ~67%; Mythic i Secret no es toquen: el
-comerç continua sent la drecera per als esquelets de dalt).
+amunt. 30/09/2026 (decisió del propietari, més fàcil que abans): Uncommon
+1/4 · Rare 1/15 · Epic 1/25 · Legendary 1/300 · Mythic 1/2.000 · Secret
+1/20.000 a la zona 1. Com més lluny la zona, més difícils Mythic i Secret
+(Zones.rareHardness: platja x1,5, Egipte x2 → el Crocodile 1/4.000). Sense
+sort el Common és el més probable (~67%). Secret a la zona 1: 1/1.000 amb
+la millor paleta (x20), ~1/31 al sostre (x640). Mythic: 1/100 i ~1/3.
+(Abans: Mythic 1/20.000 i Secret 1/100.000; el propietari sap que així
+l'esquelet Mythic es pot fer sol en unes hores; el Secret de 8 peces
+continua necessitant el comerç).
 La sort surt de la paleta × els passis de sort (i els boosts x2 temporals);
 el minijoc només dona monedes. 11 paletes: 8 a Dig & Co. (x1, x1.5, x2, x3,
 x4, x5.5, x7, x9) i 3 al basar d'Egipte, que demanen Egipte obert (x12, x15,

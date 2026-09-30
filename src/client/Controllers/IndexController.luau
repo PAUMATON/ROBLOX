@@ -162,7 +162,7 @@ local function redraw()
 		table.sort(defs, function(a, b)
 			return Bones.RARITY_ORDER[a.rarity] > Bones.RARITY_ORDER[b.rarity]
 		end)
-		local chances = Dig.RarityChances(currentLuck(snapshot), Zones.PiecesByRarity[zone.id])
+		local chances = Dig.RarityChances(currentLuck(snapshot), Zones.PiecesByRarity[zone.id], zone.rareHardness)
 		for _, def in defs do
 			order += 1
 			row(snapshot, def, order, chances)

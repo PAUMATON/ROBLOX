@@ -25,7 +25,7 @@ del joc són a `CLAUDE.md`; aquí hi ha QUÈ hi ha fet, COM es treballa i QUÈ f
 | Sistema | On és | Resum |
 |---|---|---|
 | Excavar | `DigService`, `DigController`, `Config/Dig` | Minijoc de 3 cops: la franja verda salta a cada cop i la línia va més ràpid. El client diu quan ha clicat (±0,07 s de marge); el servidor calcula el resultat. |
-| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 14 esquelets × 5 peces = 70 (els 4 d'Egipte, 29/09/2026). 7 rareses "1 de cada N" (Secret 1/100.000, Mythic 1/20.000, Legendary 1/300, Epic 1/25 — més fàcils des del 30/09/2026; la sort les divideix). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
+| Fòssils | `Config/Bones`, `Util/BoneBuilder` | 14 esquelets × 5 peces = 70 (els 4 d'Egipte, 29/09/2026). 7 rareses "1 de cada N" (Secret 1/20.000, Mythic 1/2.000, Legendary 1/300, Epic 1/25 a la zona 1 — més fàcils des del 30/09/2026; Mythic i Secret més difícils a les zones de lluny; la sort les divideix). Models fets amb parts (el·lipsoides, ossos llargs, vèrtebres...). |
 | Zones | `Config/Zones` | Obra (gratis, 270/excavació, Rat → T-Rex), Platja (450.000, 720/exc., Seagull/Otter/Cormorant) i **Egipte** (5.000.000, 3.600/exc., cal la platja; Ibis Rare, Jackal Epic, Camel Legendary, Crocodile Mythic). Egipte és un desert que arriba fins a l'horitzó a x = 6000 (`tools/world/11_egypt.luau`; zona jugable ±480 amb parets invisibles, dunes fins a la boira, piràmides gegants, forats repartits a l'atzar): només s'hi arriba amb ✈️ Travel → Egypt (la icona són piràmides dibuixades: `Theme.Icon("PYRAMIDS")`), i es desbloqueja a la portalada de l'illa (`ZoneUnlock`). `Zones.requires` = la zona que cal tenir abans; `unlockAt` = on es desbloqueja (missatge). |
 | Paletes | `Config/Tools`, `ShopService`, `ShopController`, `ToolService` | 11 paletes d'arqueòleg (NOMÉS sort): 8 a Dig & Co. (plaça): Rusty x1 · Steel x1.5 (12K) · Bronze x2 (45K) · Pro x3 (110K) · Ruby x4 (320K) · Emerald x5.5 (900K) · Golden x7 (2,5 M) · Diamond x9 (6 M); i 3 al basar de l'illa d'Egipte (`zone = "egypt"`, cal Egipte obert): Scarab x12 (15 M) · Anubis x15 (32 M) · Pharaoh's x20 (65 M). Mantens E sobre l'eina → fitxa amb el model 3D i BUY. |
 | Vendre | `ShopService` (sell), `DialogController` (Bonnie) | La Bonnie (Fossil Buyer, al costat de Dig & Co.) compra repetits / tot / una peça. Val 4 min de renda. |
@@ -269,6 +269,12 @@ Platja 17 min · Egipte 40 min · esquelet Epic 12 min · esquelet Legendary
 1a Rare 0,8 min · 1a Epic 1,9 min · 1a Legendary 11 min · esquelet Epic
 16 min · Platja 18 min · Egipte 46 min · esquelet Legendary 2 h ·
 Pharaoh's 2,7 h · Mythic sol el 8% en 40 h.
+
+**30/09/2026 (nit, 2)**: Mythic 1/2.000 i Secret 1/20.000 a la zona 1, i
+dificultat per zona per a Mythic i Secret (`Zones.rareHardness`: platja
+x1,5, Egipte x2; `Dig.RarityChances` la rep, també a l'Índex). Simulació
+(60 partides, sol): 1a Mythic 47 min · 1a Secret 7,6 h · esquelet Mythic
+sol 11,8 h (el 100% en 40 h) · esquelet T-Rex sol: cap en 40 h.
 
 **Dubte**: el tutorial es dedueix del perfil; si algú buida el museu,
 el tutorial (pas 3) torna a sortir i amaga les missions fins que exposa
