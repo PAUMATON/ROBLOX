@@ -23,7 +23,6 @@ export type Snapshot = {
 	skeletons: { [string]: number },
 	museum: { [string]: string },
 	rate: number,
-	cap: number,
 	slots: number,
 	zones: { string },
 	discovered: { [string]: boolean },

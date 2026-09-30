@@ -9,7 +9,8 @@ museu (10 vitrines) i **comercies peces amb altres jugadors**. Si tens la sort
 de reunir totes les peces d'un esquelet (de 5 a 8: com més rar, més peces), el
 muntes i rendeix la suma de les peces x5. L'índex
 (a part de la motxilla) apunta tot el que has descobert. El museu genera renda
-passiva amb sostre.
+passiva SENSE sostre (30/09/2026, decisió del propietari): el límit
+natural són les 10 vitrines.
 
 ## Loop
 Excavar → minijoc → fòssil amb raresa → motxilla (i índex) → l'exposes → renda →
@@ -32,11 +33,11 @@ Els números es balancegen amb tools/economy_sim.py.
 
 ## ESTAT DELS FÒSSILS (30/09/2026, Bones.luau > ESTAT)
 Cada fòssil surt amb un de 7 estats: Crushed x0,5 · Cracked x0,7 · Dusty x1
-· Clean x1,4 · Polished x1,9 · Mint x2,5 · Pristine x3,2 (renda i venda; cada
+· Clean x1,4 · Polished x1,9 · Mint x3,2 · Pristine x6 (renda i venda; cada
 salt és més gran que l'anterior). Com més rara
 la peça, més fàcil que surti malmesa; com millor la paleta (NOMÉS la sort de
-la paleta: ni passis ni pocions), més neta. Mitjana: Common x1,35 (Rusty) →
-x2,28 (Pharaoh's); Secret x0,81 → x1,35. Esquelet muntat = (suma de cada
+la paleta: ni passis ni pocions), més neta. Mitjana: Common x1,53 (Rusty) →
+x3,3 (Pharaoh's); Secret x0,82 → x1,53. Esquelet muntat = (suma de cada
 peça x el seu estat) x5 x bonus de conjunt (+10% per estat de la peça
 PITJOR: Crushed +0% … Pristine +60%). En muntar, el servidor tria la peça de
 millor estat de cada. La clau porta l'estat: "Rat_Skull#4", "Rat#34425".

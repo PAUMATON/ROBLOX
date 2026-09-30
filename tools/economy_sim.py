@@ -29,7 +29,7 @@ PIECE_INCOME = {"Common": 60, "Uncommon": 120, "Rare": 240, "Epic": 600, "Legend
 SKELETON_BONUS = 5  # 29/09/2026: el muntat rendeix la suma de les peces x5
 
 # Estat dels fòssils (Bones.luau > ESTAT): Crushed … Mint, Pristine
-GRADE_MULT = [0.5, 0.7, 1.0, 1.4, 1.9, 2.5, 3.2]
+GRADE_MULT = [0.5, 0.7, 1.0, 1.4, 1.9, 3.2, 6.0]
 GRADE_WEIGHT = [10, 18, 30, 20, 12, 7, 3]
 GRADE_TILT_TOOL, GRADE_TILT_RARITY, GRADE_TILT_BASE, GRADE_TOOL_TOP = 0.8, 0.8, 0.1, 20
 SET_BONUS_STEP = 0.1  # bonus de conjunt: +10% per estat de la peça pitjor
@@ -71,7 +71,7 @@ TOOLS = [("rusty_shovel", 0, 1.0, None), ("steel_trowel", 9000, 1.5, None), ("br
          ("pharaoh_trowel", 45000000, 20, "egypt")]
 DIG_COOLDOWN = 1.2
 MINIGAME_MAX_LUCK = 1
-SLOTS, INCOME_CAP = 10, 720000  # 30/09/2026: x2 amb l'estat dels fòssils
+SLOTS, INCOME_CAP = 10, float("inf")  # 30/09/2026: sense sostre (decisió del propietari)
 SELL_MINUTES = 4
 SELL = "--nosell" not in sys.argv
 PERFECT_BONUS, GOOD_BONUS, ATTEMPTS = 50, 30, 3
@@ -175,7 +175,7 @@ def play(max_minutes=2400):
             skels.append(skeleton_value(rarity, grades))
             events.setdefault(f"esquelet {rarity} muntat", t)
         income = museum_income({v: n for v, n in loose.items() if n > 0}, skels)
-        for milestone in (3000, 12000, 60000, 360000, INCOME_CAP):
+        for milestone in (3000, 12000, 60000, 360000, 720000, 3600000):
             if income >= milestone:
                 events.setdefault(f"renda >= {milestone}/min", t)
         # compres

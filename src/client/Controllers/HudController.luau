@@ -494,7 +494,7 @@ local function refresh(snapshot: ProfileController.Snapshot)
 	end
 	incomeSmall.Text = if money > 1
 		then `{used}/{snapshot.slots} cases · $ x{string.format("%g", math.floor(money * 10 + 0.5) / 10)} money`
-		else `{used}/{snapshot.slots} cases · max {Museum.PerSecondText(snapshot.cap)} $/s`
+		else `{used}/{snapshot.slots} cases on display`
 
 	-- Fòssils nous des de l'últim cop que es va obrir la motxilla
 	local total = 0

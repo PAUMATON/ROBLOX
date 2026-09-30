@@ -169,7 +169,13 @@ local function redraw()
 	Widgets.Clear(stats)
 	stat(stats, 0, "$", Theme.Short(snapshot.coins), C.gold)
 	stat(stats, 256, "📈", `+{Museum.PerSecondText(snapshot.rate)} $/s`, C.green)
-	stat(stats, 512, "🏆", `max {Museum.PerSecondText(snapshot.cap)} $/s`, C.purple)
+	local shown = 0
+	for slot = 1, snapshot.slots do
+		if snapshot.museum[tostring(slot)] then
+			shown += 1
+		end
+	end
+	stat(stats, 512, "🏛️", `{shown}/{snapshot.slots} cases`, C.purple)
 	Widgets.Clear(slotsGrid)
 	local used = 0
 	for slot = 1, snapshot.slots do

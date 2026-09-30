@@ -129,8 +129,8 @@ Bones.SKELETON_BONUS = 5
 
 -- ─────────────────────────── ESTAT ───────────────────────────
 -- Cada fòssil surt de terra en un de 7 estats, del pitjor al millor. Els
--- multiplicadors pugen cada cop més (+0,2, +0,3, +0,4 … +0,7): cada graó
--- val més que l'anterior. L'estat
+-- multiplicadors pugen cada cop més (+0,2, +0,3, +0,4, +0,5, +1,3, +2,8):
+-- cada graó val més que l'anterior, i Pristine és el gran premi. L'estat
 -- multiplica el que rendeix al museu i el que en paga la Bonnie.
 --   · Com més RARA la peça, més fàcil que surti malmesa (és més antiga).
 --   · Com millor la PALETA (la seva sort), més fàcil que surti neta. Només
@@ -139,7 +139,7 @@ Bones.SKELETON_BONUS = 5
 -- inclinació = 0,8·t − 0,8·r + 0,1, t = ln(sort paleta)/ln(20) (0 → 1) i
 -- r = (ordre de raresa − 1)/6 (0 → 1).
 -- Mitjana del multiplicador (tools/economy_sim.py): Common amb la Rusty
--- x1,35 i amb la Pharaoh's x2,28; Secret x0,81 → x1,35. Els perfils vells
+-- x1,53 i amb la Pharaoh's x3,3; Secret x0,82 → x1,53. Els perfils vells
 -- passen tots a Dusty (x1): ningú no hi perd.
 export type Grade = {
 	id: string,
@@ -154,8 +154,8 @@ local GRADES: { Grade } = {
 	{ id = "Dusty", name = "Dusty", mult = 1, color = Color3.fromRGB(205, 186, 150), weight = 30 },
 	{ id = "Clean", name = "Clean", mult = 1.4, color = Color3.fromRGB(120, 210, 90), weight = 20 },
 	{ id = "Polished", name = "Polished", mult = 1.9, color = Color3.fromRGB(70, 160, 255), weight = 12 },
-	{ id = "Mint", name = "Mint", mult = 2.5, color = Color3.fromRGB(80, 240, 200), weight = 7 },
-	{ id = "Pristine", name = "Pristine", mult = 3.2, color = Color3.fromRGB(255, 120, 230), weight = 3 },
+	{ id = "Mint", name = "Mint", mult = 3.2, color = Color3.fromRGB(80, 240, 200), weight = 7 },
+	{ id = "Pristine", name = "Pristine", mult = 6, color = Color3.fromRGB(255, 120, 230), weight = 3 },
 }
 Bones.GRADES = GRADES
 Bones.DEFAULT_GRADE = 3 -- Dusty: el de les peces d'abans que hi hagués estat
@@ -478,7 +478,7 @@ function Bones.SetBonus(item: string): number
 	return 1 + Bones.SET_BONUS_STEP * (worst - 1)
 end
 
--- "Pristine x3.2" (peça) o "Set +30%" (esquelet), per a la UI
+-- "Pristine x6" (peça) o "Set +30%" (esquelet), per a la UI
 function Bones.GradeText(item: string): string
 	if Bones.PieceInfo[item] then
 		local g = Bones.GradeDef(Bones.GradeOf(item))

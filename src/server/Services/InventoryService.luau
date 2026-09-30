@@ -163,7 +163,6 @@ function InventoryService.Push(player: Player)
 		skeletons = profile.ownedSkeletons,
 		museum = profile.museumLayout,
 		rate = Museum.IncomeRate(profile.museumLayout),
-		cap = Museum.INCOME_CAP,
 		slots = Museum.SLOTS,
 		zones = profile.unlockedZones,
 		discovered = profile.discovered,
