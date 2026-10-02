@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap');
+body{margin:0;overflow:hidden}
+#s{position:relative;overflow:hidden;background:radial-gradient(circle at 50% 45%,#ffe97a 0%,#ffb12e 45%,#ff6a3d 100%);font-family:'Fredoka','FredokaOne','Arial Rounded MT Bold',sans-serif}
+.rays{position:absolute;inset:-50%;background:repeating-conic-gradient(rgba(255,255,255,.22) 0 7deg,transparent 7deg 18deg)}
+.dirt{position:absolute;left:0;right:0;bottom:0;height:24%;background:#8B6F47;border-top:.9vmin solid #000}
+.dirt:before{content:"";position:absolute;inset:0;background:radial-gradient(circle,#6e5636 0 6%,transparent 7%) 0 0/9vmin 9vmin}
+.title{position:absolute;left:0;right:0;text-align:center;font-weight:700;color:#fff;line-height:.92;
+ -webkit-text-stroke:var(--st) #000;paint-order:stroke fill;text-shadow:0 var(--sh) 0 #000;transform:rotate(-3deg)}
+.title b{display:block;color:#fff35c}
+svg.art{position:absolute}
+</style></head><body><div id="s"><div class="rays"></div><div class="dirt"></div></div>
+<script>
+const q=new URLSearchParams(location.search),W=+q.get('w'),H=+q.get('h'),icon=q.get('m')=='icon';
+const s=document.getElementById('s');s.style.width=W+'px';s.style.height=H+'px';
+const bone=(x,y,r,sc)=>`<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})" stroke="#000" stroke-width="9" stroke-linejoin="round" fill="#EDE3CC">
+<rect x="-150" y="-22" width="300" height="44" rx="14"/><circle cx="-160" cy="-26" r="34"/><circle cx="-160" cy="26" r="34"/><circle cx="160" cy="-26" r="34"/><circle cx="160" cy="26" r="34"/>
+<rect x="-150" y="-12" width="300" height="24" rx="10" fill="#EDE3CC" stroke="none"/></g>`;
+const shovel=(x,y,r,sc)=>`<g transform="translate(${x} ${y}) rotate(${r}) scale(${sc})" stroke="#000" stroke-width="9" stroke-linejoin="round">
+<rect x="-14" y="-190" width="28" height="230" rx="12" fill="#C08A3E"/><rect x="-50" y="-205" width="100" height="26" rx="12" fill="#C08A3E"/>
+<path d="M-60 30 L60 30 L45 150 Q0 190 -45 150Z" fill="#cfd6dc"/></g>`;
+const star=(x,y,z)=>`<path transform="translate(${x} ${y}) scale(${z})" d="M0-40 L10-10 L40 0 L10 10 L0 40 L-10 10 L-40 0 L-10-10Z" fill="#fff" stroke="#000" stroke-width="6"/>`;
+let k=Math.min(W,H)/512;
+let svg=`<svg class="art" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+if(icon){svg+=bone(256,250,-35,1.15*k)+shovel(256,260,40,1.1*k)+star(110*k,110*k,1.1*k)+star(410*k,120*k,.8*k)}
+else{const cx=W*.76,cy=H*.5;svg+=bone(cx,cy,-30,1.25*k)+shovel(cx,cy+10,38,1.2*k)+star(W*.56,H*.16,1.5*k)+star(W*.95,H*.2,1.1*k)+star(W*.6,H*.7,1*k)}
+s.insertAdjacentHTML('beforeend',svg+'</svg>');
+const t=document.createElement('div');t.className='title';
+t.style.setProperty('--st',(icon?10:16)*k+'px');t.style.setProperty('--sh',(icon?8:14)*k+'px');
+if(icon){t.style.top='4%';t.style.fontSize='96px';t.innerHTML='FOSSIL<b>DIG!</b>'}
+else{t.style.left='0';t.style.width='56%';t.style.top='14%';t.style.fontSize=H*.25+'px';t.innerHTML='FOSSIL<b>MUSEUM</b>';
+ const tag=document.createElement('div');tag.style.cssText=`position:absolute;left:3%;bottom:8%;font-size:${H*.07}px;color:#fff;font-weight:700;-webkit-text-stroke:${7*k}px #000;paint-order:stroke fill`;tag.textContent='DIG • TRADE • BUILD SKELETONS';s.appendChild(tag)}
+s.appendChild(t);
+</script></body></html>
